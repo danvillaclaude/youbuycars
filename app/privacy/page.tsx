@@ -121,6 +121,23 @@ export default function PrivacyPage() {
           lenders.
         </p>
 
+        <h2 className="text-lg font-bold text-slate-900">
+          Marketplace accounts &amp; listings
+        </h2>
+        <p>
+          If you create a seller account to list a vehicle, we collect your
+          name, email address, password (stored only in encrypted form by
+          our authentication provider), and the details and photos of the
+          vehicles you list. Listings you publish — including photos, the
+          vehicle&apos;s details, and any VIN you choose to include — are
+          public by design. Your email address is never shown publicly. You
+          can delete pending listings yourself at any time, and you can ask
+          us to close your account by contacting the email below. None of
+          this changes anything in the sections above: account information
+          is never sold, and your mobile number and SMS consent are never
+          shared with anyone for marketing.
+        </p>
+
         <h2 className="text-lg font-bold text-slate-900">Data security</h2>
         <p>
           We take reasonable measures to protect your information. No method

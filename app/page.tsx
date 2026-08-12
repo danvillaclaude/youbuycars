@@ -7,7 +7,12 @@ import { InquiryForm } from "./inquiry-form";
  * Every compliance sentence on this page is registered with carriers;
  * change the words here and the campaign registration must change too.
  */
-export default function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ about?: string }>;
+}) {
+  const { about } = await searchParams;
   return (
     <main>
       {/* Hero */}
@@ -22,12 +27,20 @@ export default function HomePage() {
           Tell us what you&apos;re looking for and we&apos;ll text you real
           options — no pushy calls, no sitting at a dealership all day.
         </p>
-        <a
-          href="#inquiry"
-          className="mt-8 inline-block rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500"
-        >
-          Tell us what you&apos;re looking for
-        </a>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <a
+            href="#inquiry"
+            className="inline-block rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500"
+          >
+            Tell us what you&apos;re looking for
+          </a>
+          <Link
+            href="/cars"
+            className="inline-block rounded-xl border border-slate-600 px-6 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+          >
+            Browse cars for sale
+          </Link>
+        </div>
       </section>
 
       {/* Text-us-first — the second registered opt-in path. */}
@@ -98,7 +111,7 @@ export default function HomePage() {
           <p className="mt-1 mb-6 text-sm text-slate-500">
             Fill this out and we&apos;ll text you back shortly.
           </p>
-          <InquiryForm />
+          <InquiryForm defaultLookingFor={about ?? ""} />
         </div>
       </section>
 

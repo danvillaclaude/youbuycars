@@ -1,0 +1,63 @@
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+
+/**
+ * The storefront's masthead, on every page. Server-rendered: it knows
+ * whether you're signed in, and whether you're the admin (the Approvals
+ * link is the owner's alone).
+ */
+export async function SiteHeader() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let isAdmin = false;
+  if (user) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .maybeSingle();
+    isAdmin = Boolean((data as { is_admin: boolean } | null)?.is_admin);
+  }
+
+  return (
+    <header className="border-b border-slate-200 bg-white">
+      <div className="mx-auto flex max-w-5xl items-center gap-5 px-6 py-3">
+        <Link href="/" className="text-lg font-bold text-slate-900">
+          You<span className="text-blue-600">Buy</span>Cars
+        </Link>
+        <nav className="flex flex-1 items-center gap-4 text-sm font-medium text-slate-600">
+          <Link href="/cars" className="hover:text-slate-900">
+            Browse cars
+          </Link>
+          <Link href="/sell" className="hover:text-slate-900">
+            Sell your car
+          </Link>
+          <span className="flex-1" />
+          {isAdmin && (
+            <Link href="/admin" className="hover:text-slate-900">
+              Approvals
+            </Link>
+          )}
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="rounded-lg bg-blue-600 px-3 py-1.5 text-white hover:bg-blue-700"
+            >
+              My listings
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50"
+            >
+              Sign in
+            </Link>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+}

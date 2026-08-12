@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE } from "@/lib/site";
+import { SiteHeader } from "./site-header";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,9 +19,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-dvh bg-white text-slate-900">
+        <SiteHeader />
         {children}
         <footer className="border-t border-slate-200 bg-slate-50 px-6 py-8 text-center text-sm text-slate-500">
           <nav className="mb-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <Link href="/cars" className="hover:text-slate-800">
+              Browse cars
+            </Link>
+            <Link href="/sell" className="hover:text-slate-800">
+              Sell your car
+            </Link>
             <Link href="/about" className="hover:text-slate-800">
               About
             </Link>

@@ -9,7 +9,12 @@ import { submitInquiry } from "./actions";
  * required — both facts are load-bearing for A2P review (error 30925),
  * so don't "improve" either one.
  */
-export function InquiryForm() {
+export function InquiryForm({
+  defaultLookingFor = "",
+}: {
+  /** Prefilled from a listing page's "Ask by form" link. */
+  defaultLookingFor?: string;
+}) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -107,6 +112,7 @@ export function InquiryForm() {
           name="looking_for"
           required
           rows={3}
+          defaultValue={defaultLookingFor}
           placeholder="Year, make, model, budget — or just describe what you need."
           className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-600 focus:outline-none"
         />
