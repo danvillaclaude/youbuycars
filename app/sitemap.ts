@@ -27,17 +27,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
-    const { data } = await supabase
-      .from("listings")
-      .select("slug, updated_at")
-      .in("status", ["active", "sold"]);
+    const [{ data }, { data: sellerData }] = await Promise.all([
+      supabase
+        .from("listings")
+        .select("slug, updated_at")
+        .in("status", ["active", "sold"]),
+      supabase
+        .from("profiles")
+        .select("public_slug")
+        .not("public_slug", "is", null),
+    ]);
     const listingPages = ((data ?? []) as { slug: string; updated_at: string }[]).map(
       (l) => ({
         url: `${SITE.domain}/cars/${l.slug}`,
         lastModified: new Date(l.updated_at),
       }),
     );
-    return [...staticPages, ...listingPages];
+    const sellerPages = ((sellerData ?? []) as { public_slug: string }[]).map(
+      (s) => ({
+        url: `${SITE.domain}/sellers/${s.public_slug}`,
+        lastModified: new Date(),
+      }),
+    );
+    return [...staticPages, ...listingPages, ...sellerPages];
   } catch {
     return staticPages;
   }

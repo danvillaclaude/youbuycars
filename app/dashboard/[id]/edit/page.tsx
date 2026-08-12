@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { requireUser } from "@/lib/auth";
+import { requireApprovedSeller } from "@/lib/auth";
 import type { Listing, ListingPhoto } from "@/lib/listings";
 import { ListingForm } from "../../listing-form";
 
@@ -12,7 +12,7 @@ export default async function EditListingPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase, user } = await requireUser();
+  const { supabase, user } = await requireApprovedSeller();
 
   const { data } = await supabase
     .from("listings")

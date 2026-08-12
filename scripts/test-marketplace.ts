@@ -3,12 +3,14 @@
  * Pure-function checks; the database's guard trigger is exercised live.
  */
 import {
+  capFor,
   formatMileage,
   formatPrice,
   LISTING_CAP,
   makeSlug,
   slugify,
   STATUS_LABELS,
+  TIER_CAPS,
 } from "../lib/listings";
 
 let passed = 0;
@@ -57,8 +59,13 @@ for (const status of ["pending", "active", "rejected", "sold"] as const) {
   check(`STATUS_LABELS covers ${status}`, Boolean(STATUS_LABELS[status]));
 }
 
-// The cap is the agreed number; the DB trigger hardcodes 5 to match.
+// The tier ladder — the DB's tier_cap() mirrors these numbers exactly.
 check("LISTING_CAP is the agreed 5", LISTING_CAP === 5);
+check("free cap 5", TIER_CAPS.free === 5);
+check("pro cap 25 (the $100 plan)", TIER_CAPS.pro === 25);
+check("ultimate cap 200 (the $500 plan)", TIER_CAPS.ultimate === 200);
+check("capFor defaults to free", capFor(null) === 5 && capFor("nonsense") === 5);
+check("capFor reads tiers", capFor("pro") === 25 && capFor("ultimate") === 200);
 
 console.log(`${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

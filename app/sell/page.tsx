@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LISTING_CAP } from "@/lib/listings";
+import { TIER_CAPS } from "@/lib/listings";
 
 export const metadata: Metadata = {
   title: "Sell your car · YouBuyCars",
@@ -21,8 +21,8 @@ export default function SellPage() {
       <ol className="mt-8 space-y-5 text-sm leading-relaxed text-slate-600">
         <li>
           <strong className="text-slate-900">1. Create your account.</strong>{" "}
-          Just a name, email and password — you can list up to {LISTING_CAP}{" "}
-          vehicles at a time.
+          Just a name, email and password. A real person approves every new
+          seller — usually same day.
         </li>
         <li>
           <strong className="text-slate-900">2. Post the car.</strong> Year,
@@ -41,6 +41,58 @@ export default function SellPage() {
           helps the next one.
         </li>
       </ol>
+
+      {/* The tier ladder — the owner's pricing, 12 Aug 2026. */}
+      <h2 className="mt-12 text-xl font-bold">Plans</h2>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 p-5">
+          <div className="text-sm font-semibold text-slate-500">Free</div>
+          <div className="mt-1 text-2xl font-bold">$0</div>
+          <p className="mt-2 text-sm text-slate-600">
+            Up to {TIER_CAPS.free} active listings. Perfect for selling your
+            own car.
+          </p>
+        </div>
+        <div className="rounded-2xl border-2 border-blue-600 p-5">
+          <div className="text-sm font-semibold text-blue-600">Pro</div>
+          <div className="mt-1 text-2xl font-bold">
+            $100<span className="text-sm font-normal text-slate-400">/mo</span>
+          </div>
+          <p className="mt-2 text-sm text-slate-600">
+            Up to {TIER_CAPS.pro} active listings, plus your own public
+            dealer page with logo and inventory.
+          </p>
+          <p className="mt-2 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700">
+            Included free with the{" "}
+            <a
+              href="https://isellcars.ai"
+              className="underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              iSellCars.ai CRM
+            </a>
+            .
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 p-5">
+          <div className="text-sm font-semibold text-slate-500">Ultimate</div>
+          <div className="mt-1 text-2xl font-bold">
+            $500<span className="text-sm font-normal text-slate-400">/mo</span>
+          </div>
+          <p className="mt-2 text-sm text-slate-600">
+            Up to {TIER_CAPS.ultimate} active listings — full-lot scale, with
+            the dealer page included.
+          </p>
+        </div>
+      </div>
+      <p className="mt-3 text-xs text-slate-400">
+        To upgrade to Pro or Ultimate, contact us at the email on the{" "}
+        <Link href="/contact" className="underline">
+          Contact page
+        </Link>{" "}
+        — online checkout is coming.
+      </p>
 
       <div className="mt-10 flex gap-3">
         <Link

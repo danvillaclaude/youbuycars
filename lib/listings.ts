@@ -31,10 +31,33 @@ export interface ListingPhoto {
   sort_order: number;
 }
 
-/** The Phase-1 free ceiling (owner's call, 12 Aug 2026): five listings
- *  pending-or-active per seller. Enforced in the DB trigger too — this
- *  constant exists so the UI can explain the refusal before it happens. */
-export const LISTING_CAP = 5;
+/**
+ * The tier ladder (owner's pricing, 12 Aug 2026): Free rides 5, Pro is
+ * $100/month for 25, Ultimate is $500/month for 200 — and every iSellCars
+ * CRM dealership gets Pro included free through its linked account.
+ * The DB's tier_cap() enforces the same numbers; these exist so the UI
+ * can explain a refusal before it happens.
+ */
+export type Tier = "free" | "pro" | "ultimate";
+
+export const TIER_CAPS: Record<Tier, number> = {
+  free: 5,
+  pro: 25,
+  ultimate: 200,
+};
+
+export const TIER_PRICES: Record<Tier, string> = {
+  free: "Free",
+  pro: "$100/mo",
+  ultimate: "$500/mo",
+};
+
+export function capFor(tier: string | null | undefined): number {
+  return TIER_CAPS[(tier as Tier) ?? "free"] ?? TIER_CAPS.free;
+}
+
+/** Kept for the free tier's sake; prefer capFor(tier). */
+export const LISTING_CAP = TIER_CAPS.free;
 
 /** Lowercase, dashes, nothing weird — the URL-safe half of a slug. */
 export function slugify(text: string): string {
@@ -79,6 +102,11 @@ export function formatMileage(mileage: number): string {
 /** The public URL for a photo in the public listing-photos bucket. */
 export function photoUrl(storagePath: string): string {
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-photos/${storagePath}`;
+}
+
+/** The public URL for a dealer logo. */
+export function logoUrl(storagePath: string): string {
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/dealer-logos/${storagePath}`;
 }
 
 /** What a status chip says and wears, one place. */

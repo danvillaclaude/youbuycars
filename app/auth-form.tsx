@@ -42,7 +42,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       setBusy(false);
       if (error) return setError(error.message);
       setNotice(
-        "Almost there — check your email for a confirmation link, then sign in.",
+        "Almost there — confirm your email, then sign in. A real person reviews every new seller account; you can post as soon as you're approved.",
       );
       return;
     }

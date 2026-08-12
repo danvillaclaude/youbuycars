@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
-import { LISTING_CAP, makeSlug, type Listing } from "@/lib/listings";
+import { capFor, makeSlug, type Listing } from "@/lib/listings";
 
 const listingSchema = z.object({
   year: z.coerce.number().int().min(1900).max(2100),
@@ -29,7 +29,7 @@ export interface ListingResult {
 export async function createListingAction(
   input: Record<string, unknown>,
 ): Promise<ListingResult> {
-  const { supabase, user } = await requireUser();
+  const { supabase, user, profile } = await requireUser();
 
   const parsed = listingSchema.safeParse(input);
   if (!parsed.success) {
@@ -41,10 +41,11 @@ export async function createListingAction(
     .select("id", { count: "exact", head: true })
     .eq("seller_id", user.id)
     .in("status", ["pending", "active"]);
-  if ((count ?? 0) >= LISTING_CAP) {
+  const cap = capFor(profile.tier);
+  if ((count ?? 0) >= cap) {
     return {
       ok: false,
-      error: `You're at the limit of ${LISTING_CAP} listings. Mark one sold (or delete a pending one) to post another.`,
+      error: `You're at your plan's limit of ${cap} listings. Mark one sold (or delete a pending one) to post another.`,
     };
   }
 

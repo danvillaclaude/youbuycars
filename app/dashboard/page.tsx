@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireUser } from "@/lib/auth";
+import { requireApprovedSeller } from "@/lib/auth";
 import {
+  capFor,
   formatMileage,
   formatPrice,
-  LISTING_CAP,
   STATUS_LABELS,
   type Listing,
 } from "@/lib/listings";
@@ -20,7 +20,7 @@ const STATUS_STYLES: Record<Listing["status"], string> = {
 };
 
 export default async function DashboardPage() {
-  const { supabase, user, profile } = await requireUser();
+  const { supabase, user, profile } = await requireApprovedSeller();
 
   const { data } = await supabase
     .from("listings")
@@ -38,16 +38,24 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold">My listings</h1>
           <p className="mt-1 text-sm text-slate-500">
-            {profile.display_name ?? "Seller"} · {liveCount} of {LISTING_CAP}{" "}
-            slots used
+            {profile.display_name ?? "Seller"} · {liveCount} of {capFor(profile.tier)}{" "}
+            slots used · {profile.tier} plan
           </p>
         </div>
-        <Link
-          href="/dashboard/new"
-          className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-        >
-          + List a car
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/dashboard/profile"
+            className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            My dealer page
+          </Link>
+          <Link
+            href="/dashboard/new"
+            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            + List a car
+          </Link>
+        </div>
       </div>
 
       {listings.length === 0 ? (

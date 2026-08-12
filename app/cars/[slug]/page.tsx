@@ -21,12 +21,23 @@ async function loadListing(slug: string) {
     .maybeSingle();
   const listing = data as Listing | null;
   if (!listing) return null;
-  const { data: photoData } = await supabase
-    .from("listing_photos")
-    .select("*")
-    .eq("listing_id", listing.id)
-    .order("sort_order");
-  return { listing, photos: (photoData ?? []) as ListingPhoto[] };
+  const [{ data: photoData }, { data: sellerData }] = await Promise.all([
+    supabase
+      .from("listing_photos")
+      .select("*")
+      .eq("listing_id", listing.id)
+      .order("sort_order"),
+    supabase
+      .from("profiles")
+      .select("display_name, public_slug")
+      .eq("id", listing.seller_id)
+      .maybeSingle(),
+  ]);
+  return {
+    listing,
+    photos: (photoData ?? []) as ListingPhoto[],
+    seller: sellerData as { display_name: string | null; public_slug: string | null } | null,
+  };
 }
 
 export async function generateMetadata({
@@ -58,7 +69,7 @@ export default async function ListingPage({
   const { slug } = await params;
   const found = await loadListing(slug);
   if (!found) notFound();
-  const { listing, photos } = found;
+  const { listing, photos, seller } = found;
   const name = `${listing.year} ${listing.make} ${listing.model}${listing.trim_level ? ` ${listing.trim_level}` : ""}`;
   const sold = listing.status === "sold";
 
@@ -120,6 +131,17 @@ export default async function ListingPage({
           <p className="mt-1 text-sm text-slate-500">
             {formatMileage(listing.mileage)}
             {listing.vin ? ` · VIN ${listing.vin}` : ""}
+            {seller?.public_slug && (
+              <>
+                {" · Sold by "}
+                <Link
+                  href={`/sellers/${seller.public_slug}`}
+                  className="text-blue-600 underline"
+                >
+                  {seller.display_name ?? "a YouBuyCars seller"}
+                </Link>
+              </>
+            )}
           </p>
         </div>
         <div className="text-3xl font-bold text-slate-900">
