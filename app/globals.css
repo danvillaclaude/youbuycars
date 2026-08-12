@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* YouBuyCars — one accent (blue-600), dark hero, light paper below.
+   The marketplace inherits this file; keep tokens here, not per-page. */
+
+:root {
+  --brand: #2563eb;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
