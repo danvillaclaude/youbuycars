@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createAdminClient } from "@/lib/supabase-admin";
+import { createServerClient } from "@/lib/supabase-server";
 
 const inquirySchema = z.object({
   name: z.string().trim().min(1, "Tell us your name.").max(120),
@@ -48,7 +48,7 @@ export async function submitInquiry(input: {
     };
   }
 
-  const supabase = createAdminClient();
+  const supabase = createServerClient();
   const { error } = await supabase.from("inquiries").insert({
     name: parsed.data.name,
     phone: parsed.data.phone,
