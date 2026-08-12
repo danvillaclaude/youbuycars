@@ -63,5 +63,36 @@ export async function submitInquiry(input: {
   if (error) {
     return { ok: false, error: "Something went wrong — please try again." };
   }
+
+  /*
+   * Forward into the CRM, best-effort: the Supabase row above is the
+   * durable record; this is what makes the inquiry ring the inbox with
+   * the full capture flow (lead, thread message, follow-up enrollment,
+   * speed-to-lead greeting). A CRM hiccup must never turn a captured
+   * inquiry into a user-facing error, so failures only log.
+   */
+  const crmUrl = process.env.CRM_INQUIRY_URL;
+  const crmSecret = process.env.CRM_INQUIRY_SECRET;
+  if (crmUrl && crmSecret) {
+    try {
+      await fetch(crmUrl, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${crmSecret}`,
+        },
+        body: JSON.stringify({
+          name: parsed.data.name,
+          phone: parsed.data.phone,
+          message:
+            parsed.data.looking_for +
+            (parsed.data.email ? `\nEmail: ${parsed.data.email}` : ""),
+          consented: parsed.data.sms_consent,
+        }),
+      });
+    } catch (e) {
+      console.error("CRM forward failed (inquiry kept):", e);
+    }
+  }
   return { ok: true };
 }
