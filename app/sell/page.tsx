@@ -5,7 +5,7 @@ import { TIER_CAPS } from "@/lib/listings";
 export const metadata: Metadata = {
   title: "Sell your car · YouBuyCars",
   description:
-    "List your vehicle on YouBuyCars for free — up to five active listings, every one reviewed before it goes live.",
+    "List your vehicle on YouBuyCars for free — up to three active listings, every one reviewed before it goes live.",
 };
 
 export default function SellPage() {

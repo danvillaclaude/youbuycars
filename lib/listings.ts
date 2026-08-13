@@ -41,7 +41,10 @@ export interface ListingPhoto {
 export type Tier = "free" | "pro" | "ultimate";
 
 export const TIER_CAPS: Record<Tier, number> = {
-  free: 5,
+  // 3 since 12 Aug 2026 (the owner's call, down from the launch 5). The
+  // DB's tier_cap() moved with it — migration 0005 — so the two can't
+  // disagree without a listing insert failing loudly.
+  free: 3,
   pro: 25,
   ultimate: 200,
 };
