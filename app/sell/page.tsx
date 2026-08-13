@@ -5,7 +5,7 @@ import { TIER_CAPS } from "@/lib/listings";
 export const metadata: Metadata = {
   title: "Sell your car · YouBuyCars",
   description:
-    "List your vehicle on YouBuyCars for free — up to three active listings, every one reviewed before it goes live.",
+    "List your vehicle on YouBuyCars for free — one active listing, reviewed before it goes live.",
 };
 
 export default function SellPage() {
@@ -49,8 +49,9 @@ export default function SellPage() {
           <div className="text-sm font-semibold text-slate-500">Free</div>
           <div className="mt-1 text-2xl font-bold">$0</div>
           <p className="mt-2 text-sm text-slate-600">
-            Up to {TIER_CAPS.free} active listings. Perfect for selling your
-            own car.
+            {/* Singular on purpose — the cap is {TIER_CAPS.free}, and
+                "up to 1 listings" would read like a bug. */}
+            One active listing. Perfect for selling your own car.
           </p>
         </div>
         <div className="rounded-2xl border-2 border-blue-600 p-5">
