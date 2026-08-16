@@ -87,6 +87,12 @@ export default async function DashboardPage() {
         </div>
         <div className="flex gap-2">
           <Link
+            href="/dashboard/inquiries"
+            className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Inquiries
+          </Link>
+          <Link
             href="/dashboard/profile"
             className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >

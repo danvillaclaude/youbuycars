@@ -46,3 +46,35 @@ export async function submitReviewAction(
   if (error) return { ok: false, error: "Couldn't send that — try again." };
   return { ok: true };
 }
+
+const inquirySchema = z.object({
+  seller_id: z.string().uuid(),
+  name: z.string().trim().min(1, "Tell them who you are.").max(80),
+  phone: z.string().trim().min(7, "They need a number to reach you.").max(30),
+  looking_for: z.string().trim().max(1000),
+  sms_consent: z.boolean(),
+});
+
+/** The per-seller inquiry letterbox (0010). */
+export async function submitInquiryAction(
+  input: Record<string, unknown>,
+): Promise<{ ok: boolean; error?: string }> {
+  const parsed = inquirySchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Check the form.",
+    };
+  }
+  const d = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.from("seller_inquiries").insert({
+    seller_id: d.seller_id,
+    name: d.name,
+    phone: d.phone,
+    looking_for: d.looking_for,
+    sms_consent: d.sms_consent,
+  });
+  if (error) return { ok: false, error: "Couldn't send that — try again." };
+  return { ok: true };
+}

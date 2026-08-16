@@ -9,6 +9,7 @@ import {
 } from "@/lib/listings";
 import { ListingCard } from "@/app/listing-card";
 import { ReviewForm } from "./review-form";
+import { SellerInquiryForm } from "./inquiry-form";
 
 async function loadSeller(slug: string) {
   const supabase = await createClient();
@@ -153,6 +154,18 @@ export default async function SellerPage({
           ))}
         </div>
       )}
+
+      {/* The seller's own funnel (0010): lands on their dashboard, and in
+          a CRM dealership's CRM as a real lead within the minute. */}
+      <h2 className="mt-12 text-lg font-bold">
+        Ask {seller.display_name ?? "this seller"} about a car
+      </h2>
+      <div className="mt-3">
+        <SellerInquiryForm
+          sellerId={seller.id}
+          sellerName={seller.display_name ?? "this seller"}
+        />
+      </div>
 
       {/* Ratings (0009): approved reviews, then the door to add one. */}
       <h2 className="mt-12 text-lg font-bold">Reviews</h2>

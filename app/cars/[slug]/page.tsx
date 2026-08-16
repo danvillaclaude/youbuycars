@@ -13,6 +13,7 @@ import {
 import { estimateMonthly } from "@/lib/payments";
 import { PaymentCalculator } from "./payment-calculator";
 import { TrackedContact, TrackView } from "@/app/track-client";
+import { ContactBox } from "./contact-box";
 
 async function loadListing(slug: string) {
   const supabase = await createClient();
@@ -202,44 +203,40 @@ export default async function ListingPage({
             </p>
           )}
 
-          {!sold && (
-            <div className="mt-4 grid gap-2">
-              <TrackedContact
-                href={smsHref}
+          {!sold &&
+            (sellerTel ? (
+              /* Seller-direct: one checkbox unlocks both (the owner's
+                 pick) — the explicit opt-in record. */
+              <ContactBox
+                sellerName={seller?.display_name ?? "the seller"}
+                phoneDisplay={seller?.phone ?? ""}
+                telHref={`tel:${sellerTel}`}
+                smsHref={smsHref}
                 listingId={listing.id}
-                kind="text_tap"
-                className="rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
-              >
-                💬 Text about this car
-              </TrackedContact>
-              {sellerTel ? (
+              />
+            ) : (
+              /* Platform fallback: the carrier-registered one-tap flow,
+                 untouched. */
+              <div className="mt-4 grid gap-2">
                 <TrackedContact
-                  href={`tel:${sellerTel}`}
+                  href={smsHref}
                   listingId={listing.id}
-                  kind="call_tap"
-                  className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  kind="text_tap"
+                  className="rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
                 >
-                  📞 Call {seller?.display_name ?? "the seller"} · {seller?.phone}
+                  💬 Text about this car
                 </TrackedContact>
-              ) : (
                 <Link
                   href={`/?about=${askAbout}#inquiry`}
                   className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   Ask by form instead
                 </Link>
-              )}
-            </div>
-          )}
+              </div>
+            ))}
 
           {!sold &&
-            (sellerTel ? (
-              <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
-                You&apos;re contacting the seller directly. Texting or calling
-                them first is your consent to hear back about this car — reply
-                STOP to any text to stop them.
-              </p>
-            ) : (
+            (sellerTel ? null : (
               <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
                 Texting us first is your consent to receive our replies — reply
                 STOP anytime.{" "}
@@ -286,7 +283,7 @@ export default async function ListingPage({
       {!sold && financed && (
         <PaymentCalculator
           price={listing.price}
-          smsHref={smsHref}
+          smsHref={sellerTel ? "#contact" : smsHref}
           listingId={listing.id}
         />
       )}
