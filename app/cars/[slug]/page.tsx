@@ -12,6 +12,7 @@ import {
 } from "@/lib/listings";
 import { estimateMonthly } from "@/lib/payments";
 import { PaymentCalculator } from "./payment-calculator";
+import { TrackedContact, TrackView } from "@/app/track-client";
 
 async function loadListing(slug: string) {
   const supabase = await createClient();
@@ -128,6 +129,9 @@ export default async function ListingPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/* Analytics (0007): a beacon, so crawlers reading for SEO count
+          for nothing. Sold pages don't count views — nobody's shopping. */}
+      {!sold && <TrackView listingId={listing.id} />}
 
       <Link href="/cars" className="text-sm text-slate-400 hover:text-slate-600">
         ← All cars
@@ -197,19 +201,23 @@ export default async function ListingPage({
 
           {!sold && (
             <div className="mt-4 grid gap-2">
-              <a
+              <TrackedContact
                 href={smsHref}
+                listingId={listing.id}
+                kind="text_tap"
                 className="rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
               >
                 💬 Text about this car
-              </a>
+              </TrackedContact>
               {sellerTel ? (
-                <a
+                <TrackedContact
                   href={`tel:${sellerTel}`}
+                  listingId={listing.id}
+                  kind="call_tap"
                   className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   📞 Call {seller?.display_name ?? "the seller"} · {seller?.phone}
-                </a>
+                </TrackedContact>
               ) : (
                 <Link
                   href={`/?about=${askAbout}#inquiry`}
@@ -270,7 +278,13 @@ export default async function ListingPage({
         </p>
       )}
 
-      {!sold && <PaymentCalculator price={listing.price} smsHref={smsHref} />}
+      {!sold && (
+        <PaymentCalculator
+          price={listing.price}
+          smsHref={smsHref}
+          listingId={listing.id}
+        />
+      )}
     </main>
   );
 }

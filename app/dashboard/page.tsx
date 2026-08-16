@@ -19,6 +19,16 @@ const STATUS_STYLES: Record<Listing["status"], string> = {
   sold: "bg-slate-200 text-slate-600",
 };
 
+/** Per-listing tallies from the events table (0007), reduced in JS —
+ *  supabase-js doesn't group, and a seller's event volume is small. */
+interface ListingStats {
+  views: number;
+  viewsWeek: number;
+  textTaps: number;
+  callTaps: number;
+  calcRuns: number;
+}
+
 export default async function DashboardPage() {
   const { supabase, user, profile } = await requireApprovedSeller();
 
@@ -31,6 +41,39 @@ export default async function DashboardPage() {
   const liveCount = listings.filter((l) =>
     ["pending", "active"].includes(l.status),
   ).length;
+
+  /*
+   * Analytics (Phase 2): what each car earned. RLS already scopes the
+   * read to this seller's listings; 90 days is the story worth telling
+   * on a used-car timeline.
+   */
+  const statsByListing = new Map<string, ListingStats>();
+  if (listings.length > 0) {
+    const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
+    const weekAgo = Date.now() - 7 * 86_400_000;
+    const { data: eventData } = await supabase
+      .from("listing_events")
+      .select("listing_id, kind, created_at")
+      .in("listing_id", listings.map((l) => l.id))
+      .gte("created_at", since)
+      .limit(10000);
+    for (const e of (eventData ?? []) as {
+      listing_id: string;
+      kind: string;
+      created_at: string;
+    }[]) {
+      const s =
+        statsByListing.get(e.listing_id) ??
+        ({ views: 0, viewsWeek: 0, textTaps: 0, callTaps: 0, calcRuns: 0 } as ListingStats);
+      if (e.kind === "view") {
+        s.views++;
+        if (Date.parse(e.created_at) >= weekAgo) s.viewsWeek++;
+      } else if (e.kind === "text_tap") s.textTaps++;
+      else if (e.kind === "call_tap") s.callTaps++;
+      else if (e.kind === "calc_run") s.calcRuns++;
+      statsByListing.set(e.listing_id, s);
+    }
+  }
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
@@ -89,6 +132,26 @@ export default async function DashboardPage() {
                     ? ` · Reason: ${l.rejected_reason}`
                     : ""}
                 </div>
+                {(() => {
+                  const s = statsByListing.get(l.id);
+                  if (!s || l.status === "pending") return null;
+                  return (
+                    <div className="mt-1.5 flex flex-wrap gap-x-3 text-[11px] text-slate-400 tabular-nums">
+                      <span>
+                        <b className="font-semibold text-slate-600">{s.views}</b>{" "}
+                        views
+                        {s.viewsWeek > 0 && (
+                          <span className="ml-1 font-semibold text-green-700">
+                            ▲ {s.viewsWeek} this week
+                          </span>
+                        )}
+                      </span>
+                      {s.textTaps > 0 && <span>{s.textTaps} text taps</span>}
+                      {s.callTaps > 0 && <span>{s.callTaps} calls</span>}
+                      {s.calcRuns > 0 && <span>{s.calcRuns} calculator runs</span>}
+                    </div>
+                  );
+                })()}
               </div>
               <DashboardRowButtons listing={l} />
             </div>

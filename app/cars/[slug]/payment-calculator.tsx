@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   CREDIT_BANDS,
   DEFAULT_ESTIMATE,
   monthlyPayment,
   TERM_OPTIONS,
 } from "@/lib/payments";
+import { track } from "@/app/track-client";
 
 /**
  * The finance calculator (Phase 2, the owner's spec from the mockup round:
@@ -21,14 +22,26 @@ import {
 export function PaymentCalculator({
   price,
   smsHref,
+  listingId,
 }: {
   price: number;
   /** The listing's text CTA (seller-direct or the platform line). */
   smsHref: string;
+  /** For analytics (0007): one calc_run per session's first touch. */
+  listingId?: string;
 }) {
   const [down, setDown] = useState(Math.min(DEFAULT_ESTIMATE.down, price));
   const [term, setTerm] = useState<number>(DEFAULT_ESTIMATE.termMonths);
   const [apr, setApr] = useState<number>(DEFAULT_ESTIMATE.apr);
+
+  // First real interaction = one calc_run event, and only one — the
+  // slider alone emits dozens of input events per drag.
+  const ranRef = useRef(false);
+  function touched() {
+    if (ranRef.current || !listingId) return;
+    ranRef.current = true;
+    track(listingId, "calc_run");
+  }
 
   const maxDown = Math.max(0, Math.min(Math.round(price * 0.5), 20000));
   const monthly = Math.round(monthlyPayment(Math.max(0, price - down), apr, term));
@@ -60,7 +73,10 @@ export function PaymentCalculator({
         max={maxDown}
         step={250}
         value={down}
-        onChange={(e) => setDown(Number(e.target.value))}
+        onChange={(e) => {
+          touched();
+          setDown(Number(e.target.value));
+        }}
         className="mt-1 w-full accent-blue-600"
       />
       <div className="flex justify-between text-[11px] text-slate-400 tabular-nums">
@@ -71,7 +87,15 @@ export function PaymentCalculator({
       <div className="mt-4 text-xs font-semibold text-slate-700">Term</div>
       <div className="mt-1 grid grid-cols-4 gap-1.5">
         {TERM_OPTIONS.map((n) => (
-          <button key={n} type="button" onClick={() => setTerm(n)} className={chip(term === n)}>
+          <button
+            key={n}
+            type="button"
+            onClick={() => {
+              touched();
+              setTerm(n);
+            }}
+            className={chip(term === n)}
+          >
             {n} mo
           </button>
         ))}
@@ -82,7 +106,15 @@ export function PaymentCalculator({
       </div>
       <div className="mt-1 grid grid-cols-4 gap-1.5">
         {CREDIT_BANDS.map((b) => (
-          <button key={b.label} type="button" onClick={() => setApr(b.apr)} className={chip(apr === b.apr)}>
+          <button
+            key={b.label}
+            type="button"
+            onClick={() => {
+              touched();
+              setApr(b.apr);
+            }}
+            className={chip(apr === b.apr)}
+          >
             {b.label}
           </button>
         ))}
@@ -90,6 +122,7 @@ export function PaymentCalculator({
 
       <a
         href={smsHref}
+        onClick={() => listingId && track(listingId, "text_tap")}
         className="mt-5 block rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
       >
         💬 Text the seller about financing
