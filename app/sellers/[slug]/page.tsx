@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/auth";
 import {
-  formatMileage,
-  formatPrice,
   logoUrl,
-  photoUrl,
   type Listing,
   type ListingPhoto,
 } from "@/lib/listings";
+import { ListingCard } from "@/app/listing-card";
 
 async function loadSeller(slug: string) {
   const supabase = await createClient();
@@ -115,43 +112,15 @@ export default async function SellerPage({
           Nothing live right now — check back soon.
         </p>
       ) : (
-        <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {listings.map((l) => {
-            const photo = photosByListing.get(l.id);
-            return (
-              <Link
-                key={l.id}
-                href={`/cars/${l.slug}`}
-                className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition-shadow hover:shadow-md"
-              >
-                <div className="aspect-[4/3] bg-slate-100">
-                  {photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={photoUrl(photo)}
-                      alt={`${l.year} ${l.make} ${l.model}`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-4xl">
-                      🚗
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="font-semibold text-slate-900 group-hover:text-blue-600">
-                    {l.year} {l.make} {l.model}
-                  </div>
-                  <div className="mt-1 flex items-baseline justify-between">
-                    <span className="text-lg font-bold">{formatPrice(l.price)}</span>
-                    <span className="text-xs text-slate-500">
-                      {formatMileage(l.mileage)}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
+        <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {listings.map((l) => (
+            <ListingCard
+              key={l.id}
+              listing={l}
+              photoPath={photosByListing.get(l.id) ?? null}
+              sellerCity={seller.city}
+            />
+          ))}
         </div>
       )}
     </main>

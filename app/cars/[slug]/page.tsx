@@ -10,6 +10,8 @@ import {
   type Listing,
   type ListingPhoto,
 } from "@/lib/listings";
+import { estimateMonthly } from "@/lib/payments";
+import { PaymentCalculator } from "./payment-calculator";
 
 async function loadListing(slug: string) {
   const supabase = await createClient();
@@ -29,7 +31,7 @@ async function loadListing(slug: string) {
       .order("sort_order"),
     supabase
       .from("profiles")
-      .select("display_name, public_slug, phone")
+      .select("display_name, public_slug, phone, city")
       .eq("id", listing.seller_id)
       .maybeSingle(),
   ]);
@@ -40,6 +42,7 @@ async function loadListing(slug: string) {
       display_name: string | null;
       public_slug: string | null;
       phone: string | null;
+      city: string | null;
     } | null,
   };
 }
@@ -107,9 +110,20 @@ export default async function ListingPage({
   const askAbout = encodeURIComponent(
     `I'm interested in the ${name} (${SITE.domain}/cars/${listing.slug})`,
   );
+  /*
+   * Contact routing (15 Aug 2026, the owner's ask): the SELLER's own
+   * number when they've published one — with the YouBuyCars line as the
+   * fallback. Buyer-initiated contact carries its own consent; the note
+   * under the buttons says so plainly, and the registered platform-line
+   * wording stays verbatim on the fallback path.
+   */
+  const sellerTel = seller?.phone ? seller.phone.replace(/[^\d+]/g, "") : null;
+  const smsHref = sellerTel
+    ? `sms:${sellerTel}?&body=${askAbout}`
+    : `sms:${SITE.phoneE164}?&body=${askAbout}`;
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <main className="mx-auto max-w-5xl px-6 py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -129,123 +143,134 @@ export default async function ListingPage({
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+      {/* Concept A ("Showroom Daylight", the owner's pick): gallery left,
+          buy box right — price, the green est./mo, the two contact CTAs
+          and the seller card in one glanceable column. */}
+      <div className="mt-4 grid gap-7 lg:grid-cols-[3fr_2fr]">
         <div>
-          <h1 className="text-3xl font-bold">{name}</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <div className="overflow-hidden rounded-2xl bg-slate-100">
+            {photos.length > 0 ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={photoUrl(photos[0].storage_path)}
+                alt={name}
+                className="aspect-[16/10] w-full object-cover"
+              />
+            ) : (
+              <div className="flex aspect-[16/10] items-center justify-center text-6xl">
+                🚗
+              </div>
+            )}
+          </div>
+          {photos.length > 1 && (
+            <div className="mt-2.5 grid grid-cols-4 gap-2.5 sm:grid-cols-5">
+              {photos.slice(1).map((p) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={p.id}
+                  src={photoUrl(p.storage_path)}
+                  alt=""
+                  className="aspect-[4/3] w-full rounded-lg object-cover"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h1 className="text-xl font-bold text-slate-900">{name}</h1>
+          <p className="mt-0.5 text-xs text-slate-500">
             {formatMileage(listing.mileage)}
             {listing.vin ? ` · VIN ${listing.vin}` : ""}
-            {seller?.public_slug && (
-              <>
-                {" · Sold by "}
+          </p>
+          <div className="mt-3 text-[32px] font-extrabold leading-none tracking-tight text-slate-900 tabular-nums">
+            {formatPrice(listing.price)}
+          </div>
+          {!sold && (
+            <p className="mt-1.5 text-sm font-semibold text-green-700 tabular-nums">
+              ${estimateMonthly(listing.price).toLocaleString("en-US")}/mo est. ·{" "}
+              <a href="#calculator" className="font-medium text-blue-600 underline">
+                work the numbers ↓
+              </a>
+            </p>
+          )}
+
+          {!sold && (
+            <div className="mt-4 grid gap-2">
+              <a
+                href={smsHref}
+                className="rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
+              >
+                💬 Text about this car
+              </a>
+              {sellerTel ? (
+                <a
+                  href={`tel:${sellerTel}`}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  📞 Call {seller?.display_name ?? "the seller"} · {seller?.phone}
+                </a>
+              ) : (
+                <Link
+                  href={`/?about=${askAbout}#inquiry`}
+                  className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Ask by form instead
+                </Link>
+              )}
+            </div>
+          )}
+
+          {!sold &&
+            (sellerTel ? (
+              <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+                You&apos;re contacting the seller directly. Texting or calling
+                them first is your consent to hear back about this car — reply
+                STOP to any text to stop them.
+              </p>
+            ) : (
+              <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+                Texting us first is your consent to receive our replies — reply
+                STOP anytime.{" "}
+                <Link href="/sms-consent" className="underline">
+                  How texting consent works.
+                </Link>
+              </p>
+            ))}
+
+          {seller?.public_slug && (
+            <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-4">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-sm font-extrabold text-blue-700">
+                {(seller.display_name ?? "S").charAt(0).toUpperCase()}
+              </span>
+              <span className="text-xs text-slate-500">
+                <Link
+                  href={`/sellers/${seller.public_slug}`}
+                  className="font-semibold text-slate-900 hover:text-blue-700"
+                >
+                  {seller.display_name ?? "A YouBuyCars seller"}
+                </Link>
+                {seller.city ? <> · {seller.city}</> : null}
+                <br />
                 <Link
                   href={`/sellers/${seller.public_slug}`}
                   className="text-blue-600 underline"
                 >
-                  {seller.display_name ?? "a YouBuyCars seller"}
+                  See all their cars
                 </Link>
-              </>
-            )}
-          </p>
-        </div>
-        <div className="text-3xl font-bold text-slate-900">
-          {formatPrice(listing.price)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Gallery — first photo big, the rest in a strip. */}
-      <div className="mt-6 overflow-hidden rounded-2xl bg-slate-100">
-        {photos.length > 0 ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={photoUrl(photos[0].storage_path)}
-            alt={name}
-            className="aspect-[16/10] w-full object-cover"
-          />
-        ) : (
-          <div className="flex aspect-[16/10] items-center justify-center text-6xl">
-            🚗
-          </div>
-        )}
-      </div>
-      {photos.length > 1 && (
-        <div className="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-6">
-          {photos.slice(1).map((p) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={p.id}
-              src={photoUrl(p.storage_path)}
-              alt=""
-              className="aspect-[4/3] w-full rounded-lg object-cover"
-            />
-          ))}
-        </div>
-      )}
 
       {listing.description && (
-        <p className="mt-6 whitespace-pre-line text-sm leading-relaxed text-slate-600">
+        <p className="mt-8 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-slate-600">
           {listing.description}
         </p>
       )}
 
-      {/*
-        Contact (15 Aug 2026, the owner's ask): the SELLER's own number
-        when they've published one on their profile — call, text, and the
-        number in plain sight, CarGurus-style — with the YouBuyCars line
-        as the fallback for sellers who haven't. Buyer-initiated contact
-        carries its own consent, which is why the text button needs no
-        opt-in machinery; the note under it says so plainly.
-      */}
-      {!sold && seller?.phone ? (
-        <>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a
-              href={`sms:${seller.phone.replace(/[^\d+]/g, "")}?&body=${askAbout}`}
-              className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Text about this car
-            </a>
-            <a
-              href={`tel:${seller.phone.replace(/[^\d+]/g, "")}`}
-              className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              📞 Call {seller.display_name ?? "the seller"}
-            </a>
-            <span className="text-sm font-semibold text-slate-600">
-              {seller.phone}
-            </span>
-          </div>
-          <p className="mt-3 text-xs text-slate-400">
-            You&apos;re contacting the seller directly. Texting or calling
-            them first is your consent to hear back about this car — reply
-            STOP to any text to stop them.
-          </p>
-        </>
-      ) : !sold ? (
-        <>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              href={`sms:${SITE.phoneE164}?&body=${askAbout}`}
-              className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Text us about this car
-            </a>
-            <Link
-              href={`/?about=${askAbout}#inquiry`}
-              className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Ask by form instead
-            </Link>
-          </div>
-          <p className="mt-3 text-xs text-slate-400">
-            Texting us first is your consent to receive our replies — reply
-            STOP anytime.{" "}
-            <Link href="/sms-consent" className="underline">
-              How texting consent works.
-            </Link>
-          </p>
-        </>
-      ) : null}
+      {!sold && <PaymentCalculator price={listing.price} smsHref={smsHref} />}
     </main>
   );
 }

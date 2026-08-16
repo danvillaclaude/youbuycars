@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import {
-  formatMileage,
-  formatPrice,
-  photoUrl,
-  type Listing,
-  type ListingPhoto,
-} from "@/lib/listings";
+import { type Listing, type ListingPhoto } from "@/lib/listings";
+import { DEFAULT_ESTIMATE } from "@/lib/payments";
+import { ListingCard } from "@/app/listing-card";
 
 export const metadata: Metadata = {
   title: "Cars for sale · YouBuyCars",
@@ -47,19 +43,35 @@ export default async function CarsPage({
     ...new Set(((makeData ?? []) as { make: string }[]).map((m) => m.make)),
   ].sort();
 
-  // First photo per listing, one query.
+  // First photo per listing, one query — and the seller line's names,
+  // because a card with a dealership on it reads more trustworthy than an
+  // anonymous one (Concept A's rule: the seller is part of the product).
   const ids = listings.map((l) => l.id);
   const photosByListing = new Map<string, string>();
+  const sellersById = new Map<string, { name: string | null; city: string | null }>();
   if (ids.length > 0) {
-    const { data: photoData } = await supabase
-      .from("listing_photos")
-      .select("listing_id, storage_path, sort_order")
-      .in("listing_id", ids)
-      .order("sort_order");
+    const [{ data: photoData }, { data: sellerData }] = await Promise.all([
+      supabase
+        .from("listing_photos")
+        .select("listing_id, storage_path, sort_order")
+        .in("listing_id", ids)
+        .order("sort_order"),
+      supabase
+        .from("profiles")
+        .select("id, display_name, city")
+        .in("id", [...new Set(listings.map((l) => l.seller_id))]),
+    ]);
     for (const p of (photoData ?? []) as ListingPhoto[]) {
       if (!photosByListing.has(p.listing_id)) {
         photosByListing.set(p.listing_id, p.storage_path);
       }
+    }
+    for (const s of (sellerData ?? []) as {
+      id: string;
+      display_name: string | null;
+      city: string | null;
+    }[]) {
+      sellersById.set(s.id, { name: s.display_name, city: s.city });
     }
   }
 
@@ -144,47 +156,28 @@ export default async function CarsPage({
           </p>
         </div>
       ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {listings.map((l) => {
-            const photo = photosByListing.get(l.id);
-            return (
-              <Link
-                key={l.id}
-                href={`/cars/${l.slug}`}
-                className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition-shadow hover:shadow-md"
-              >
-                <div className="aspect-[4/3] bg-slate-100">
-                  {photo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={photoUrl(photo)}
-                      alt={`${l.year} ${l.make} ${l.model}`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-4xl">
-                      🚗
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="font-semibold text-slate-900 group-hover:text-blue-600">
-                    {l.year} {l.make} {l.model}
-                    {l.trim_level ? ` ${l.trim_level}` : ""}
-                  </div>
-                  <div className="mt-1 flex items-baseline justify-between">
-                    <span className="text-lg font-bold text-slate-900">
-                      {formatPrice(l.price)}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {formatMileage(l.mileage)}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+        <>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {listings.map((l) => {
+              const seller = sellersById.get(l.seller_id);
+              return (
+                <ListingCard
+                  key={l.id}
+                  listing={l}
+                  photoPath={photosByListing.get(l.id) ?? null}
+                  sellerName={seller?.name}
+                  sellerCity={seller?.city}
+                />
+              );
+            })}
+          </div>
+          <p className="mt-6 text-[11px] text-slate-400">
+            Monthly estimates assume ${DEFAULT_ESTIMATE.down.toLocaleString("en-US")}{" "}
+            down, {DEFAULT_ESTIMATE.termMonths} months, {DEFAULT_ESTIMATE.apr}%
+            APR — estimates only, never an offer of credit. Open any car to run
+            your own numbers.
+          </p>
+        </>
       )}
     </main>
   );

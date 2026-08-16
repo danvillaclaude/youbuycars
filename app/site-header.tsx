@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { SITE } from "@/lib/site";
 
 /**
  * The storefront's masthead, on every page. Server-rendered: it knows
@@ -49,12 +50,19 @@ export async function SiteHeader() {
               My listings
             </Link>
           ) : (
-            <Link
-              href="/login"
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50"
-            >
-              Sign in
-            </Link>
+            <>
+              <Link href="/login" className="hover:text-slate-900">
+                Sign in
+              </Link>
+              {/* Concept A's masthead CTA — the storefront's whole pitch
+                  in one button, the same line every page already texts. */}
+              <a
+                href={`sms:${SITE.phoneE164}`}
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-white hover:bg-blue-700"
+              >
+                Text us
+              </a>
+            </>
           )}
         </nav>
       </div>

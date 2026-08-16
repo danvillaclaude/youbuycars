@@ -1,0 +1,107 @@
+"use client";
+
+import { useState } from "react";
+import {
+  CREDIT_BANDS,
+  DEFAULT_ESTIMATE,
+  monthlyPayment,
+  TERM_OPTIONS,
+} from "@/lib/payments";
+
+/**
+ * The finance calculator (Phase 2, the owner's spec from the mockup round:
+ * down-payment slider, term, and a "how's your credit?" picker that moves
+ * the assumed APR band). Lives on every listing page.
+ *
+ * Compliance posture, deliberate and visible: every word around the number
+ * says ESTIMATE — never an offer, a quote, or an approval — and the only
+ * call to action is a text to the seller. The math is real amortization
+ * from lib/payments.ts, the same module the cards' est./mo uses.
+ */
+export function PaymentCalculator({
+  price,
+  smsHref,
+}: {
+  price: number;
+  /** The listing's text CTA (seller-direct or the platform line). */
+  smsHref: string;
+}) {
+  const [down, setDown] = useState(Math.min(DEFAULT_ESTIMATE.down, price));
+  const [term, setTerm] = useState<number>(DEFAULT_ESTIMATE.termMonths);
+  const [apr, setApr] = useState<number>(DEFAULT_ESTIMATE.apr);
+
+  const maxDown = Math.max(0, Math.min(Math.round(price * 0.5), 20000));
+  const monthly = Math.round(monthlyPayment(Math.max(0, price - down), apr, term));
+
+  const chip = (on: boolean) =>
+    `rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors ${
+      on
+        ? "border-blue-600 bg-blue-50 text-blue-700"
+        : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
+    }`;
+
+  return (
+    <section id="calculator" className="mt-10 max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="text-base font-bold text-slate-900">
+        Estimate your payment
+      </h2>
+      <div className="mt-2 text-4xl font-extrabold tracking-tight text-green-700 tabular-nums">
+        ${monthly.toLocaleString("en-US")}
+        <span className="text-base font-semibold text-slate-400">/mo</span>
+      </div>
+
+      <label className="mt-5 block text-xs font-semibold text-slate-700">
+        Down payment —{" "}
+        <span className="tabular-nums">${down.toLocaleString("en-US")}</span>
+      </label>
+      <input
+        type="range"
+        min={0}
+        max={maxDown}
+        step={250}
+        value={down}
+        onChange={(e) => setDown(Number(e.target.value))}
+        className="mt-1 w-full accent-blue-600"
+      />
+      <div className="flex justify-between text-[11px] text-slate-400 tabular-nums">
+        <span>$0</span>
+        <span>${maxDown.toLocaleString("en-US")}</span>
+      </div>
+
+      <div className="mt-4 text-xs font-semibold text-slate-700">Term</div>
+      <div className="mt-1 grid grid-cols-4 gap-1.5">
+        {TERM_OPTIONS.map((n) => (
+          <button key={n} type="button" onClick={() => setTerm(n)} className={chip(term === n)}>
+            {n} mo
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 text-xs font-semibold text-slate-700">
+        How&apos;s your credit?
+      </div>
+      <div className="mt-1 grid grid-cols-4 gap-1.5">
+        {CREDIT_BANDS.map((b) => (
+          <button key={b.label} type="button" onClick={() => setApr(b.apr)} className={chip(apr === b.apr)}>
+            {b.label}
+          </button>
+        ))}
+      </div>
+
+      <a
+        href={smsHref}
+        className="mt-5 block rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
+      >
+        💬 Text the seller about financing
+      </a>
+
+      <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+        Estimate only — not an offer of credit, a quote, or an approval. Your
+        rate and payment are set by a lender after an application. Taxes,
+        title and fees not included. Assumed APR{" "}
+        <span className="tabular-nums">{apr.toFixed(1)}%</span> based on the
+        credit range you picked.
+      </p>
+    </section>
+  );
+}
