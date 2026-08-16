@@ -29,14 +29,18 @@ async function loadListing(slug: string) {
       .order("sort_order"),
     supabase
       .from("profiles")
-      .select("display_name, public_slug")
+      .select("display_name, public_slug, phone")
       .eq("id", listing.seller_id)
       .maybeSingle(),
   ]);
   return {
     listing,
     photos: (photoData ?? []) as ListingPhoto[],
-    seller: sellerData as { display_name: string | null; public_slug: string | null } | null,
+    seller: sellerData as {
+      display_name: string | null;
+      public_slug: string | null;
+      phone: string | null;
+    } | null,
   };
 }
 
@@ -184,31 +188,64 @@ export default async function ListingPage({
         </p>
       )}
 
-      {!sold && (
-        <div className="mt-8 flex flex-wrap gap-3">
-          <a
-            href={`sms:${SITE.phoneE164}?&body=${askAbout}`}
-            className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            Text us about this car
-          </a>
-          <Link
-            href={`/?about=${askAbout}#inquiry`}
-            className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Ask by form instead
-          </Link>
-        </div>
-      )}
-      {!sold && (
-        <p className="mt-3 text-xs text-slate-400">
-          Texting us first is your consent to receive our replies — reply STOP
-          anytime.{" "}
-          <Link href="/sms-consent" className="underline">
-            How texting consent works.
-          </Link>
-        </p>
-      )}
+      {/*
+        Contact (15 Aug 2026, the owner's ask): the SELLER's own number
+        when they've published one on their profile — call, text, and the
+        number in plain sight, CarGurus-style — with the YouBuyCars line
+        as the fallback for sellers who haven't. Buyer-initiated contact
+        carries its own consent, which is why the text button needs no
+        opt-in machinery; the note under it says so plainly.
+      */}
+      {!sold && seller?.phone ? (
+        <>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <a
+              href={`sms:${seller.phone.replace(/[^\d+]/g, "")}?&body=${askAbout}`}
+              className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Text about this car
+            </a>
+            <a
+              href={`tel:${seller.phone.replace(/[^\d+]/g, "")}`}
+              className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              📞 Call {seller.display_name ?? "the seller"}
+            </a>
+            <span className="text-sm font-semibold text-slate-600">
+              {seller.phone}
+            </span>
+          </div>
+          <p className="mt-3 text-xs text-slate-400">
+            You&apos;re contacting the seller directly. Texting or calling
+            them first is your consent to hear back about this car — reply
+            STOP to any text to stop them.
+          </p>
+        </>
+      ) : !sold ? (
+        <>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href={`sms:${SITE.phoneE164}?&body=${askAbout}`}
+              className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Text us about this car
+            </a>
+            <Link
+              href={`/?about=${askAbout}#inquiry`}
+              className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Ask by form instead
+            </Link>
+          </div>
+          <p className="mt-3 text-xs text-slate-400">
+            Texting us first is your consent to receive our replies — reply
+            STOP anytime.{" "}
+            <Link href="/sms-consent" className="underline">
+              How texting consent works.
+            </Link>
+          </p>
+        </>
+      ) : null}
     </main>
   );
 }

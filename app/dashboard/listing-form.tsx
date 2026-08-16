@@ -162,8 +162,16 @@ export function ListingForm({
       </div>
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-slate-700">Description</span>
-        <textarea name="description" rows={5} maxLength={5000}
+        <span className="mb-1 block text-sm font-medium text-slate-700">
+          Description{" "}
+          <span className="font-normal text-slate-400">
+            (up to 5,500 characters — a little more room than Facebook
+            Marketplace gives you)
+          </span>
+        </span>
+        {/* 5,500 by the owner's rule: slightly above FBMP's 5,000, so a
+            description pasted from FBMP always fits with room to spare. */}
+        <textarea name="description" rows={5} maxLength={5500}
           placeholder="Condition, history, options, why it's a good one…"
           defaultValue={listing?.description ?? ""}
           className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />

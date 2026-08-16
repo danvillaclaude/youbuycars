@@ -13,7 +13,9 @@ const listingSchema = z.object({
   vin: z.string().trim().max(20).optional().or(z.literal("")),
   mileage: z.coerce.number().int().min(0).max(2_000_000),
   price: z.coerce.number().int().min(0).max(10_000_000),
-  description: z.string().trim().max(5000),
+  // 5,500: slightly above Facebook Marketplace's 5,000 (the owner's rule),
+  // so a description pasted from FBMP always fits with room to spare.
+  description: z.string().trim().max(5500),
 });
 
 export interface ListingResult {
