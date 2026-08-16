@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/auth";
@@ -129,6 +130,13 @@ export default async function SellerPage({
           </p>
         </div>
       </div>
+
+      <Link
+        href={`/messages/start?seller=${seller.id}`}
+        className="mt-5 inline-block rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
+      >
+        💬 Message {seller.display_name ?? "this seller"}
+      </Link>
 
       {seller.about && (
         <p className="mt-6 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-slate-600">

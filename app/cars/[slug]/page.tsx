@@ -246,6 +246,15 @@ export default async function ListingPage({
               </p>
             ))}
 
+          {!sold && (
+            <Link
+              href={`/messages/start?seller=${listing.seller_id}&listing=${listing.id}`}
+              className="mt-2 block rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-center text-sm font-semibold text-blue-700 hover:bg-blue-100"
+            >
+              💬 Message on-site — no phone needed
+            </Link>
+          )}
+
           {seller?.public_slug && (
             <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-4">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-sm font-extrabold text-blue-700">
