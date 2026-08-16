@@ -76,5 +76,11 @@ export async function submitInquiryAction(
     sms_consent: d.sms_consent,
   });
   if (error) return { ok: false, error: "Couldn't send that — try again." };
+  /*
+   * Delivery happens elsewhere, deliberately: this action runs on the
+   * PUBLIC roles, and the seller's email is column-revoked from them
+   * (0012). The CRM's every-minute puller — the only service-role
+   * reader — emails non-CRM sellers and stamps forwarded_at.
+   */
   return { ok: true };
 }
