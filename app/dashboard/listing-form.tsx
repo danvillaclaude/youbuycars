@@ -63,6 +63,7 @@ export function ListingForm({
       mileage: fd.get("mileage"),
       price: fd.get("price"),
       description: fd.get("description"),
+      financing_offered: fd.get("financing_offered") != null,
     };
     const files = (fd.getAll("photos") as File[]).filter((f) => f && f.size > 0);
 
@@ -175,6 +176,23 @@ export function ListingForm({
           placeholder="Condition, history, options, why it's a good one…"
           defaultValue={listing?.description ?? ""}
           className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
+      </label>
+
+      {/* The financing switch (0008) — off means no est./mo, no calculator. */}
+      <label className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          name="financing_offered"
+          defaultChecked={listing?.financing_offered ?? true}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
+        />
+        <span className="text-sm text-slate-700">
+          <span className="font-medium">Offer financing on this car</span>
+          <span className="block text-xs text-slate-500">
+            Shows an estimated monthly payment and the payment calculator on
+            your listing. Untick for a cash-only sale.
+          </span>
+        </span>
       </label>
 
       {photos.length > 0 && (

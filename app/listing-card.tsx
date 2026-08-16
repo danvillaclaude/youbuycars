@@ -51,9 +51,13 @@ export function ListingCard({
           <span className="text-lg font-extrabold tracking-tight text-slate-900 tabular-nums">
             {formatPrice(l.price)}
           </span>
-          <span className="text-xs font-semibold text-green-700 tabular-nums">
-            ${estimateMonthly(l.price).toLocaleString("en-US")}/mo est.
-          </span>
+          {/* Only when the seller actually offers financing (0008) — a
+              cash-only car must not wear a monthly payment. */}
+          {l.financing_offered && (
+            <span className="text-xs font-semibold text-green-700 tabular-nums">
+              ${estimateMonthly(l.price).toLocaleString("en-US")}/mo est.
+            </span>
+          )}
         </div>
         <div className="mt-0.5 text-sm font-semibold text-slate-900 group-hover:text-blue-700">
           {title}

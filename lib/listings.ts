@@ -15,6 +15,8 @@ export interface Listing {
   mileage: number;
   price: number;
   description: string;
+  /** The financing switch (0008): off hides the est./mo and calculator. */
+  financing_offered: boolean;
   status: "pending" | "active" | "rejected" | "sold";
   slug: string;
   rejected_reason: string | null;

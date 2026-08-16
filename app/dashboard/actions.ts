@@ -16,6 +16,8 @@ const listingSchema = z.object({
   // 5,500: slightly above Facebook Marketplace's 5,000 (the owner's rule),
   // so a description pasted from FBMP always fits with room to spare.
   description: z.string().trim().max(5500),
+  // The financing switch (0008): checkbox absence is a plain false.
+  financing_offered: z.boolean().default(true),
 });
 
 export interface ListingResult {
@@ -64,6 +66,7 @@ export async function createListingAction(
       mileage: d.mileage,
       price: d.price,
       description: d.description,
+      financing_offered: d.financing_offered,
       slug: makeSlug(d.year, d.make, d.model),
     })
     .select("id")
@@ -101,6 +104,7 @@ export async function updateListingAction(
       mileage: d.mileage,
       price: d.price,
       description: d.description,
+      financing_offered: d.financing_offered,
     })
     .eq("id", id);
   if (error) return { ok: false, error: error.message };

@@ -190,7 +190,7 @@ export default async function ListingPage({
           <div className="mt-3 text-[32px] font-extrabold leading-none tracking-tight text-slate-900 tabular-nums">
             {formatPrice(listing.price)}
           </div>
-          {!sold && (
+          {!sold && listing.financing_offered && (
             <p className="mt-1.5 text-sm font-semibold text-green-700 tabular-nums">
               ${estimateMonthly(listing.price).toLocaleString("en-US")}/mo est. ·{" "}
               <a href="#calculator" className="font-medium text-blue-600 underline">
@@ -278,7 +278,9 @@ export default async function ListingPage({
         </p>
       )}
 
-      {!sold && (
+      {/* The financing switch (0008): a seller who doesn't offer it shows
+          no calculator — the contact buttons are the whole pitch. */}
+      {!sold && listing.financing_offered && (
         <PaymentCalculator
           price={listing.price}
           smsHref={smsHref}
