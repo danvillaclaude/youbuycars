@@ -13,6 +13,8 @@ export interface Profile {
   about: string | null;
   city: string | null;
   logo_path: string | null;
+  /** Seller-wide financing switch (0009) — the master breaker. */
+  financing_offered: boolean;
   public_slug: string | null;
 }
 
@@ -27,7 +29,7 @@ export async function requireUser() {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, phone, is_admin, tier, approved_at, declined_at, suspended_at, about, city, logo_path, public_slug",
+      "id, display_name, phone, is_admin, tier, approved_at, declined_at, suspended_at, about, city, logo_path, public_slug, financing_offered",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -43,6 +45,7 @@ export async function requireUser() {
     about: null,
     city: null,
     logo_path: null,
+    financing_offered: true,
     public_slug: null,
   };
   return { supabase, user, profile };

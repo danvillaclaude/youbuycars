@@ -41,6 +41,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         phone: String(fd.get("phone") ?? ""),
         city: String(fd.get("city") ?? ""),
         about: String(fd.get("about") ?? ""),
+        financing_offered: fd.get("financing_offered") != null,
         logo_path: logoPath,
       });
       if (!res.ok) throw new Error(res.error);
@@ -111,6 +112,21 @@ export function ProfileForm({ profile }: { profile: Profile }) {
           placeholder="Who you are, what you sell, why buyers should trust you."
           defaultValue={profile.about ?? ""}
           className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
+      </label>
+
+      {/* The master financing breaker (0009): off hides est./mo and the
+          calculator on EVERY listing, whatever each listing's box says. */}
+      <label className="flex items-start gap-2">
+        <input type="checkbox" name="financing_offered"
+          defaultChecked={profile.financing_offered ?? true}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600" />
+        <span className="text-sm text-slate-700">
+          <span className="font-medium">Offer financing</span>
+          <span className="block text-xs text-slate-500">
+            Off = every one of your listings shows no monthly estimate and no
+            payment calculator, regardless of each listing's own setting.
+          </span>
+        </span>
       </label>
 
       <button disabled={busy}

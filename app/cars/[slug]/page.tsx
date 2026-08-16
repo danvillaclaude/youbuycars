@@ -32,7 +32,7 @@ async function loadListing(slug: string) {
       .order("sort_order"),
     supabase
       .from("profiles")
-      .select("display_name, public_slug, phone, city")
+      .select("display_name, public_slug, phone, city, financing_offered")
       .eq("id", listing.seller_id)
       .maybeSingle(),
   ]);
@@ -44,6 +44,7 @@ async function loadListing(slug: string) {
       public_slug: string | null;
       phone: string | null;
       city: string | null;
+      financing_offered: boolean;
     } | null,
   };
 }
@@ -80,6 +81,8 @@ export default async function ListingPage({
   const { listing, photos, seller } = found;
   const name = `${listing.year} ${listing.make} ${listing.model}${listing.trim_level ? ` ${listing.trim_level}` : ""}`;
   const sold = listing.status === "sold";
+  // The master breaker AND the listing's own box (0008/0009).
+  const financed = listing.financing_offered && (seller?.financing_offered ?? true);
 
   // schema.org Vehicle — the structured data the spec wants on every
   // listing from day one.
@@ -190,7 +193,7 @@ export default async function ListingPage({
           <div className="mt-3 text-[32px] font-extrabold leading-none tracking-tight text-slate-900 tabular-nums">
             {formatPrice(listing.price)}
           </div>
-          {!sold && listing.financing_offered && (
+          {!sold && financed && (
             <p className="mt-1.5 text-sm font-semibold text-green-700 tabular-nums">
               ${estimateMonthly(listing.price).toLocaleString("en-US")}/mo est. ·{" "}
               <a href="#calculator" className="font-medium text-blue-600 underline">
@@ -280,7 +283,7 @@ export default async function ListingPage({
 
       {/* The financing switch (0008): a seller who doesn't offer it shows
           no calculator — the contact buttons are the whole pitch. */}
-      {!sold && listing.financing_offered && (
+      {!sold && financed && (
         <PaymentCalculator
           price={listing.price}
           smsHref={smsHref}

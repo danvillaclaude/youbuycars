@@ -8,6 +8,7 @@ import {
   type ListingPhoto,
 } from "@/lib/listings";
 import { ListingCard } from "@/app/listing-card";
+import { ReviewForm } from "./review-form";
 
 async function loadSeller(slug: string) {
   const supabase = await createClient();
@@ -16,13 +17,13 @@ async function loadSeller(slug: string) {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, phone, about, city, logo_path, public_slug, tier",
+      "id, display_name, phone, about, city, logo_path, public_slug, tier, financing_offered",
     )
     .eq("public_slug", slug)
     .maybeSingle();
   return data as Pick<
     Profile,
-    "id" | "display_name" | "phone" | "about" | "city" | "logo_path" | "public_slug" | "tier"
+    "id" | "display_name" | "phone" | "about" | "city" | "logo_path" | "public_slug" | "tier" | "financing_offered"
   > | null;
 }
 
@@ -61,6 +62,26 @@ export default async function SellerPage({
     .order("created_at", { ascending: false });
   const listings = (listingData ?? []) as Listing[];
 
+  // Approved reviews only — RLS is the guarantee. Columns deliberately
+  // exclude the reviewer's phone; that's the desk's alone (0009).
+  const { data: reviewData } = await supabase
+    .from("seller_reviews")
+    .select("id, reviewer_name, rating, body, created_at")
+    .eq("seller_id", seller.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  const reviews = (reviewData ?? []) as {
+    id: string;
+    reviewer_name: string;
+    rating: number;
+    body: string;
+    created_at: string;
+  }[];
+  const avg =
+    reviews.length > 0
+      ? reviews.reduce((t, r) => t + r.rating, 0) / reviews.length
+      : null;
+
   const photosByListing = new Map<string, string>();
   if (listings.length > 0) {
     const { data: photoData } = await supabase
@@ -93,6 +114,14 @@ export default async function SellerPage({
         <div>
           <h1 className="text-3xl font-bold">{seller.display_name}</h1>
           <p className="mt-1 text-sm text-slate-500">
+            {avg != null && (
+              <span className="mr-1.5 font-semibold text-amber-500">
+                ★ {avg.toFixed(1)}
+                <span className="font-normal text-slate-400">
+                  {" "}({reviews.length})
+                </span>
+              </span>
+            )}
             {seller.city ? `${seller.city} · ` : ""}
             {listings.length} car{listings.length === 1 ? "" : "s"} for sale
             {seller.phone ? ` · ${seller.phone}` : ""}
@@ -119,10 +148,55 @@ export default async function SellerPage({
               listing={l}
               photoPath={photosByListing.get(l.id) ?? null}
               sellerCity={seller.city}
+              sellerFinancing={seller.financing_offered}
             />
           ))}
         </div>
       )}
+
+      {/* Ratings (0009): approved reviews, then the door to add one. */}
+      <h2 className="mt-12 text-lg font-bold">Reviews</h2>
+      {reviews.length === 0 ? (
+        <p className="mt-2 text-sm text-slate-500">
+          No reviews yet — dealt with {seller.display_name ?? "this seller"}?
+          Be the first.
+        </p>
+      ) : (
+        <div className="mt-4 max-w-2xl space-y-4">
+          {reviews.map((r) => (
+            <div key={r.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-sm font-semibold text-slate-900">
+                  {r.reviewer_name}
+                </span>
+                <span className="text-sm font-semibold text-amber-500">
+                  {"★".repeat(r.rating)}
+                  <span className="text-slate-200">{"★".repeat(5 - r.rating)}</span>
+                </span>
+              </div>
+              {r.body && (
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                  {r.body}
+                </p>
+              )}
+              <p className="mt-1.5 text-[11px] text-slate-400">
+                Verified contact ·{" "}
+                {new Date(r.created_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="mt-5">
+        <ReviewForm sellerId={seller.id} />
+      </div>
+      <p className="mt-3 max-w-2xl text-[11px] text-slate-400">
+        Every review is verified against real contact with the seller before
+        it appears — no drive-by ratings.
+      </p>
     </main>
   );
 }

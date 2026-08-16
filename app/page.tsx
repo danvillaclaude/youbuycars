@@ -41,9 +41,14 @@ export default async function HomePage({
   ].sort();
 
   const photosByListing = new Map<string, string>();
-  const sellersById = new Map<string, { name: string | null; city: string | null }>();
+  const sellersById = new Map<
+    string,
+    { name: string | null; city: string | null; financing: boolean }
+  >();
+  const ratingBySeller = new Map<string, { avg: number; count: number }>();
   if (latest.length > 0) {
-    const [{ data: photoData }, { data: sellerData }] = await Promise.all([
+    const sellerIds = [...new Set(latest.map((l) => l.seller_id))];
+    const [{ data: photoData }, { data: sellerData }, { data: reviewData }] = await Promise.all([
       supabase
         .from("listing_photos")
         .select("listing_id, storage_path, sort_order")
@@ -51,8 +56,12 @@ export default async function HomePage({
         .order("sort_order"),
       supabase
         .from("profiles")
-        .select("id, display_name, city")
-        .in("id", [...new Set(latest.map((l) => l.seller_id))]),
+        .select("id, display_name, city, financing_offered")
+        .in("id", sellerIds),
+      supabase
+        .from("seller_reviews")
+        .select("seller_id, rating")
+        .in("seller_id", sellerIds),
     ]);
     for (const p of (photoData ?? []) as ListingPhoto[]) {
       if (!photosByListing.has(p.listing_id)) {
@@ -63,8 +72,23 @@ export default async function HomePage({
       id: string;
       display_name: string | null;
       city: string | null;
+      financing_offered: boolean;
     }[]) {
-      sellersById.set(s.id, { name: s.display_name, city: s.city });
+      sellersById.set(s.id, {
+        name: s.display_name,
+        city: s.city,
+        financing: s.financing_offered,
+      });
+    }
+    const sums = new Map<string, { total: number; count: number }>();
+    for (const r of (reviewData ?? []) as { seller_id: string; rating: number }[]) {
+      const cur = sums.get(r.seller_id) ?? { total: 0, count: 0 };
+      cur.total += r.rating;
+      cur.count++;
+      sums.set(r.seller_id, cur);
+    }
+    for (const [id, v] of sums) {
+      ratingBySeller.set(id, { avg: v.total / v.count, count: v.count });
     }
   }
 
@@ -135,6 +159,45 @@ export default async function HomePage({
         </div>
       </section>
 
+      {/* Shop-by-style tiles + the trust strip — the premium furniture the
+          big sites teach shoppers to expect. Tiles are just searches. */}
+      <section className="mx-auto max-w-5xl px-6 pt-10">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { label: "SUVs & Crossovers", href: "/cars?q=Equinox", art: "M8 34c-3 0-5-2-5-5 0-2 2-4 4-5l8-2 6-9c2-3 5-4 8-4h18c3 0 6 1 8 4l7 9 11 2c3 1 5 3 5 5 0 3-2 5-5 5" },
+            { label: "Trucks", href: "/cars?q=F-150", art: "M6 34c-2 0-4-2-4-4s1-4 3-4l9-2 5-8c1-2 3-3 6-3h14v13h26c3 0 5 2 5 4s-1 4-3 4" },
+            { label: "Sedans", href: "/cars?q=Accord", art: "M7 33c-3 0-5-2-5-4s2-4 4-4l9-3 8-8c2-2 4-3 7-3h16c3 0 5 1 7 3l8 8 10 3c2 0 4 2 4 4s-2 4-5 4" },
+            { label: "Under $15k", href: "/cars?max_price=15000", art: null },
+          ].map((t) => (
+            <Link
+              key={t.label}
+              href={t.href}
+              className="group flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
+            >
+              {t.art ? (
+                <svg viewBox="0 0 80 44" className="h-9 w-16 text-slate-400 group-hover:text-blue-600" fill="none">
+                  <path d={t.art} stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  <circle cx="24" cy="34" r="6" stroke="currentColor" strokeWidth="3" />
+                  <circle cx="58" cy="34" r="6" stroke="currentColor" strokeWidth="3" />
+                </svg>
+              ) : (
+                <span className="flex h-9 items-center text-2xl font-extrabold text-slate-400 group-hover:text-blue-600">
+                  $
+                </span>
+              )}
+              <span className="text-xs font-semibold text-slate-700 group-hover:text-blue-700">
+                {t.label}
+              </span>
+            </Link>
+          ))}
+        </div>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs font-medium text-slate-500">
+          <span>✓ Every listing reviewed before it goes live</span>
+          <span>✓ Text the seller — no phone tag, no pressure</span>
+          <span>✓ Local Metro Detroit cars and dealers</span>
+        </div>
+      </section>
+
       {/* Real inventory above the fold — the CarGurus move. */}
       {latest.length > 0 && (
         <section className="mx-auto max-w-5xl px-6 py-12">
@@ -159,6 +222,8 @@ export default async function HomePage({
                   photoPath={photosByListing.get(l.id) ?? null}
                   sellerName={seller?.name}
                   sellerCity={seller?.city}
+                  sellerFinancing={seller?.financing ?? true}
+                  sellerRating={ratingBySeller.get(l.seller_id) ?? null}
                 />
               );
             })}

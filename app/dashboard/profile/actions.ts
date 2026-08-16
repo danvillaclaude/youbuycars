@@ -11,6 +11,7 @@ const schema = z.object({
   city: z.string().trim().max(80).optional().or(z.literal("")),
   about: z.string().trim().max(2000).optional().or(z.literal("")),
   logo_path: z.string().max(200).optional(),
+  financing_offered: z.boolean().default(true),
 });
 
 export async function saveProfileAction(
@@ -40,6 +41,7 @@ export async function saveProfileAction(
       phone: d.phone || null,
       city: d.city || null,
       about: d.about || null,
+      financing_offered: d.financing_offered,
       ...(d.logo_path ? { logo_path: d.logo_path } : {}),
       public_slug,
     })

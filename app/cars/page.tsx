@@ -48,9 +48,14 @@ export default async function CarsPage({
   // anonymous one (Concept A's rule: the seller is part of the product).
   const ids = listings.map((l) => l.id);
   const photosByListing = new Map<string, string>();
-  const sellersById = new Map<string, { name: string | null; city: string | null }>();
+  const sellersById = new Map<
+    string,
+    { name: string | null; city: string | null; financing: boolean }
+  >();
+  const ratingBySeller = new Map<string, { avg: number; count: number }>();
   if (ids.length > 0) {
-    const [{ data: photoData }, { data: sellerData }] = await Promise.all([
+    const sellerIds = [...new Set(listings.map((l) => l.seller_id))];
+    const [{ data: photoData }, { data: sellerData }, { data: reviewData }] = await Promise.all([
       supabase
         .from("listing_photos")
         .select("listing_id, storage_path, sort_order")
@@ -58,8 +63,13 @@ export default async function CarsPage({
         .order("sort_order"),
       supabase
         .from("profiles")
-        .select("id, display_name, city")
-        .in("id", [...new Set(listings.map((l) => l.seller_id))]),
+        .select("id, display_name, city, financing_offered")
+        .in("id", sellerIds),
+      // RLS surfaces approved reviews only — the average is honest by law.
+      supabase
+        .from("seller_reviews")
+        .select("seller_id, rating")
+        .in("seller_id", sellerIds),
     ]);
     for (const p of (photoData ?? []) as ListingPhoto[]) {
       if (!photosByListing.has(p.listing_id)) {
@@ -70,8 +80,23 @@ export default async function CarsPage({
       id: string;
       display_name: string | null;
       city: string | null;
+      financing_offered: boolean;
     }[]) {
-      sellersById.set(s.id, { name: s.display_name, city: s.city });
+      sellersById.set(s.id, {
+        name: s.display_name,
+        city: s.city,
+        financing: s.financing_offered,
+      });
+    }
+    const sums = new Map<string, { total: number; count: number }>();
+    for (const r of (reviewData ?? []) as { seller_id: string; rating: number }[]) {
+      const cur = sums.get(r.seller_id) ?? { total: 0, count: 0 };
+      cur.total += r.rating;
+      cur.count++;
+      sums.set(r.seller_id, cur);
+    }
+    for (const [id, v] of sums) {
+      ratingBySeller.set(id, { avg: v.total / v.count, count: v.count });
     }
   }
 
@@ -167,6 +192,8 @@ export default async function CarsPage({
                   photoPath={photosByListing.get(l.id) ?? null}
                   sellerName={seller?.name}
                   sellerCity={seller?.city}
+                  sellerFinancing={seller?.financing ?? true}
+                  sellerRating={ratingBySeller.get(l.seller_id) ?? null}
                 />
               );
             })}

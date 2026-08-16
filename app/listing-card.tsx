@@ -18,11 +18,17 @@ export function ListingCard({
   photoPath,
   sellerName,
   sellerCity,
+  sellerFinancing = true,
+  sellerRating = null,
 }: {
   listing: Listing;
   photoPath: string | null;
   sellerName?: string | null;
   sellerCity?: string | null;
+  /** The seller-wide master breaker (0009) — off beats the listing's own. */
+  sellerFinancing?: boolean;
+  /** Approved-review average, when the seller has any (0009). */
+  sellerRating?: { avg: number; count: number } | null;
 }) {
   const title = `${l.year} ${l.make} ${l.model}${l.trim_level ? ` ${l.trim_level}` : ""}`;
   const sellerLine = [sellerName, sellerCity].filter(Boolean).join(" · ");
@@ -53,7 +59,7 @@ export function ListingCard({
           </span>
           {/* Only when the seller actually offers financing (0008) — a
               cash-only car must not wear a monthly payment. */}
-          {l.financing_offered && (
+          {l.financing_offered && sellerFinancing && (
             <span className="text-xs font-semibold text-green-700 tabular-nums">
               ${estimateMonthly(l.price).toLocaleString("en-US")}/mo est.
             </span>
@@ -66,8 +72,14 @@ export function ListingCard({
           {formatMileage(l.mileage)}
           {l.vin ? " · VIN on file" : ""}
         </div>
-        {sellerLine && (
+        {(sellerLine || sellerRating) && (
           <div className="mt-2 border-t border-slate-100 pt-2 text-[11px] text-slate-400">
+            {sellerRating && (
+              <span className="mr-1.5 font-semibold text-amber-500">
+                ★ {sellerRating.avg.toFixed(1)}
+                <span className="font-normal text-slate-400"> ({sellerRating.count})</span>
+              </span>
+            )}
             {sellerLine}
           </div>
         )}
