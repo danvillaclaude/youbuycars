@@ -13,12 +13,13 @@ function PersonIcon() {
 }
 
 /**
- * The storefront's masthead — FLOATING now (his ask, from CarGurus'
- * mobile header: "a floating nav header with a hamburger menu, likes
- * and login buttons. I really want that"): sticky at every width.
- * Mobile is icons only — heart, person, hamburger — with every text
- * destination living in the drawer; desktop keeps the text links
- * beside the same icons. Server-rendered: it knows whether you're
+ * The storefront's masthead — his exact spec, refined twice the same
+ * evening: "a floating nav header with a hamburger menu, likes and
+ * login buttons... the youbuycars logo in the center and the hamburger
+ * menu button on the left. basically a copycat of cargurus floating
+ * header nav." So it is: sticky at EVERY width, hamburger left, logo
+ * absolutely centered, heart + person right — no text links anywhere;
+ * the drawer IS the nav. Server-rendered: it knows whether you're
  * signed in, and whether you're the admin.
  */
 export async function SiteHeader() {
@@ -39,31 +40,21 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:gap-5 sm:px-6">
-        <Link href="/" className="shrink-0 text-lg font-bold text-slate-900">
+      <div className="relative mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
+        {/* Left: the hamburger — the whole nav lives in its drawer. */}
+        <MenuDrawer signedIn={Boolean(user)} isAdmin={isAdmin} />
+
+        {/* Center: the wordmark, absolutely centered so the sides can't
+            push it around. */}
+        <Link
+          href="/"
+          className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-slate-900"
+        >
           You<span className="text-blue-600">Buy</span>Cars
         </Link>
 
-        <nav className="hidden flex-1 items-center gap-4 whitespace-nowrap text-sm font-medium text-slate-600 sm:flex">
-          <Link href="/cars" className="hover:text-slate-900">
-            Browse cars
-          </Link>
-          <Link href="/sell" className="hover:text-slate-900">
-            Sell your car
-          </Link>
-          <Link href="/compare" className="hover:text-slate-900">
-            Compare
-          </Link>
-          {isAdmin && (
-            <Link href="/admin" className="hover:text-slate-900">
-              Approvals
-            </Link>
-          )}
-        </nav>
-        <span className="flex-1 sm:hidden" />
-
+        {/* Right: likes and login. */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {/* Likes — the saved-cars shortlist, count live. */}
           <Link
             href="/saved"
             aria-label="Saved cars"
@@ -71,7 +62,6 @@ export async function SiteHeader() {
           >
             <SavedCount />
           </Link>
-          {/* Login — or the dashboard once you're in. */}
           <Link
             href={user ? "/dashboard" : "/login"}
             aria-label={user ? "My listings" : "Sign in"}
@@ -79,7 +69,6 @@ export async function SiteHeader() {
           >
             <PersonIcon />
           </Link>
-          <MenuDrawer signedIn={Boolean(user)} isAdmin={isAdmin} />
         </div>
       </div>
     </header>
