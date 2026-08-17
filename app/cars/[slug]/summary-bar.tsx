@@ -28,14 +28,35 @@ export function SummaryBar({
   const sentinel = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
 
+  /*
+   * A scroll listener, deliberately NOT an IntersectionObserver: the
+   * observer only fires when the sentinel CROSSES the viewport, so a
+   * jump scroll (Home key, an anchor link) that leaps from "below the
+   * fold" to "above the top" in one frame never changes the intersection
+   * state — and the bar sticks. Shipped that way once; caught the same
+   * day. Reading the rect on scroll, rAF-throttled, has no such gap.
+   */
   useEffect(() => {
     const el = sentinel.current;
     if (!el) return;
-    const io = new IntersectionObserver(([entry]) => {
-      setShown(!entry.isIntersecting && entry.boundingClientRect.top < 0);
-    });
-    io.observe(el);
-    return () => io.disconnect();
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      setShown(el.getBoundingClientRect().top < 0);
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   return (
