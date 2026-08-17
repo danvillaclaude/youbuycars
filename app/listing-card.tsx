@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatMileage, formatPrice, photoUrl, type Listing } from "@/lib/listings";
 import { estimateMonthly } from "@/lib/payments";
+import { SaveHeart } from "@/app/save-heart";
 
 /**
  * The Concept A card ("Showroom Daylight", the owner's pick from the Phase 2
@@ -43,7 +44,10 @@ export function ListingCard({
          get one instant border step, no shadow bloom, no photo zoom. */
       className="group overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-slate-300"
     >
-      <div className="aspect-[4/3] bg-slate-100">
+      <div className="relative aspect-[4/3] bg-slate-100">
+        {/* The teardown's card anatomy, completed: the circular save
+            heart floating over the photo. */}
+        <SaveHeart slug={l.slug} className="absolute right-2 top-2 z-10" />
         {photoPath ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

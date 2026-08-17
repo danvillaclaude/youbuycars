@@ -66,7 +66,9 @@ export function SummaryBar({
     <>
       <div ref={sentinel} aria-hidden />
       {shown && (
-        <div className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+        /* top-14: the masthead is sticky now (his floating-header ask),
+           so the summary bar docks BELOW it, never over it. */
+        <div className="fixed inset-x-0 top-14 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
           <div className="mx-auto flex max-w-5xl items-center gap-3 px-6 py-2">
             {photoUrl && (
               // eslint-disable-next-line @next/next/no-img-element

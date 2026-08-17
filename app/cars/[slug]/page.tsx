@@ -19,6 +19,7 @@ import { ContactBox } from "./contact-box";
 import { Gallery } from "./gallery";
 import { SummaryBar } from "./summary-bar";
 import { ExpandText } from "@/app/expand-text";
+import { SaveHeart } from "@/app/save-heart";
 
 async function loadListing(slug: string) {
   const supabase = await createClient();
@@ -210,7 +211,10 @@ export default async function ListingPage({
         </div>
 
         <div className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="text-xl font-bold text-slate-900">{name}</h1>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-xl font-bold text-slate-900">{name}</h1>
+            <SaveHeart slug={listing.slug} className="-mr-1 -mt-1 shrink-0" />
+          </div>
           <p className="mt-0.5 text-xs text-slate-500">
             {formatMileage(listing.mileage)}
             {listing.vin ? ` · VIN ${listing.vin}` : ""}
