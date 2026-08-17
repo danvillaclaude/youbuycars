@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -84,7 +85,12 @@ export function MenuDrawer({
         <span className="h-0.5 w-5 rounded bg-current" />
       </button>
 
-      {open && (
+      {/* PORTALED to <body> (his report: "the hamburger button isn't
+          working"): the sticky header's backdrop-blur makes the header
+          the containing block for fixed descendants, so a drawer
+          rendered inside it was clipped into the 56px bar. From the
+          body, fixed means the viewport again. */}
+      {open && createPortal(
         <div className="fixed inset-0 z-[70]">
           <button
             aria-label="Close menu"
@@ -161,7 +167,8 @@ export function MenuDrawer({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
