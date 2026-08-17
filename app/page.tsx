@@ -110,16 +110,18 @@ export default async function HomePage({
             sitting at a dealership all day.
           </p>
 
-          {/* The search bar — a plain GET straight onto the browse board. */}
+          {/* The search bar — a plain GET straight onto the browse board.
+              A clean full-width stack on phones (his report: the wrap was
+              ragged), the one-row pill bar from sm up. */}
           <form
             action="/cars"
             method="get"
-            className="mx-auto mt-8 flex max-w-2xl flex-wrap items-stretch gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg shadow-blue-900/5"
+            className="mx-auto mt-8 grid max-w-2xl gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg shadow-blue-900/5 sm:flex sm:flex-wrap sm:items-stretch"
           >
             <select
               name="make"
               defaultValue=""
-              className="rounded-full border-0 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700"
+              className="w-full rounded-full border-0 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 sm:w-auto"
             >
               <option value="">All makes</option>
               {makes.map((m) => (
@@ -131,16 +133,16 @@ export default async function HomePage({
             <input
               name="q"
               placeholder="Model or keyword — Equinox, F-150…"
-              className="min-w-40 flex-1 rounded-full border-0 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+              className="w-full rounded-full border-0 bg-slate-50 px-4 py-3 text-sm text-slate-700 sm:min-w-40 sm:w-auto sm:flex-1"
             />
             <input
               name="max_price"
               type="number"
               min={0}
               placeholder="Max $"
-              className="w-24 rounded-full border-0 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+              className="w-full rounded-full border-0 bg-slate-50 px-4 py-3 text-sm text-slate-700 sm:w-24"
             />
-            <button className="rounded-full bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-700">
+            <button className="w-full rounded-full bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-700 sm:w-auto">
               Search
             </button>
           </form>
@@ -273,21 +275,58 @@ export default async function HomePage({
         </PromoSplit>
       </section>
 
-      {/* Text-us-first — the second registered opt-in path. */}
-      <section className="bg-blue-600 px-6 py-12 text-center text-white">
-        <p className="text-xs font-semibold uppercase tracking-widest text-blue-200">
-          Prefer to skip the form?
-        </p>
-        <p className="mt-3 text-3xl font-bold sm:text-4xl">
-          Text <span className="rounded-lg bg-blue-500 px-2">START</span> to{" "}
-          <a href={`sms:${SITE.phoneE164}`} className="underline">
-            {SITE.phoneDisplay}
-          </a>
-        </p>
-        <p className="mt-2 text-blue-100">
-          and a real person will text you back about your next car.
-        </p>
-        <p className="mx-auto mt-6 max-w-2xl text-xs leading-relaxed text-blue-200">
+      {/* Text-us-first — the second registered opt-in path. Restyled to
+          the accent-sky band CarGurus uses (pale stripe, navy headline,
+          product proof beside it) — the loud blue slab read as an ad, not
+          a premium marketplace. EVERY registered sentence is verbatim;
+          only the frame changed, same rule as the Concept A rebuild. */}
+      <section className="bg-sky-50 px-6 py-14">
+        <div className="mx-auto grid max-w-5xl items-center gap-8 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-blue-600">
+              Prefer to skip the form?
+            </p>
+            <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+              Text <span className="rounded-lg bg-white px-2 text-blue-600 shadow-sm">START</span> to{" "}
+              <a href={`sms:${SITE.phoneE164}`} className="whitespace-nowrap underline decoration-blue-300 underline-offset-4 hover:decoration-blue-600">
+                {SITE.phoneDisplay}
+              </a>
+            </p>
+            <p className="mt-2 text-slate-600">
+              and a real person will text you back about your next car.
+            </p>
+            <a
+              href={`sms:${SITE.phoneE164}?&body=START`}
+              className="mt-5 inline-block rounded-full bg-blue-600 px-7 py-3 text-sm font-bold text-white hover:bg-blue-700"
+            >
+              💬 Text START now
+            </a>
+          </div>
+
+          {/* Product proof, their phone-in-hand trick in CSS: the thread
+              a shopper actually starts. The reply bubble deliberately
+              reuses the page's own sentence — nothing invented. */}
+          <div className="flex justify-center">
+            <div className="w-64 rounded-[2rem] border-8 border-slate-900 bg-white p-3 shadow-xl shadow-blue-900/10">
+              <p className="text-center text-[10px] font-semibold text-slate-400">
+                {SITE.phoneDisplay}
+              </p>
+              <div className="mt-2 ml-auto w-fit rounded-2xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white">
+                START
+              </div>
+              <div className="mt-2 max-w-[85%] rounded-2xl bg-slate-100 px-3.5 py-2 text-xs leading-relaxed text-slate-700">
+                A real person will text you back about your next car. 👋
+              </div>
+              <div className="mt-2 flex w-fit gap-1 rounded-2xl bg-slate-100 px-3.5 py-2.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-200" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="mx-auto mt-8 max-w-2xl text-center text-xs leading-relaxed text-slate-500">
           By texting START (or any message) to {SITE.phoneDisplay}, you agree
           to receive text messages from YouBuyCars about your vehicle inquiry,
           appointments, and follow-ups. Consent is not a condition of
@@ -304,32 +343,29 @@ export default async function HomePage({
         </p>
       </section>
 
-      {/* How it works */}
+      {/* How it works — the teardown's numbered-circle explainer (a real
+          sequence, so the numbers carry information), no emoji cards. */}
       <section className="mx-auto max-w-4xl px-6 py-16">
         <h2 className="text-center text-2xl font-bold">How it works</h2>
         <div className="mt-10 grid gap-8 sm:grid-cols-3">
           {[
             {
-              emoji: "📝",
-              title: "1. Tell us what you want",
+              title: "Tell us what you want",
               body: "Year, make, model, budget — or just describe what you need.",
             },
             {
-              emoji: "💬",
-              title: "2. We text you back",
+              title: "We text you back",
               body: "A real person texts you options that actually fit. No phone tag.",
             },
             {
-              emoji: "🔑",
-              title: "3. Come drive it",
+              title: "Come drive it",
               body: "Like what you see? We'll have it pulled up and ready for you.",
             },
-          ].map((step) => (
-            <div
-              key={step.title}
-              className="rounded-2xl border border-slate-100 bg-white p-6 text-center shadow-sm"
-            >
-              <div className="text-3xl">{step.emoji}</div>
+          ].map((step, i) => (
+            <div key={step.title} className="text-center">
+              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-base font-bold text-white">
+                {i + 1}
+              </span>
               <h3 className="mt-3 font-semibold">{step.title}</h3>
               <p className="mt-1 text-sm text-slate-500">{step.body}</p>
             </div>
@@ -337,8 +373,22 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* Second promo module — the saved-search letters. Gray stripe. */}
-      <section className="bg-slate-50 px-6 py-14">
+      {/* The form — the first registered opt-in path, now in the
+          teardown's floating-white-card dress over a pale stripe. The
+          form component itself (registered consent language) untouched. */}
+      <section id="inquiry" className="bg-slate-50 px-6 py-16">
+        <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/5 sm:p-8">
+          <h2 className="text-2xl font-bold">What are you looking for?</h2>
+          <p className="mt-1 mb-6 text-sm text-slate-500">
+            Fill this out and we&apos;ll text you back shortly.
+          </p>
+          <InquiryForm defaultLookingFor={about ?? ""} />
+        </div>
+      </section>
+
+      {/* The saved-search promo — white stripe, below the form so the
+          zebra alternates cleanly all the way to the footer. */}
+      <section className="px-6 py-14">
         <PromoSplit
           flip
           eyebrow="Save a search"
@@ -375,17 +425,6 @@ export default async function HomePage({
         </PromoSplit>
       </section>
 
-      {/* The form — the first registered opt-in path. */}
-      <section id="inquiry" className="px-6 py-16">
-        <div className="mx-auto max-w-xl">
-          <h2 className="text-2xl font-bold">What are you looking for?</h2>
-          <p className="mt-1 mb-6 text-sm text-slate-500">
-            Fill this out and we&apos;ll text you back shortly.
-          </p>
-          <InquiryForm defaultLookingFor={about ?? ""} />
-        </div>
-      </section>
-
       {/* The consent story, in plain sight — mirrors /sms-consent.
           Gray stripe closes the zebra before the dark footer. */}
       <section className="bg-slate-50 px-6 py-16">
@@ -397,28 +436,45 @@ export default async function HomePage({
           messages are always about your vehicle inquiry, appointments, and
           follow-ups.
         </p>
-        <ol className="mt-5 space-y-4 text-sm leading-relaxed text-slate-600">
-          <li>
-            <strong className="text-slate-800">The form on this page.</strong>{" "}
-            You fill it out with your number, and tick the optional consent
-            checkbox next to the full disclosure. The box is never pre-checked
-            and never required — you can send the form without it, and if you
-            do, we won&apos;t text you.
+        {/* Same three ways, same words — the circles just carry the
+            numbering the way the rest of the page now does. */}
+        <ol className="mt-6 space-y-5 text-sm leading-relaxed text-slate-600">
+          <li className="flex gap-3">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+              1
+            </span>
+            <span>
+              <strong className="text-slate-800">The form on this page.</strong>{" "}
+              You fill it out with your number, and tick the optional consent
+              checkbox next to the full disclosure. The box is never pre-checked
+              and never required — you can send the form without it, and if you
+              do, we won&apos;t text you.
+            </span>
           </li>
-          <li>
-            <strong className="text-slate-800">Texting us first.</strong> You
-            text START — or any message — to {SITE.phoneDisplay}. Starting the
-            conversation is your consent to receive our replies about it, and
-            replying STOP at any time ends it immediately.
+          <li className="flex gap-3">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+              2
+            </span>
+            <span>
+              <strong className="text-slate-800">Texting us first.</strong> You
+              text START — or any message — to {SITE.phoneDisplay}. Starting the
+              conversation is your consent to receive our replies about it, and
+              replying STOP at any time ends it immediately.
+            </span>
           </li>
-          <li>
-            <strong className="text-slate-800">In person or on a call.</strong>{" "}
-            You give us your number and tell us it&apos;s OK to text you. The
-            salesperson records that you agreed, when, and how, before any
-            message is sent.{" "}
-            <Link href="/sms-consent" className="text-blue-600 underline">
-              See exactly how that works →
-            </Link>
+          <li className="flex gap-3">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+              3
+            </span>
+            <span>
+              <strong className="text-slate-800">In person or on a call.</strong>{" "}
+              You give us your number and tell us it&apos;s OK to text you. The
+              salesperson records that you agreed, when, and how, before any
+              message is sent.{" "}
+              <Link href="/sms-consent" className="text-blue-600 underline">
+                See exactly how that works →
+              </Link>
+            </span>
           </li>
         </ol>
         <ul className="mt-6 space-y-1 text-xs text-slate-500">

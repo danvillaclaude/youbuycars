@@ -25,23 +25,28 @@ export async function SiteHeader() {
 
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-5xl items-center gap-5 px-6 py-3">
-        <Link href="/" className="text-lg font-bold text-slate-900">
+      {/* One row at EVERY width (his report: the phone header wrapped
+          into a two-line mess). Mobile gets short labels; Sign in lives
+          in the footer below sm — the row must never wrap. */}
+      <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:gap-5 sm:px-6">
+        <Link href="/" className="shrink-0 text-lg font-bold text-slate-900">
           You<span className="text-blue-600">Buy</span>Cars
         </Link>
-        <nav className="flex flex-1 items-center gap-4 text-sm font-medium text-slate-600">
+        <nav className="flex flex-1 items-center gap-3 whitespace-nowrap text-sm font-medium text-slate-600 sm:gap-4">
           <Link href="/cars" className="hover:text-slate-900">
-            Browse cars
+            <span className="sm:hidden">Browse</span>
+            <span className="hidden sm:inline">Browse cars</span>
           </Link>
           <Link href="/sell" className="hover:text-slate-900">
-            Sell your car
+            <span className="sm:hidden">Sell</span>
+            <span className="hidden sm:inline">Sell your car</span>
           </Link>
           <Link href="/compare" className="hidden hover:text-slate-900 sm:block">
             Compare
           </Link>
           <span className="flex-1" />
           {isAdmin && (
-            <Link href="/admin" className="hover:text-slate-900">
+            <Link href="/admin" className="hidden hover:text-slate-900 sm:block">
               Approvals
             </Link>
           )}
@@ -50,11 +55,12 @@ export async function SiteHeader() {
               href="/dashboard"
               className="rounded-full bg-blue-600 px-4 py-1.5 text-white hover:bg-blue-700"
             >
-              My listings
+              <span className="sm:hidden">Listings</span>
+              <span className="hidden sm:inline">My listings</span>
             </Link>
           ) : (
             <>
-              <Link href="/login" className="hover:text-slate-900">
+              <Link href="/login" className="hidden hover:text-slate-900 sm:block">
                 Sign in
               </Link>
               {/* Concept A's masthead CTA — the storefront's whole pitch
