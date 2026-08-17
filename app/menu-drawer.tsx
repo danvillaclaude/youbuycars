@@ -50,6 +50,7 @@ export function MenuDrawer({
         { href: "/cars?max_price=15000", label: "Under $15k" },
         { href: "/compare", label: "Compare cars" },
         { href: "/saved", label: "Saved cars" },
+        { href: "/ask", label: "✦ Ask AI (coming soon)" },
       ],
     },
     {

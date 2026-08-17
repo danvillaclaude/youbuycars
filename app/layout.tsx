@@ -30,6 +30,19 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} min-h-dvh bg-white text-slate-900`}>
         <SiteHeader />
+        {/* The sub-nav row (his spec, copying CarGurus): hyperlink words
+            under the floating header, at the top of the page — it
+            scrolls AWAY with the page, deliberately not sticky. */}
+        <nav className="border-b border-slate-100 bg-white px-4 sm:px-6">
+          <div className="mx-auto flex h-11 max-w-5xl items-center gap-7 text-sm font-semibold text-slate-800">
+            <Link href="/cars">Shop</Link>
+            <Link href="/sell">Sell</Link>
+            <Link href="/compare">Compare</Link>
+            <Link href="/ask" className="text-blue-600">
+              ✦ Ask AI
+            </Link>
+          </div>
+        </nav>
         {children}
         <BackToTop />
         {/* The teardown's footer: dark, full-bleed, accordion groups that
