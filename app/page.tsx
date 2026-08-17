@@ -339,15 +339,15 @@ export default async function HomePage() {
             </div>
           ))}
         </div>
+        {/* The CTA does step 1 (his call, 16 Aug 2026: "the start a
+            conversation button should be a browse cars button"). The
+            concierge door lives on /contact, reachable from the footer. */}
         <div className="mt-9 text-center">
-          <p className="text-sm text-slate-500">
-            Don&apos;t see the right car on the board yet?
-          </p>
           <Link
-            href="/contact"
-            className="mt-3 inline-block rounded-full bg-blue-600 px-7 py-3 text-sm font-bold text-white hover:bg-blue-700"
+            href="/cars"
+            className="inline-block rounded-full bg-blue-600 px-7 py-3 text-sm font-bold text-white hover:bg-blue-700"
           >
-            Start a conversation
+            Browse cars
           </Link>
         </div>
       </section>
