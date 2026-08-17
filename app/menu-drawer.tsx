@@ -96,11 +96,12 @@ export function MenuDrawer({
           <button
             aria-label="Close menu"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-900/40"
+            className="overlay-in absolute inset-0 bg-slate-900/40"
           />
           {/* From the LEFT (his call) — the drawer opens from the side
-              its button lives on. */}
-          <div className="absolute left-0 top-0 h-full w-72 overflow-y-auto bg-white p-5 shadow-2xl transition-transform duration-200">
+              its button lives on, and SLIDES in (his refinement: it
+              popped; premium slides). */}
+          <div className="drawer-in absolute left-0 top-0 h-full w-72 overflow-y-auto bg-white p-5 shadow-2xl">
             <div className="flex items-center justify-between">
               <span className="text-lg font-bold text-slate-900">
                 You<span className="text-blue-600">Buy</span>Cars
