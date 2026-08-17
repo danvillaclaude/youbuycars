@@ -306,22 +306,28 @@ export default async function HomePage() {
         </PromoSplit>
       </section>
 
-      {/* How it works — the closer, with the one door to /contact. */}
+      {/* How it works — the MARKETPLACE story (16 Aug 2026, his call:
+          "considering youbuycars is a multivendor site... it should be
+          something totally different"). The old three steps told the
+          concierge tale — tell us, we find it — which reads like one
+          dealer, not a board of many sellers. The marketplace tells it
+          straight: browse, deal with the seller, drive it home. The
+          concierge survives as the door under it, on /contact. */}
       <section className="mx-auto max-w-4xl px-6 py-16">
         <h2 className="text-center text-2xl font-bold">How it works</h2>
         <div className="mt-10 grid gap-8 sm:grid-cols-3">
           {[
             {
-              title: "Tell us what you want",
-              body: "Year, make, model, budget — or just describe what you need.",
+              title: "Browse real local cars",
+              body: "Every listing comes from a Metro Detroit seller or dealer, and a real person reviews each one before it goes live.",
             },
             {
-              title: "We text you back",
-              body: "A real person texts you options that actually fit. No phone tag.",
+              title: "Deal directly with the seller",
+              body: "Text, call, or message on-site — every car connects you straight to whoever's selling it, with payment numbers you can run yourself.",
             },
             {
-              title: "Come drive it",
-              body: "Like what you see? We'll have it pulled up and ready for you.",
+              title: "Drive it home",
+              body: "Meet the seller, take the drive, make the deal. Sold cars stay marked, so the board never shows you a ghost.",
             },
           ].map((step, i) => (
             <div key={step.title} className="text-center">
@@ -334,9 +340,12 @@ export default async function HomePage() {
           ))}
         </div>
         <div className="mt-9 text-center">
+          <p className="text-sm text-slate-500">
+            Don&apos;t see the right car on the board yet?
+          </p>
           <Link
             href="/contact"
-            className="rounded-full bg-blue-600 px-7 py-3 text-sm font-bold text-white hover:bg-blue-700"
+            className="mt-3 inline-block rounded-full bg-blue-600 px-7 py-3 text-sm font-bold text-white hover:bg-blue-700"
           >
             Start a conversation
           </Link>
