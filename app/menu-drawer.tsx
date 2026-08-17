@@ -64,6 +64,7 @@ export function MenuDrawer({
     {
       title: "Company",
       links: [
+        { href: "/research", label: "Research & guides" },
         { href: "/about", label: "About" },
         { href: "/contact", label: "Contact" },
         { href: "/sms-consent", label: "How texting consent works" },

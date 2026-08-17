@@ -64,6 +64,7 @@ export default async function SiteIndexPage() {
           { href: "/", label: "Home" },
           { href: "/cars", label: "Cars for sale" },
           { href: "/compare", label: "Compare cars" },
+          { href: "/research", label: "Research & guides" },
           { href: "/sell", label: "Sell your car" },
           { href: "/dealers", label: "For dealers" },
           { href: "/about", label: "About" },

@@ -34,10 +34,11 @@ export default function RootLayout({
             under the floating header, at the top of the page — it
             scrolls AWAY with the page, deliberately not sticky. */}
         <nav className="border-b border-slate-100 bg-white px-4 sm:px-6">
-          <div className="mx-auto flex h-11 max-w-5xl items-center justify-center gap-7 text-sm font-semibold text-slate-800">
+          <div className="mx-auto flex h-11 max-w-5xl items-center justify-center gap-5 text-sm font-semibold text-slate-800 sm:gap-7">
             <Link href="/cars">Shop</Link>
             <Link href="/sell">Sell</Link>
             <Link href="/compare">Compare</Link>
+            <Link href="/research">Research</Link>
             <Link href="/ask" className="text-blue-600">
               ✦ Ask AI
             </Link>
@@ -73,6 +74,7 @@ export default function RootLayout({
                     { href: "/cars", label: "Browse cars" },
                     { href: "/cars?max_price=15000", label: "Under $15k" },
                     { href: "/compare", label: "Compare cars" },
+                    { href: "/research", label: "Research & guides" },
                   ],
                 },
                 {
