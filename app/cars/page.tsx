@@ -2,21 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
+  BODY_STYLES,
   describeSearch,
   type Listing,
   type ListingPhoto,
+  type PriceChange,
   type SearchFilters,
 } from "@/lib/listings";
 import { DEFAULT_ESTIMATE } from "@/lib/payments";
 import { ListingCard } from "@/app/listing-card";
 import { SaveSearch } from "./save-search";
 import { RememberSearch } from "./remember-search";
-
-export const metadata: Metadata = {
-  title: "Cars for sale · YouBuyCars",
-  description:
-    "Browse vehicles for sale in Metro Detroit — every listing reviewed before it goes live. Tell us what you need and we'll text you options.",
-};
 
 /**
  * The board, rebuilt to the teardown's results shape (16 Aug 2026):
@@ -30,12 +26,39 @@ export const metadata: Metadata = {
 interface Params {
   make?: string;
   q?: string;
+  body?: string;
   year_min?: string;
   year_max?: string;
   max_price?: string;
   max_miles?: string;
   financing?: string;
   sort?: string;
+}
+
+/**
+ * Search-driven page titles — the SEO layer (his ask: more industry
+ * keywords). Every filtered view is a crawlable URL; the title makes it
+ * a keyword page: "Used SUVs under $15,000 for sale in Metro Detroit".
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Params>;
+}): Promise<Metadata> {
+  const p = await searchParams;
+  const bits: string[] = ["Used"];
+  if (p.make) bits.push(p.make);
+  if (p.body && (BODY_STYLES as readonly string[]).includes(p.body))
+    bits.push(`${p.body}s`);
+  if (bits.length === 1) bits.push("Cars");
+  let title = bits.join(" ");
+  if (p.max_price && Number(p.max_price) > 0)
+    title += ` under $${Number(p.max_price).toLocaleString("en-US")}`;
+  title += " for Sale in Metro Detroit";
+  return {
+    title: `${title} | YouBuyCars`,
+    description: `${title}. Every listing reviewed before it goes live — browse prices, payment estimates and local sellers, or save the search and get emailed when new matches arrive.`,
+  };
 }
 
 /** Rebuild the page URL with some params patched (null drops one). */
@@ -69,6 +92,10 @@ export default async function CarsPage({
   const filters: SearchFilters = {
     make: params.make || null,
     q: params.q || null,
+    body_style:
+      params.body && (BODY_STYLES as readonly string[]).includes(params.body)
+        ? params.body
+        : null,
     year_min: positive(params.year_min),
     year_max: positive(params.year_max),
     max_price: positive(params.max_price),
@@ -79,6 +106,7 @@ export default async function CarsPage({
 
   let query = supabase.from("listings").select("*").eq("status", "active");
   if (filters.make) query = query.ilike("make", filters.make);
+  if (filters.body_style) query = query.eq("body_style", filters.body_style);
   if (filters.q)
     query = query.or(
       `model.ilike.%${filters.q}%,make.ilike.%${filters.q}%,trim_level.ilike.%${filters.q}%`,
@@ -177,9 +205,28 @@ export default async function CarsPage({
     );
   }
 
+  // Price drops (0015): the latest change per visible listing, chipped
+  // only when it FELL — his call, increases stay quiet.
+  const dropByListing = new Map<string, number>();
+  if (listings.length > 0) {
+    const { data: changeData } = await supabase
+      .from("price_changes")
+      .select("listing_id, old_price, new_price, changed_at")
+      .in("listing_id", listings.map((l) => l.id))
+      .order("changed_at", { ascending: false });
+    for (const c of (changeData ?? []) as PriceChange[]) {
+      if (dropByListing.has(c.listing_id)) continue; // newest wins
+      if (c.new_price < c.old_price)
+        dropByListing.set(c.listing_id, c.old_price - c.new_price);
+      else dropByListing.set(c.listing_id, 0); // latest change was a raise — no chip
+    }
+  }
+
   // Active-filter chips: one removable chip per set filter.
   const chips: { key: keyof Params; label: string }[] = [];
   if (filters.make) chips.push({ key: "make", label: filters.make });
+  if (filters.body_style)
+    chips.push({ key: "body", label: `${filters.body_style}s` });
   if (filters.q) chips.push({ key: "q", label: `“${filters.q}”` });
   if (filters.year_min)
     chips.push({ key: "year_min", label: `${filters.year_min} or newer` });
@@ -238,6 +285,20 @@ export default async function CarsPage({
               {makes.map((m) => (
                 <option key={m} value={m}>
                   {m}
+                </option>
+              ))}
+            </select>
+          </details>
+
+          <details className={groupCls} open={Boolean(filters.body_style)}>
+            <summary className={summaryCls}>
+              Body style <span className="text-slate-300">▾</span>
+            </summary>
+            <select name="body" defaultValue={params.body ?? ""} className={inputCls}>
+              <option value="">Any</option>
+              {BODY_STYLES.map((b) => (
+                <option key={b} value={b}>
+                  {b}
                 </option>
               ))}
             </select>
@@ -409,6 +470,7 @@ export default async function CarsPage({
                       sellerCity={seller?.city}
                       sellerFinancing={seller?.financing ?? true}
                       sellerRating={ratingBySeller.get(l.seller_id) ?? null}
+                      priceDrop={dropByListing.get(l.id) || null}
                     />
                   );
                 })}

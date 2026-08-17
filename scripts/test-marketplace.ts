@@ -3,15 +3,20 @@
  * Pure-function checks; the database's guard trigger is exercised live.
  */
 import {
+  BODY_STYLES,
   capFor,
+  CONDITIONS,
   describeSearch,
+  DRIVETRAINS,
   formatMileage,
   formatPrice,
+  FUEL_TYPES,
   LISTING_CAP,
   makeSlug,
   slugify,
   STATUS_LABELS,
   TIER_CAPS,
+  TRANSMISSIONS,
 } from "../lib/listings";
 
 let passed = 0;
@@ -96,6 +101,26 @@ check(
   "describeSearch financing reads as offered",
   describeSearch({ financing: true }) === "financing offered",
 );
+check(
+  "describeSearch body style pluralizes and leads after make",
+  describeSearch({ make: "Ford", body_style: "SUV", max_price: 20000 }) ===
+    "Ford · SUVs · under $20,000",
+);
+
+/*
+ * The spec vocabularies (0015) — these lists are mirrored by CHECK
+ * constraints in the database. Removing or renaming a value here without
+ * a migration means an insert that the UI offered and the DB refuses;
+ * these pins make that drift a test failure instead of a runtime one.
+ */
+check("BODY_STYLES holds the board's nine", BODY_STYLES.length === 9);
+for (const v of ["SUV", "Sedan", "Truck"] as const) {
+  check(`BODY_STYLES keeps ${v} (tiles depend on it)`, BODY_STYLES.includes(v));
+}
+check("DRIVETRAINS is the four", DRIVETRAINS.length === 4);
+check("TRANSMISSIONS is the two", TRANSMISSIONS.length === 2);
+check("FUEL_TYPES is the five", FUEL_TYPES.length === 5);
+check("CONDITIONS is the three", CONDITIONS.length === 3);
 
 console.log(`${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

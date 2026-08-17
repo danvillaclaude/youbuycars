@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE } from "@/lib/site";
 import { TIER_CAPS } from "@/lib/listings";
 import { PromoSplit } from "@/app/promo-split";
 
@@ -43,12 +42,12 @@ export default function DealersPage() {
           >
             Get started with iSellCars.ai
           </a>
-          <a
-            href={`sms:${SITE.phoneE164}`}
+          <Link
+            href="/contact"
             className="rounded-full border border-slate-300 px-7 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
-            Text us · {SITE.phoneDisplay}
-          </a>
+            Talk to us first
+          </Link>
         </div>
       </section>
 

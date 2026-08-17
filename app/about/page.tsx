@@ -48,11 +48,11 @@ export default function AboutPage() {
           and mention it.
         </p>
         <p>
-          Questions? Text {SITE.phoneDisplay}, or email {SITE.email} — see{" "}
+          Questions? Everything — text, call, email — lives on the{" "}
           <Link href="/contact" className="text-blue-600 underline">
-            Contact
-          </Link>{" "}
-          for everything.
+            Contact page
+          </Link>
+          .
         </p>
       </div>
     </main>

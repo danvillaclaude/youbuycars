@@ -25,6 +25,7 @@ export async function saveSearchAction(
     email: cleanEmail,
     make: filters.make?.slice(0, 60) || null,
     q: filters.q?.slice(0, 80) || null,
+    body_style: filters.body_style?.slice(0, 40) || null,
     year_min: numberOrNull(filters.year_min),
     year_max: numberOrNull(filters.year_max),
     max_price: numberOrNull(filters.max_price),

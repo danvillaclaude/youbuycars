@@ -31,6 +31,9 @@ export default async function SiteIndexPage() {
   const active = listings.filter((l) => l.status === "active");
   const sold = listings.filter((l) => l.status === "sold");
   const makes = [...new Set(active.map((l) => l.make))].sort();
+  const bodyStyles = [
+    ...new Set(active.map((l) => l.body_style).filter(Boolean)),
+  ].sort() as string[];
 
   const { data: sellerData } = await supabase
     .from("profiles")
@@ -86,6 +89,23 @@ export default async function SiteIndexPage() {
                 className={link}
               >
                 {m} for sale
+              </Link>
+            ))}
+          </nav>
+        </>
+      )}
+
+      {bodyStyles.length > 0 && (
+        <>
+          <h2 className={h2}>Browse by style</h2>
+          <nav className={list}>
+            {bodyStyles.map((b) => (
+              <Link
+                key={b}
+                href={`/cars?body=${encodeURIComponent(b)}`}
+                className={link}
+              >
+                Used {b}s for sale
               </Link>
             ))}
           </nav>

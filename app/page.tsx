@@ -143,7 +143,8 @@ export default async function HomePage() {
             {[
               { label: "Under $15k", href: "/cars?max_price=15000" },
               { label: "Under $25k", href: "/cars?max_price=25000" },
-              { label: "Trucks", href: "/cars?q=F-150" },
+              { label: "SUVs", href: "/cars?body=SUV" },
+              { label: "Trucks", href: "/cars?body=Truck" },
               { label: "Everything", href: "/cars" },
             ].map((c) => (
               <Link
@@ -165,10 +166,12 @@ export default async function HomePage() {
           big sites teach shoppers to expect. Tiles are just searches. */}
       <section className="mx-auto max-w-5xl px-6 pt-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {/* Real body-style searches now (0015) — the q= keyword hack
+              is dead. */}
           {[
-            { label: "SUVs & Crossovers", href: "/cars?q=Equinox", art: "M8 34c-3 0-5-2-5-5 0-2 2-4 4-5l8-2 6-9c2-3 5-4 8-4h18c3 0 6 1 8 4l7 9 11 2c3 1 5 3 5 5 0 3-2 5-5 5" },
-            { label: "Trucks", href: "/cars?q=F-150", art: "M6 34c-2 0-4-2-4-4s1-4 3-4l9-2 5-8c1-2 3-3 6-3h14v13h26c3 0 5 2 5 4s-1 4-3 4" },
-            { label: "Sedans", href: "/cars?q=Accord", art: "M7 33c-3 0-5-2-5-4s2-4 4-4l9-3 8-8c2-2 4-3 7-3h16c3 0 5 1 7 3l8 8 10 3c2 0 4 2 4 4s-2 4-5 4" },
+            { label: "SUVs & Crossovers", href: "/cars?body=SUV", art: "M8 34c-3 0-5-2-5-5 0-2 2-4 4-5l8-2 6-9c2-3 5-4 8-4h18c3 0 6 1 8 4l7 9 11 2c3 1 5 3 5 5 0 3-2 5-5 5" },
+            { label: "Trucks", href: "/cars?body=Truck", art: "M6 34c-2 0-4-2-4-4s1-4 3-4l9-2 5-8c1-2 3-3 6-3h14v13h26c3 0 5 2 5 4s-1 4-3 4" },
+            { label: "Sedans", href: "/cars?body=Sedan", art: "M7 33c-3 0-5-2-5-4s2-4 4-4l9-3 8-8c2-2 4-3 7-3h16c3 0 5 1 7 3l8 8 10 3c2 0 4 2 4 4s-2 4-5 4" },
             { label: "Under $15k", href: "/cars?max_price=15000", art: null },
           ].map((t) => (
             <Link

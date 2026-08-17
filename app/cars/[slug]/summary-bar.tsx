@@ -17,6 +17,7 @@ export function SummaryBar({
   monthly,
   photoUrl,
   contactHref,
+  contactLabel = "💬 Text",
 }: {
   name: string;
   mileage: string;
@@ -24,6 +25,8 @@ export function SummaryBar({
   monthly: string | null;
   photoUrl: string | null;
   contactHref: string;
+  /** "💬 Text" for seller-direct, "💬 Message" for chat-only sellers. */
+  contactLabel?: string;
 }) {
   const sentinel = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
@@ -93,7 +96,7 @@ export function SummaryBar({
               href={contactHref}
               className="shrink-0 rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
             >
-              💬 Text
+              {contactLabel}
             </a>
           </div>
         </div>

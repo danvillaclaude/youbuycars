@@ -22,11 +22,14 @@ import { track } from "@/app/track-client";
 export function PaymentCalculator({
   price,
   smsHref,
+  ctaLabel = "💬 Text the seller about financing",
   listingId,
 }: {
   price: number;
-  /** The listing's text CTA (seller-direct or the platform line). */
+  /** Where the CTA lands: the seller's contact box, or on-site chat. */
   smsHref: string;
+  /** Worded for the path — Text for seller-direct, Message for chat. */
+  ctaLabel?: string;
   /** For analytics (0007): one calc_run per session's first touch. */
   listingId?: string;
 }) {
@@ -125,7 +128,7 @@ export function PaymentCalculator({
         onClick={() => listingId && track(listingId, "text_tap")}
         className="mt-5 block rounded-full bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
       >
-        💬 Text the seller about financing
+        {ctaLabel}
       </a>
 
       <p className="mt-3 text-[11px] leading-relaxed text-slate-400">

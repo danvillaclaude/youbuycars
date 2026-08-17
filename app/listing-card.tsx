@@ -20,6 +20,7 @@ export function ListingCard({
   sellerCity,
   sellerFinancing = true,
   sellerRating = null,
+  priceDrop = null,
 }: {
   listing: Listing;
   photoPath: string | null;
@@ -29,6 +30,8 @@ export function ListingCard({
   sellerFinancing?: boolean;
   /** Approved-review average, when the seller has any (0009). */
   sellerRating?: { avg: number; count: number } | null;
+  /** Latest price change when it FELL (0015) — increases never badge. */
+  priceDrop?: number | null;
 }) {
   const title = `${l.year} ${l.make} ${l.model}${l.trim_level ? ` ${l.trim_level}` : ""}`;
   const sellerLine = [sellerName, sellerCity].filter(Boolean).join(" · ");
@@ -67,6 +70,13 @@ export function ListingCard({
             </span>
           )}
         </div>
+        {priceDrop != null && priceDrop > 0 && (
+          <div className="mt-1">
+            <span className="rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-bold text-green-700 tabular-nums">
+              ↓ ${priceDrop.toLocaleString("en-US")} price drop
+            </span>
+          </div>
+        )}
         <div className="mt-0.5 text-sm font-semibold text-slate-900 group-hover:text-blue-700">
           {title}
         </div>

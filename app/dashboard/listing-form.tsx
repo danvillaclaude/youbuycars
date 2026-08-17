@@ -3,7 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { photoUrl, type Listing, type ListingPhoto } from "@/lib/listings";
+import {
+  BODY_STYLES,
+  COLOR_OPTIONS,
+  CONDITIONS,
+  DRIVETRAINS,
+  FUEL_TYPES,
+  photoUrl,
+  TRANSMISSIONS,
+  type Listing,
+  type ListingPhoto,
+} from "@/lib/listings";
 import {
   createListingAction,
   deletePhotoAction,
@@ -27,7 +37,7 @@ import {
  * re-approval.
  */
 
-type SectionKey = "basics" | "numbers" | "photos" | "story";
+type SectionKey = "basics" | "numbers" | "specs" | "photos" | "story";
 
 const SECTIONS: {
   key: SectionKey;
@@ -37,6 +47,7 @@ const SECTIONS: {
 }[] = [
   { key: "basics", title: "The basics", sub: "Year, make, model", required: true },
   { key: "numbers", title: "Miles & price", sub: "The two numbers every buyer checks first", required: true },
+  { key: "specs", title: "The specs", sub: "Body style, colors, drivetrain — what the filters find", required: true },
   { key: "photos", title: "Photos", sub: "Up to 12 — the first one is the cover", required: false },
   { key: "story", title: "Description & extras", sub: "The story, the VIN, financing", required: false },
 ];
@@ -45,6 +56,10 @@ const SECTIONS: {
 const SECTION_FIELDS: Record<SectionKey, string[]> = {
   basics: ["year", "make", "model", "trim_level"],
   numbers: ["mileage", "price"],
+  specs: [
+    "body_style", "exterior_color", "interior_color", "drivetrain",
+    "transmission", "fuel_type", "engine", "condition",
+  ],
   photos: [],
   story: ["description", "vin", "financing_offered"],
 };
@@ -62,6 +77,9 @@ function validate(fd: FormData): Record<string, string> {
   const price = Number(fd.get("price"));
   if (!fd.get("price") || !Number.isFinite(price) || price <= 0)
     errors.price = "Enter an asking price.";
+  // Body style is the one required spec (his call): it's what the
+  // homepage tiles and the body-style filter run on.
+  if (!fd.get("body_style")) errors.body_style = "Pick the body style.";
   return errors;
 }
 
@@ -93,6 +111,8 @@ export function ListingForm({
   const [open, setOpen] = useState<Record<SectionKey, boolean>>({
     basics: !listing,
     numbers: false,
+    // An old listing with no body style opens straight onto the ask.
+    specs: Boolean(listing && !listing.body_style),
     photos: false,
     story: false,
   });
@@ -123,6 +143,12 @@ export function ListingForm({
     }
     if (key === "numbers") {
       const done = live ? !live.v.mileage && !live.v.price : Boolean(listing);
+      return done
+        ? { label: "✓ Completed", cls: GREEN }
+        : { label: "Required", cls: GRAY };
+    }
+    if (key === "specs") {
+      const done = live ? !live.v.body_style : Boolean(listing?.body_style);
       return done
         ? { label: "✓ Completed", cls: GREEN }
         : { label: "Required", cls: GRAY };
@@ -339,6 +365,95 @@ export function ListingForm({
             {fieldError("price")}
           </label>
         </div>
+      </>)}
+
+      {section("specs", <>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Body style</span>
+            <select name="body_style" defaultValue={listing?.body_style ?? ""}
+              className={inputCls("body_style")}>
+              <option value="">Choose…</option>
+              {BODY_STYLES.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+            {fieldError("body_style")}
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">
+              Drivetrain <span className="font-normal text-slate-400">(optional)</span>
+            </span>
+            <select name="drivetrain" defaultValue={listing?.drivetrain ?? ""}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+              <option value="">Not sure</option>
+              {DRIVETRAINS.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">
+              Exterior color <span className="font-normal text-slate-400">(optional)</span>
+            </span>
+            <select name="exterior_color" defaultValue={listing?.exterior_color ?? ""}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+              <option value="">Choose…</option>
+              {COLOR_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">
+              Interior color <span className="font-normal text-slate-400">(optional)</span>
+            </span>
+            <select name="interior_color" defaultValue={listing?.interior_color ?? ""}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+              <option value="">Choose…</option>
+              {COLOR_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">
+              Transmission <span className="font-normal text-slate-400">(optional)</span>
+            </span>
+            <select name="transmission" defaultValue={listing?.transmission ?? ""}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+              <option value="">Not sure</option>
+              {TRANSMISSIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">
+              Fuel type <span className="font-normal text-slate-400">(optional)</span>
+            </span>
+            <select name="fuel_type" defaultValue={listing?.fuel_type ?? ""}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+              <option value="">Not sure</option>
+              {FUEL_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">
+              Condition <span className="font-normal text-slate-400">(optional)</span>
+            </span>
+            <select name="condition" defaultValue={listing?.condition ?? ""}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+              <option value="">Choose…</option>
+              {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium text-slate-700">
+            Engine <span className="font-normal text-slate-400">(optional — 2.0L Turbo I4, 5.7L V8…)</span>
+          </span>
+          <input name="engine" maxLength={80}
+            defaultValue={listing?.engine ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
+        </label>
       </>)}
 
       {section("photos", <>

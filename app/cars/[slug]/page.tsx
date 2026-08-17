@@ -3,16 +3,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SITE } from "@/lib/site";
+import { cache } from "react";
 import {
   formatMileage,
   formatPrice,
   photoUrl,
   type Listing,
   type ListingPhoto,
+  type PriceChange,
 } from "@/lib/listings";
 import { estimateMonthly } from "@/lib/payments";
 import { PaymentCalculator } from "./payment-calculator";
-import { TrackedContact, TrackView } from "@/app/track-client";
+import { TrackView } from "@/app/track-client";
 import { ContactBox } from "./contact-box";
 import { Gallery } from "./gallery";
 import { SummaryBar } from "./summary-bar";
@@ -28,18 +30,26 @@ async function loadListing(slug: string) {
     .maybeSingle();
   const listing = data as Listing | null;
   if (!listing) return null;
-  const [{ data: photoData }, { data: sellerData }] = await Promise.all([
-    supabase
-      .from("listing_photos")
-      .select("*")
-      .eq("listing_id", listing.id)
-      .order("sort_order"),
-    supabase
-      .from("profiles")
-      .select("display_name, public_slug, phone, city, financing_offered")
-      .eq("id", listing.seller_id)
-      .maybeSingle(),
-  ]);
+  const [{ data: photoData }, { data: sellerData }, { data: changeData }] =
+    await Promise.all([
+      supabase
+        .from("listing_photos")
+        .select("*")
+        .eq("listing_id", listing.id)
+        .order("sort_order"),
+      supabase
+        .from("profiles")
+        .select("display_name, public_slug, phone, city, financing_offered")
+        .eq("id", listing.seller_id)
+        .maybeSingle(),
+      // Price history (0015) — trigger-written, public by policy.
+      supabase
+        .from("price_changes")
+        .select("*")
+        .eq("listing_id", listing.id)
+        .order("changed_at", { ascending: false })
+        .limit(10),
+    ]);
   return {
     listing,
     photos: (photoData ?? []) as ListingPhoto[],
@@ -50,6 +60,7 @@ async function loadListing(slug: string) {
       city: string | null;
       financing_offered: boolean;
     } | null,
+    priceChanges: (changeData ?? []) as PriceChange[],
   };
 }
 
@@ -74,6 +85,9 @@ export async function generateMetadata({
  * banner instead of vanishing, so every link ever shared keeps working
  * and the page keeps its search authority (the spec's SEO rule).
  */
+// One clock read per request (react-hooks/purity).
+const now = cache(() => Date.now());
+
 export default async function ListingPage({
   params,
 }: {
@@ -82,11 +96,30 @@ export default async function ListingPage({
   const { slug } = await params;
   const found = await loadListing(slug);
   if (!found) notFound();
-  const { listing, photos, seller } = found;
+  const { listing, photos, seller, priceChanges } = found;
   const name = `${listing.year} ${listing.make} ${listing.model}${listing.trim_level ? ` ${listing.trim_level}` : ""}`;
   const sold = listing.status === "sold";
   // The master breaker AND the listing's own box (0008/0009).
   const financed = listing.financing_offered && (seller?.financing_offered ?? true);
+
+  /*
+   * Market-velocity facts (0015, drops-only by his call): the latest
+   * price change gets a chip ONLY when it fell — an increase is
+   * recorded but never badged. Days-on-board runs from approval (when
+   * the car actually went live), falling back to creation.
+   */
+  const latestChange = priceChanges[0] ?? null;
+  const drop =
+    latestChange && latestChange.new_price < latestChange.old_price
+      ? latestChange.old_price - latestChange.new_price
+      : null;
+  const listedDays = Math.max(
+    0,
+    Math.floor(
+      (now() - new Date(listing.approved_at ?? listing.created_at).getTime()) /
+        86_400_000,
+    ),
+  );
 
   // schema.org Vehicle — the structured data the spec wants on every
   // listing from day one.
@@ -119,16 +152,15 @@ export default async function ListingPage({
     `I'm interested in the ${name} (${SITE.domain}/cars/${listing.slug})`,
   );
   /*
-   * Contact routing (15 Aug 2026, the owner's ask): the SELLER's own
-   * number when they've published one — with the YouBuyCars line as the
-   * fallback. Buyer-initiated contact carries its own consent; the note
-   * under the buttons says so plainly, and the registered platform-line
-   * wording stays verbatim on the fallback path.
+   * Contact routing (re-cut 16 Aug 2026, the owner's rule: the platform
+   * number lives on /contact ALONE — buyers contact SELLERS). A seller
+   * with a published number gets the consent-gated Text/Call box; a
+   * seller without one gets the on-site chat as the front door. No
+   * listing ever points at the YouBuyCars line anymore.
    */
   const sellerTel = seller?.phone ? seller.phone.replace(/[^\d+]/g, "") : null;
-  const smsHref = sellerTel
-    ? `sms:${sellerTel}?&body=${askAbout}`
-    : `sms:${SITE.phoneE164}?&body=${askAbout}`;
+  const smsHref = sellerTel ? `sms:${sellerTel}?&body=${askAbout}` : null;
+  const messageHref = `/messages/start?seller=${listing.seller_id}&listing=${listing.id}`;
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
@@ -183,9 +215,26 @@ export default async function ListingPage({
             {formatMileage(listing.mileage)}
             {listing.vin ? ` · VIN ${listing.vin}` : ""}
           </p>
-          <div className="mt-3 text-[32px] font-extrabold leading-none tracking-tight text-slate-900 tabular-nums">
-            {formatPrice(listing.price)}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-[32px] font-extrabold leading-none tracking-tight text-slate-900 tabular-nums">
+              {formatPrice(listing.price)}
+            </span>
+            {!sold && drop && (
+              <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700 tabular-nums">
+                ↓ ${drop.toLocaleString("en-US")} price drop
+              </span>
+            )}
           </div>
+          {!sold && (
+            /* The velocity line — the honest half of their market chips. */
+            <p className="mt-1.5 text-xs text-slate-400 tabular-nums" suppressHydrationWarning>
+              Listed {listedDays === 0 ? "today" : `${listedDays} day${listedDays === 1 ? "" : "s"} ago`}
+              {" · "}
+              {priceChanges.length === 0
+                ? "No price changes"
+                : `${priceChanges.length} price change${priceChanges.length === 1 ? "" : "s"}`}
+            </p>
+          )}
           {!sold && financed && (
             <p className="mt-1.5 text-sm font-semibold text-green-700 tabular-nums">
               ${estimateMonthly(listing.price).toLocaleString("en-US")}/mo est. ·{" "}
@@ -196,28 +245,34 @@ export default async function ListingPage({
           )}
 
           {!sold &&
-            (sellerTel ? (
-              /* Seller-direct: one checkbox unlocks both (the owner's
-                 pick) — the explicit opt-in record. */
-              <ContactBox
-                sellerName={seller?.display_name ?? "the seller"}
-                phoneDisplay={seller?.phone ?? ""}
-                telHref={`tel:${sellerTel}`}
-                smsHref={smsHref}
-                listingId={listing.id}
-              />
-            ) : (
-              /* Platform fallback: the carrier-registered one-tap flow,
-                 untouched. */
-              <div className="mt-4 grid gap-2">
-                <TrackedContact
-                  href={smsHref}
+            (sellerTel && smsHref ? (
+              <>
+                {/* Seller-direct: one checkbox unlocks both (the owner's
+                   pick) — the explicit opt-in record. */}
+                <ContactBox
+                  sellerName={seller?.display_name ?? "the seller"}
+                  phoneDisplay={seller?.phone ?? ""}
+                  telHref={`tel:${sellerTel}`}
+                  smsHref={smsHref}
                   listingId={listing.id}
-                  kind="text_tap"
+                />
+                <Link
+                  href={messageHref}
+                  className="mt-2 block rounded-full border border-blue-200 bg-blue-50 px-4 py-2.5 text-center text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                >
+                  💬 Message on-site — no phone needed
+                </Link>
+              </>
+            ) : (
+              /* No published seller line: on-site chat IS the front door
+                 (16 Aug 2026 — no listing points at the platform number). */
+              <div className="mt-4 grid gap-2">
+                <Link
+                  href={messageHref}
                   className="rounded-full bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
                 >
-                  💬 Text about this car
-                </TrackedContact>
+                  💬 Message the seller — no phone needed
+                </Link>
                 <Link
                   href="/contact"
                   className="rounded-full border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
@@ -226,26 +281,6 @@ export default async function ListingPage({
                 </Link>
               </div>
             ))}
-
-          {!sold &&
-            (sellerTel ? null : (
-              <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
-                Texting us first is your consent to receive our replies — reply
-                STOP anytime.{" "}
-                <Link href="/sms-consent" className="underline">
-                  How texting consent works.
-                </Link>
-              </p>
-            ))}
-
-          {!sold && (
-            <Link
-              href={`/messages/start?seller=${listing.seller_id}&listing=${listing.id}`}
-              className="mt-2 block rounded-full border border-blue-200 bg-blue-50 px-4 py-2.5 text-center text-sm font-semibold text-blue-700 hover:bg-blue-100"
-            >
-              💬 Message on-site — no phone needed
-            </Link>
-          )}
 
           {seller?.public_slug && (
             <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-4">
@@ -286,7 +321,8 @@ export default async function ListingPage({
               : null
           }
           photoUrl={photos.length > 0 ? photoUrl(photos[0].storage_path) : null}
-          contactHref={sellerTel ? "#contact" : smsHref}
+          contactHref={sellerTel ? "#contact" : messageHref}
+          contactLabel={sellerTel ? "💬 Text" : "💬 Message"}
         />
       )}
 
@@ -301,12 +337,83 @@ export default async function ListingPage({
         </div>
       )}
 
+      {/* Features grid + Overview table (0015) — the teardown's two spec
+          sections, sized to our data. Null specs simply don't render;
+          a fully-specced car reads like their page, a thin one stays
+          clean instead of wearing a column of dashes. */}
+      <section className="mt-10 max-w-3xl">
+        <h2 className="text-base font-bold text-slate-900">Features</h2>
+        <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
+          {(
+            [
+              ["Mileage", formatMileage(listing.mileage)],
+              ["Body style", listing.body_style],
+              ["Drivetrain", listing.drivetrain],
+              ["Transmission", listing.transmission],
+              ["Fuel type", listing.fuel_type],
+              ["Exterior color", listing.exterior_color],
+              ["Interior color", listing.interior_color],
+              ["Engine", listing.engine],
+              ["Condition", listing.condition],
+            ] as const
+          )
+            .filter(([, v]) => v)
+            .map(([label, value]) => (
+              <div key={label}>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  {label}
+                </div>
+                <div className="mt-0.5 text-sm font-semibold text-slate-800">
+                  {value}
+                </div>
+              </div>
+            ))}
+        </div>
+
+        <h2 className="mt-10 text-base font-bold text-slate-900">Overview</h2>
+        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+          {(
+            [
+              ["Make", listing.make],
+              ["Model", listing.model],
+              ["Year", String(listing.year)],
+              ["Trim", listing.trim_level],
+              ["Body style", listing.body_style],
+              ["Exterior color", listing.exterior_color],
+              ["Interior color", listing.interior_color],
+              ["Mileage", formatMileage(listing.mileage)],
+              ["Condition", listing.condition],
+              ["VIN", listing.vin],
+            ] as const
+          )
+            .filter(([, v]) => v)
+            .map(([label, value], i) => (
+              <div
+                key={label}
+                className={`grid grid-cols-[130px_1fr] gap-2 px-4 py-2.5 text-sm sm:grid-cols-[160px_1fr] ${
+                  i % 2 === 0 ? "bg-slate-50" : "bg-white"
+                }`}
+              >
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  {label}
+                </div>
+                <div className="font-medium text-slate-800">{value}</div>
+              </div>
+            ))}
+        </div>
+      </section>
+
       {/* The financing switch (0008): a seller who doesn't offer it shows
           no calculator — the contact buttons are the whole pitch. */}
       {!sold && financed && (
         <PaymentCalculator
           price={listing.price}
-          smsHref={sellerTel ? "#contact" : smsHref}
+          smsHref={sellerTel ? "#contact" : messageHref}
+          ctaLabel={
+            sellerTel
+              ? "💬 Text the seller about financing"
+              : "💬 Message the seller about financing"
+          }
           listingId={listing.id}
         />
       )}

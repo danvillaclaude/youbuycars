@@ -3,7 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
-import { capFor, makeSlug, type Listing } from "@/lib/listings";
+import {
+  BODY_STYLES,
+  capFor,
+  CONDITIONS,
+  DRIVETRAINS,
+  FUEL_TYPES,
+  makeSlug,
+  TRANSMISSIONS,
+  type Listing,
+} from "@/lib/listings";
 
 const listingSchema = z.object({
   year: z.coerce.number().int().min(1900).max(2100),
@@ -16,9 +25,35 @@ const listingSchema = z.object({
   // 5,500: slightly above Facebook Marketplace's 5,000 (the owner's rule),
   // so a description pasted from FBMP always fits with room to spare.
   description: z.string().trim().max(5500),
+  // The CarGurus eight (0015). Body style required — it powers the
+  // tiles and filters, and the wizard enforces it too; the DB's CHECK
+  // constraints hold the same vocabularies, so a mismatch bounces
+  // loudly rather than storing junk. The rest are optional.
+  body_style: z.enum(BODY_STYLES),
+  exterior_color: z.string().trim().max(40).optional().or(z.literal("")),
+  interior_color: z.string().trim().max(40).optional().or(z.literal("")),
+  drivetrain: z.enum(DRIVETRAINS).optional().or(z.literal("")),
+  transmission: z.enum(TRANSMISSIONS).optional().or(z.literal("")),
+  fuel_type: z.enum(FUEL_TYPES).optional().or(z.literal("")),
+  engine: z.string().trim().max(80).optional().or(z.literal("")),
+  condition: z.enum(CONDITIONS).optional().or(z.literal("")),
   // The financing switch (0008): checkbox absence is a plain false.
   financing_offered: z.boolean().default(true),
 });
+
+/** The spec columns as a row fragment — empty strings become NULLs. */
+function specColumns(d: z.infer<typeof listingSchema>) {
+  return {
+    body_style: d.body_style,
+    exterior_color: d.exterior_color || null,
+    interior_color: d.interior_color || null,
+    drivetrain: d.drivetrain || null,
+    transmission: d.transmission || null,
+    fuel_type: d.fuel_type || null,
+    engine: d.engine || null,
+    condition: d.condition || null,
+  };
+}
 
 export interface ListingResult {
   ok: boolean;
@@ -66,6 +101,7 @@ export async function createListingAction(
       mileage: d.mileage,
       price: d.price,
       description: d.description,
+      ...specColumns(d),
       financing_offered: d.financing_offered,
       slug: makeSlug(d.year, d.make, d.model),
     })
@@ -104,6 +140,7 @@ export async function updateListingAction(
       mileage: d.mileage,
       price: d.price,
       description: d.description,
+      ...specColumns(d),
       financing_offered: d.financing_offered,
     })
     .eq("id", id);

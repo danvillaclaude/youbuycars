@@ -128,6 +128,31 @@ export default async function ComparePage({
           label: "Trim",
           cells: both.map((l) => l.trim_level ?? "—") as [string, string],
         },
+        // The spec rows (0015) — the comparison earns its table.
+        {
+          label: "Body style",
+          cells: both.map((l) => l.body_style ?? "—") as [string, string],
+        },
+        {
+          label: "Drivetrain",
+          cells: both.map((l) => l.drivetrain ?? "—") as [string, string],
+        },
+        {
+          label: "Transmission",
+          cells: both.map((l) => l.transmission ?? "—") as [string, string],
+        },
+        {
+          label: "Fuel type",
+          cells: both.map((l) => l.fuel_type ?? "—") as [string, string],
+        },
+        {
+          label: "Color",
+          cells: both.map((l) => l.exterior_color ?? "—") as [string, string],
+        },
+        {
+          label: "Condition",
+          cells: both.map((l) => l.condition ?? "—") as [string, string],
+        },
         {
           label: "VIN on file",
           cells: both.map((l) => (l.vin ? "Yes" : "—")) as [string, string],

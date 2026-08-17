@@ -17,6 +17,22 @@ export interface Listing {
   description: string;
   /** The financing switch (0008): off hides the est./mo and calculator. */
   financing_offered: boolean;
+  /*
+   * The CarGurus eight (0015): body style is required by the WIZARD for
+   * new posts (it powers the tiles and filters); everything else is
+   * optional and simply doesn't render when null. All nullable at the
+   * DB — pre-0015 rows must not break. Spec edits deliberately do NOT
+   * re-pend a live listing: adding facts must not knock a car off the
+   * board, or nobody backfills.
+   */
+  body_style: string | null;
+  exterior_color: string | null;
+  interior_color: string | null;
+  drivetrain: string | null;
+  transmission: string | null;
+  fuel_type: string | null;
+  engine: string | null;
+  condition: string | null;
   status: "pending" | "active" | "rejected" | "sold";
   slug: string;
   rejected_reason: string | null;
@@ -24,6 +40,38 @@ export interface Listing {
   sold_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/*
+ * The closed vocabularies, mirrored by CHECK constraints in 0015 — the
+ * same pin-two-lists-together shape as the CRM's memory categories;
+ * test-marketplace.ts asserts the lists are non-empty and stable-ish so
+ * a drift fails a test before it fails an insert. Colors are a UI list
+ * only (the DB accepts any short text): the select offers these, but
+ * "Pearl White" typed by an admin doesn't bounce.
+ */
+export const BODY_STYLES = [
+  "SUV", "Sedan", "Truck", "Coupe", "Hatchback", "Minivan", "Van",
+  "Convertible", "Wagon",
+] as const;
+export const DRIVETRAINS = ["FWD", "RWD", "AWD", "4WD"] as const;
+export const TRANSMISSIONS = ["Automatic", "Manual"] as const;
+export const FUEL_TYPES = [
+  "Gas", "Diesel", "Hybrid", "Plug-in Hybrid", "Electric",
+] as const;
+export const CONDITIONS = ["Excellent", "Good", "Fair"] as const;
+export const COLOR_OPTIONS = [
+  "Black", "White", "Silver", "Gray", "Blue", "Red", "Burgundy", "Brown",
+  "Beige", "Gold", "Green", "Orange", "Yellow", "Purple",
+] as const;
+
+/** A listing's price-history row (0015) — written only by the DB trigger. */
+export interface PriceChange {
+  id: string;
+  listing_id: string;
+  old_price: number;
+  new_price: number;
+  changed_at: string;
 }
 
 export interface ListingPhoto {
@@ -125,6 +173,7 @@ export function logoUrl(storagePath: string): string {
 export interface SearchFilters {
   make?: string | null;
   q?: string | null;
+  body_style?: string | null;
   year_min?: number | null;
   year_max?: number | null;
   max_price?: number | null;
@@ -140,6 +189,7 @@ export interface SearchFilters {
 export function describeSearch(f: SearchFilters): string {
   const parts: string[] = [];
   if (f.make) parts.push(f.make);
+  if (f.body_style) parts.push(`${f.body_style}s`);
   if (f.q) parts.push(`“${f.q}”`);
   if (f.year_min && f.year_max) parts.push(`${f.year_min}–${f.year_max}`);
   else if (f.year_min) parts.push(`${f.year_min} or newer`);

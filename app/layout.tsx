@@ -13,9 +13,12 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.domain),
-  title: "YouBuyCars — Find your next car, the easy way",
+  // The keyword layer (his ask, 16 Aug 2026): the industry's search
+  // terms, stated honestly — used cars for sale, the metro, the body
+  // styles, buy AND sell. Inner pages override with their own titles.
+  title: "Used Cars for Sale in Metro Detroit | YouBuyCars",
   description:
-    "Tell us what you're looking for and we'll text you real options — no pushy calls, no sitting at a dealership all day. Serving Metro Detroit, Michigan.",
+    "Buy and sell used cars in Metro Detroit, Michigan — SUVs, trucks and sedans from local dealers and sellers. Reviewed listings, payment estimates, price drops, and sellers you contact directly.",
 };
 
 export default function RootLayout({
@@ -39,12 +42,14 @@ export default function RootLayout({
               <span className="text-lg font-bold text-white">
                 You<span className="text-blue-500">Buy</span>Cars
               </span>
-              <a
-                href={`sms:${SITE.phoneE164}`}
+              {/* No number here — the platform line lives on /contact
+                  alone; the marketplace's job is seller contact. */}
+              <Link
+                href="/contact"
                 className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
               >
-                Text us · {SITE.phoneDisplay}
-              </a>
+                Contact us
+              </Link>
             </div>
 
             <div className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
