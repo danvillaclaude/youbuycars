@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Inter } from "next/font/google";
 import { SITE } from "@/lib/site";
 import { SiteHeader } from "./site-header";
+import { SubNav } from "./sub-nav";
 import { AskPill } from "./ask-pill";
 import { CompareTray } from "./compare-tray";
 import "./globals.css";
@@ -32,19 +33,9 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-dvh bg-white text-slate-900`}>
         <SiteHeader />
         {/* The sub-nav row (his spec, copying CarGurus): hyperlink words
-            under the floating header, at the top of the page — it
-            scrolls AWAY with the page, deliberately not sticky. */}
-        <nav className="border-b border-slate-100 bg-white px-4 sm:px-6">
-          <div className="mx-auto flex h-11 max-w-5xl items-center justify-center gap-5 text-sm font-semibold text-slate-800 sm:gap-7">
-            <Link href="/cars">Shop</Link>
-            <Link href="/sell">Sell</Link>
-            <Link href="/compare">Compare</Link>
-            <Link href="/research">Research</Link>
-            <Link href="/ask" className="text-blue-600">
-              ✦ Ask AI
-            </Link>
-          </div>
-        </nav>
+            under the floating header, scrolling away with the page —
+            now wearing the you-are-here underline (see sub-nav.tsx). */}
+        <SubNav />
         {children}
         <AskPill />
         <CompareTray />

@@ -126,7 +126,19 @@ export function MenuDrawer({
                     <Link
                       key={l.href}
                       href={l.href}
-                      className="rounded-lg px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      /* Close on TAP, not on pathname change (his "not
+                         intuitive" catch): query-string links like
+                         /cars?body=SUV don't change the pathname, and
+                         same-page links change nothing — the derived
+                         close never fired and the drawer sat there
+                         looking dead. The tap itself is the signal. */
+                      onClick={() => setOpenedAt(null)}
+                      aria-current={pathname === l.href ? "page" : undefined}
+                      className={`rounded-lg px-2 py-2 text-sm font-medium ${
+                        pathname === l.href
+                          ? "bg-blue-50 font-semibold text-blue-700"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
                     >
                       {l.label}
                     </Link>
