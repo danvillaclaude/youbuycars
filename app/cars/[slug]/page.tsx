@@ -20,6 +20,9 @@ import { Gallery } from "./gallery";
 import { SummaryBar } from "./summary-bar";
 import { ExpandText } from "@/app/expand-text";
 import { SaveHeart } from "@/app/save-heart";
+import { ListingCard } from "@/app/listing-card";
+import { SaveSearch } from "@/app/cars/save-search";
+import { describeSearch } from "@/lib/listings";
 
 async function loadListing(slug: string) {
   const supabase = await createClient();
@@ -51,6 +54,28 @@ async function loadListing(slug: string) {
         .order("changed_at", { ascending: false })
         .limit(10),
     ]);
+  // The cross-sell rail: the same seller's other live cars.
+  const { data: moreData } = await supabase
+    .from("listings")
+    .select("*")
+    .eq("seller_id", listing.seller_id)
+    .eq("status", "active")
+    .neq("id", listing.id)
+    .order("created_at", { ascending: false })
+    .limit(3);
+  const moreFromSeller = (moreData ?? []) as Listing[];
+  const morePhotos: Record<string, string> = {};
+  if (moreFromSeller.length > 0) {
+    const { data: mp } = await supabase
+      .from("listing_photos")
+      .select("listing_id, storage_path, sort_order")
+      .in("listing_id", moreFromSeller.map((l) => l.id))
+      .order("sort_order");
+    for (const p of (mp ?? []) as ListingPhoto[]) {
+      if (!morePhotos[p.listing_id]) morePhotos[p.listing_id] = p.storage_path;
+    }
+  }
+
   return {
     listing,
     photos: (photoData ?? []) as ListingPhoto[],
@@ -62,6 +87,8 @@ async function loadListing(slug: string) {
       financing_offered: boolean;
     } | null,
     priceChanges: (changeData ?? []) as PriceChange[],
+    moreFromSeller,
+    morePhotos,
   };
 }
 
@@ -73,11 +100,26 @@ export async function generateMetadata({
   const { slug } = await params;
   const found = await loadListing(slug);
   if (!found) return { title: "Listing · YouBuyCars" };
-  const { listing } = found;
+  const { listing, photos } = found;
   const name = `${listing.year} ${listing.make} ${listing.model}`;
+  const description = `${name}, ${formatMileage(listing.mileage)}, ${formatPrice(listing.price)} — for sale on YouBuyCars, Metro Detroit.`;
   return {
     title: `${name} — ${formatPrice(listing.price)} · YouBuyCars`,
-    description: `${name}, ${formatMileage(listing.mileage)}, ${formatPrice(listing.price)} — for sale on YouBuyCars, Metro Detroit.`,
+    description,
+    /*
+     * The share card (17 Aug 2026): a listing link texted or posted
+     * shows the CAR, not a blank tile — in a business where links get
+     * texted around, this is the photo doing sales work off-site.
+     */
+    openGraph: {
+      title: `${name} — ${formatPrice(listing.price)}`,
+      description,
+      images:
+        photos.length > 0 ? [{ url: photoUrl(photos[0].storage_path) }] : [],
+    },
+    twitter: {
+      card: photos.length > 0 ? "summary_large_image" : "summary",
+    },
   };
 }
 
@@ -97,7 +139,8 @@ export default async function ListingPage({
   const { slug } = await params;
   const found = await loadListing(slug);
   if (!found) notFound();
-  const { listing, photos, seller, priceChanges } = found;
+  const { listing, photos, seller, priceChanges, moreFromSeller, morePhotos } =
+    found;
   const name = `${listing.year} ${listing.make} ${listing.model}${listing.trim_level ? ` ${listing.trim_level}` : ""}`;
   const sold = listing.status === "sold";
   // The master breaker AND the listing's own box (0008/0009).
@@ -420,6 +463,59 @@ export default async function ListingPage({
           }
           listingId={listing.id}
         />
+      )}
+
+      {/* More from this dealer — the teardown's cross-sell rail, the
+          same shared card at a smaller count. */}
+      {moreFromSeller.length > 0 && (
+        <section className="mt-12">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-base font-bold text-slate-900">
+              More from {seller?.display_name ?? "this seller"}
+            </h2>
+            {seller?.public_slug && (
+              <Link
+                href={`/sellers/${seller.public_slug}`}
+                className="text-sm font-semibold text-blue-600 hover:underline"
+              >
+                See all →
+              </Link>
+            )}
+          </div>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {moreFromSeller.map((l) => (
+              <ListingCard
+                key={l.id}
+                listing={l}
+                photoPath={morePhotos[l.id] ?? null}
+                sellerName={seller?.display_name}
+                sellerCity={seller?.city}
+                sellerFinancing={seller?.financing_offered ?? true}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Notify me of new listings like this one — the alert pipe's
+          second door, opened where buying intent peaks. */}
+      {!sold && (
+        <section className="mt-12 rounded-2xl bg-slate-50 p-6">
+          <h2 className="text-base font-bold text-slate-900">
+            Notify me of new listings like this one
+          </h2>
+          <p className="mt-1 mb-3 text-sm text-slate-500">
+            One email when a similar car goes live — the day it&apos;s
+            approved.
+          </p>
+          <SaveSearch
+            filters={{ make: listing.make, body_style: listing.body_style }}
+            label={describeSearch({
+              make: listing.make,
+              body_style: listing.body_style,
+            })}
+          />
+        </section>
       )}
     </main>
   );

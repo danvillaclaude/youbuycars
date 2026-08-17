@@ -51,3 +51,21 @@ export function estimateMonthly(price: number): number {
     ),
   );
 }
+
+/**
+ * The inverse: the highest PRICE whose default-assumption estimate fits
+ * a monthly budget — the "$/mo" filter's whole engine. Same constants
+ * as estimateMonthly, so filtering by $260/mo shows exactly the cars
+ * whose cards SAY $260/mo or less; the two can never disagree.
+ */
+export function maxPriceForPayment(payment: number): number {
+  if (payment <= 0) return 0;
+  // The cards ROUND to the dollar, so "under $487/mo" must admit every
+  // car whose card SAYS $487 — i.e. exact payment < payment + 0.5.
+  const target = payment + 0.49;
+  const r = DEFAULT_ESTIMATE.apr / 100 / 12;
+  const n = DEFAULT_ESTIMATE.termMonths;
+  const principal =
+    r <= 0 ? target * n : (target * (1 - Math.pow(1 + r, -n))) / r;
+  return Math.floor(principal) + DEFAULT_ESTIMATE.down;
+}

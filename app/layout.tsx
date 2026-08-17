@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Inter } from "next/font/google";
 import { SITE } from "@/lib/site";
 import { SiteHeader } from "./site-header";
-import { BackToTop } from "./back-to-top";
+import { AskPill } from "./ask-pill";
+import { CompareTray } from "./compare-tray";
 import "./globals.css";
 
 // The teardown's face is Graphik — commercial. Inter is its named free
@@ -45,7 +46,8 @@ export default function RootLayout({
           </div>
         </nav>
         {children}
-        <BackToTop />
+        <AskPill />
+        <CompareTray />
         {/* The teardown's footer: dark, full-bleed, accordion groups that
             start COLLAPSED even on desktop (their pattern, copied as a
             choice — nothing pre-expanded, nothing shouting). Every link

@@ -9,7 +9,7 @@ import {
   type PriceChange,
   type SearchFilters,
 } from "@/lib/listings";
-import { DEFAULT_ESTIMATE } from "@/lib/payments";
+import { DEFAULT_ESTIMATE, maxPriceForPayment } from "@/lib/payments";
 import { ListingCard } from "@/app/listing-card";
 import { SaveSearch } from "./save-search";
 import { RememberSearch } from "./remember-search";
@@ -30,9 +30,28 @@ interface Params {
   year_min?: string;
   year_max?: string;
   max_price?: string;
+  max_payment?: string;
   max_miles?: string;
   financing?: string;
   sort?: string;
+}
+
+/**
+ * The keyword title, shared by the metadata AND the navy band's H1 —
+ * one derivation, so the tab and the page can never disagree.
+ */
+function searchTitle(p: Params): string {
+  const bits: string[] = ["Used"];
+  if (p.make) bits.push(p.make);
+  if (p.body && (BODY_STYLES as readonly string[]).includes(p.body))
+    bits.push(`${p.body}s`);
+  if (bits.length === 1) bits.push("Cars");
+  let title = bits.join(" ");
+  if (p.max_payment && Number(p.max_payment) > 0)
+    title += ` under $${Number(p.max_payment).toLocaleString("en-US")}/mo`;
+  else if (p.max_price && Number(p.max_price) > 0)
+    title += ` under $${Number(p.max_price).toLocaleString("en-US")}`;
+  return `${title} for Sale in Metro Detroit`;
 }
 
 /**
@@ -46,15 +65,7 @@ export async function generateMetadata({
   searchParams: Promise<Params>;
 }): Promise<Metadata> {
   const p = await searchParams;
-  const bits: string[] = ["Used"];
-  if (p.make) bits.push(p.make);
-  if (p.body && (BODY_STYLES as readonly string[]).includes(p.body))
-    bits.push(`${p.body}s`);
-  if (bits.length === 1) bits.push("Cars");
-  let title = bits.join(" ");
-  if (p.max_price && Number(p.max_price) > 0)
-    title += ` under $${Number(p.max_price).toLocaleString("en-US")}`;
-  title += " for Sale in Metro Detroit";
+  const title = searchTitle(p);
   return {
     title: `${title} | YouBuyCars`,
     description: `${title}. Every listing reviewed before it goes live — browse prices, payment estimates and local sellers, or save the search and get emailed when new matches arrive.`,
@@ -99,10 +110,21 @@ export default async function CarsPage({
     year_min: positive(params.year_min),
     year_max: positive(params.year_max),
     max_price: positive(params.max_price),
+    max_payment: positive(params.max_payment),
     max_miles: positive(params.max_miles),
     financing: params.financing === "1",
   };
   const supabase = await createClient();
+
+  /*
+   * The $/mo filter converts to a price cap through the SAME assumptions
+   * as the cards' est./mo — filtering by $260/mo shows exactly the cars
+   * whose cards say $260 or less. The stricter of the two caps wins.
+   */
+  const priceCap = Math.min(
+    filters.max_price ?? Infinity,
+    filters.max_payment ? maxPriceForPayment(filters.max_payment) : Infinity,
+  );
 
   let query = supabase.from("listings").select("*").eq("status", "active");
   if (filters.make) query = query.ilike("make", filters.make);
@@ -113,7 +135,7 @@ export default async function CarsPage({
     );
   if (filters.year_min) query = query.gte("year", filters.year_min);
   if (filters.year_max) query = query.lte("year", filters.year_max);
-  if (filters.max_price) query = query.lte("price", filters.max_price);
+  if (priceCap !== Infinity) query = query.lte("price", priceCap);
   if (filters.max_miles) query = query.lte("mileage", filters.max_miles);
   if (filters.financing) query = query.eq("financing_offered", true);
   switch (params.sort) {
@@ -237,6 +259,11 @@ export default async function CarsPage({
       key: "max_price",
       label: `Under $${filters.max_price.toLocaleString("en-US")}`,
     });
+  if (filters.max_payment)
+    chips.push({
+      key: "max_payment",
+      label: `Under $${filters.max_payment.toLocaleString("en-US")}/mo`,
+    });
   if (filters.max_miles)
     chips.push({
       key: "max_miles",
@@ -252,7 +279,7 @@ export default async function CarsPage({
     "mt-1 block w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm";
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-8">
+    <main>
       {/* A real search (filters set) is remembered for the homepage's
           returning-visitor chip. A bare browse remembers nothing. */}
       {chips.length > 0 && (
@@ -261,16 +288,47 @@ export default async function CarsPage({
           qs={href(params, {}).split("?")[1] ?? ""}
         />
       )}
-      <h1 className="text-2xl font-bold">Cars for sale</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        Every listing is reviewed before it goes live. Don&apos;t see what you
-        want?{" "}
-        <Link href="/contact" className="text-blue-600 underline">
-          Tell us — we&apos;ll find it and text you.
-        </Link>
-      </p>
 
-      <div className="mt-6 grid items-start gap-8 lg:grid-cols-[230px_1fr]">
+      {/* The navy band — CarGurus' results-page opener: the keyword
+          headline over dark, the search riding in the band, the white
+          sheet rounding up over it. Same title derivation as the tab. */}
+      <section className="bg-slate-900 px-4 pb-14 pt-8 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+            Every listing reviewed before it goes live
+          </p>
+          <h1 className="mt-1.5 max-w-3xl text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+            {searchTitle(params)}
+          </h1>
+          <form
+            action="/cars"
+            method="get"
+            className="mt-5 flex max-w-xl items-stretch gap-2 rounded-full bg-white p-1.5 pl-5"
+          >
+            {/* The band search changes the WORDS, keeps the filters. */}
+            {(
+              ["make", "body", "year_min", "year_max", "max_price", "max_payment", "max_miles", "financing", "sort"] as const
+            ).map((k) =>
+              params[k] ? (
+                <input key={k} type="hidden" name={k} value={params[k]} />
+              ) : null,
+            )}
+            <input
+              name="q"
+              defaultValue={params.q ?? ""}
+              placeholder="Search make, model, keyword…"
+              className="w-full border-0 bg-transparent text-sm text-slate-800"
+            />
+            <button className="shrink-0 rounded-full bg-blue-600 px-5 py-2 text-sm font-bold text-white hover:bg-blue-700">
+              Search
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* The sheet. */}
+      <div className="mx-auto -mt-6 max-w-6xl rounded-t-3xl bg-white px-4 pb-10 pt-7 sm:px-6">
+      <div className="grid items-start gap-8 lg:grid-cols-[230px_1fr]">
         {/* The filter rail — collapsed accordions, the teardown's shape.
             A group with something set opens itself; the rest stay shut. */}
         <form method="get" className="rounded-2xl border border-slate-200 bg-white px-4 py-2 lg:sticky lg:top-4">
@@ -345,9 +403,12 @@ export default async function CarsPage({
             </div>
           </details>
 
-          <details className={groupCls} open={Boolean(filters.max_price)}>
+          <details
+            className={groupCls}
+            open={Boolean(filters.max_price || filters.max_payment)}
+          >
             <summary className={summaryCls}>
-              Price <span className="text-slate-300">▾</span>
+              Price &amp; monthly payment <span className="text-slate-300">▾</span>
             </summary>
             <input
               name="max_price"
@@ -357,6 +418,19 @@ export default async function CarsPage({
               defaultValue={params.max_price ?? ""}
               className={inputCls}
             />
+            <input
+              name="max_payment"
+              type="number"
+              min={0}
+              placeholder="Max $/mo"
+              defaultValue={params.max_payment ?? ""}
+              className={inputCls}
+            />
+            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
+              $/mo uses the same estimate as the cards ($
+              {DEFAULT_ESTIMATE.down.toLocaleString("en-US")} down,{" "}
+              {DEFAULT_ESTIMATE.termMonths} mo, {DEFAULT_ESTIMATE.apr}%).
+            </p>
           </details>
 
           <details className={groupCls} open={Boolean(filters.max_miles)}>
@@ -400,31 +474,36 @@ export default async function CarsPage({
         </form>
 
         <section>
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="text-sm font-semibold text-slate-700 tabular-nums">
-              {listings.length} car{listings.length === 1 ? "" : "s"} for sale
+          {/* The toolbar, their weight: the count in real type, the
+              save pill beside sort. */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xl font-extrabold text-slate-900 tabular-nums">
+              {listings.length} vehicle{listings.length === 1 ? "" : "s"} found
             </p>
-            <p className="text-xs text-slate-500">
-              Sort:{" "}
-              {SORTS.map((s, i) => (
-                <span key={s.key}>
-                  {i > 0 && <span className="text-slate-300"> · </span>}
-                  {(params.sort ?? "") === s.key ? (
-                    <span className="font-bold text-slate-800">{s.label}</span>
-                  ) : (
-                    <Link
-                      href={href(params, { sort: s.key || null })}
-                      className="hover:text-blue-600"
-                    >
-                      {s.label}
-                    </Link>
-                  )}
-                </span>
-              ))}
-            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <p className="text-xs text-slate-500">
+                Sort:{" "}
+                {SORTS.map((s, i) => (
+                  <span key={s.key}>
+                    {i > 0 && <span className="text-slate-300"> · </span>}
+                    {(params.sort ?? "") === s.key ? (
+                      <span className="font-bold text-slate-800">{s.label}</span>
+                    ) : (
+                      <Link
+                        href={href(params, { sort: s.key || null })}
+                        className="hover:text-blue-600"
+                      >
+                        {s.label}
+                      </Link>
+                    )}
+                  </span>
+                ))}
+              </p>
+              <SaveSearch filters={filters} label={describeSearch(filters)} />
+            </div>
           </div>
 
-          {/* Active filters + the save-search control, one row. */}
+          {/* Active filters, removable. */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {chips.map((c) => (
               <Link
@@ -435,7 +514,6 @@ export default async function CarsPage({
                 {c.label} <span className="ml-0.5 text-slate-400">✕</span>
               </Link>
             ))}
-            <SaveSearch filters={filters} label={describeSearch(filters)} />
           </div>
 
           {listings.length === 0 ? (
@@ -485,6 +563,7 @@ export default async function CarsPage({
             </>
           )}
         </section>
+      </div>
       </div>
     </main>
   );

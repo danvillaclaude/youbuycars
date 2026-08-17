@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { describeSearch, type SearchFilters } from "@/lib/listings";
+import { maxPriceForPayment } from "@/lib/payments";
 
 /**
  * Save-a-search (0014, from the CarGurus teardown study): the buyer
@@ -21,6 +22,19 @@ export async function saveSearchAction(
 
   // Rebuild the row from the raw filters — never trust a label or a
   // number shape the browser could have edited into nonsense.
+  const maxPayment = numberOrNull(filters.max_payment);
+  const givenMaxPrice = numberOrNull(filters.max_price);
+  /*
+   * The $/mo budget converts to a price cap AT SAVE TIME with the same
+   * assumptions as the cards, and lands in max_price — so the CRM's
+   * alert sender matches on price like always and needs no change.
+   * max_payment survives separately purely for the label's sake.
+   */
+  const paymentCap = maxPayment ? maxPriceForPayment(maxPayment) : null;
+  const effectiveMaxPrice =
+    givenMaxPrice && paymentCap
+      ? Math.min(givenMaxPrice, paymentCap)
+      : (givenMaxPrice ?? paymentCap);
   const row = {
     email: cleanEmail,
     make: filters.make?.slice(0, 60) || null,
@@ -28,7 +42,8 @@ export async function saveSearchAction(
     body_style: filters.body_style?.slice(0, 40) || null,
     year_min: numberOrNull(filters.year_min),
     year_max: numberOrNull(filters.year_max),
-    max_price: numberOrNull(filters.max_price),
+    max_price: effectiveMaxPrice,
+    max_payment: maxPayment,
     max_miles: numberOrNull(filters.max_miles),
     financing: Boolean(filters.financing),
   };

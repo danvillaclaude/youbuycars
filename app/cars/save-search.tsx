@@ -33,12 +33,14 @@ export function SaveSearch({
 
   if (!open) {
     return (
+      /* Their weight: Save search is a REAL button, heart and all —
+         it's the retention engine, it doesn't whisper. */
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+        className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
       >
-        🔔 Save this search
+        ♡ Save search
       </button>
     );
   }

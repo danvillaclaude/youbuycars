@@ -18,6 +18,7 @@ import {
   TIER_CAPS,
   TRANSMISSIONS,
 } from "../lib/listings";
+import { estimateMonthly, maxPriceForPayment } from "../lib/payments";
 
 let passed = 0;
 let failed = 0;
@@ -121,6 +122,23 @@ check("DRIVETRAINS is the four", DRIVETRAINS.length === 4);
 check("TRANSMISSIONS is the two", TRANSMISSIONS.length === 2);
 check("FUEL_TYPES is the five", FUEL_TYPES.length === 5);
 check("CONDITIONS is the three", CONDITIONS.length === 3);
+
+/*
+ * The $/mo filter's inverse (0016): maxPriceForPayment must be the true
+ * inverse of estimateMonthly under the same assumptions — filtering by
+ * a card's own est./mo must always include that car, and a dollar more
+ * of price must push the estimate over the budget.
+ */
+for (const price of [5000, 14500, 24995, 62000]) {
+  const est = estimateMonthly(price);
+  const cap = maxPriceForPayment(est);
+  check(`payment inverse admits its own card ($${price})`, cap >= price);
+  check(
+    `payment inverse is tight ($${price})`,
+    estimateMonthly(cap + 100) > est,
+  );
+}
+check("payment inverse of zero is zero", maxPriceForPayment(0) === 0);
 
 console.log(`${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatMileage, formatPrice, photoUrl, type Listing } from "@/lib/listings";
 import { estimateMonthly } from "@/lib/payments";
 import { SaveHeart } from "@/app/save-heart";
+import { CompareToggle } from "@/app/compare-toggle";
 
 /**
  * The Concept A card ("Showroom Daylight", the owner's pick from the Phase 2
@@ -46,8 +47,10 @@ export function ListingCard({
     >
       <div className="relative aspect-[4/3] bg-slate-100">
         {/* The teardown's card anatomy, completed: the circular save
-            heart floating over the photo. */}
+            heart floating over the photo — and the compare pick under
+            it, so choosing happens where the cars are seen. */}
         <SaveHeart slug={l.slug} className="absolute right-2 top-2 z-10" />
+        <CompareToggle slug={l.slug} className="absolute right-2 top-[52px] z-10" />
         {photoPath ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

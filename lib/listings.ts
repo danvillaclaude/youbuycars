@@ -177,6 +177,8 @@ export interface SearchFilters {
   year_min?: number | null;
   year_max?: number | null;
   max_price?: number | null;
+  /** Monthly budget — converts to a price cap via lib/payments. */
+  max_payment?: number | null;
   max_miles?: number | null;
   financing?: boolean;
 }
@@ -194,7 +196,9 @@ export function describeSearch(f: SearchFilters): string {
   if (f.year_min && f.year_max) parts.push(`${f.year_min}–${f.year_max}`);
   else if (f.year_min) parts.push(`${f.year_min} or newer`);
   else if (f.year_max) parts.push(`${f.year_max} or older`);
-  if (f.max_price)
+  if (f.max_payment)
+    parts.push(`under $${f.max_payment.toLocaleString("en-US")}/mo`);
+  else if (f.max_price)
     parts.push(`under $${f.max_price.toLocaleString("en-US")}`);
   if (f.max_miles)
     parts.push(`under ${f.max_miles.toLocaleString("en-US")} mi`);
