@@ -98,8 +98,15 @@ export default function RootLayout({
               ))}
             </div>
 
-            <p className="mt-6 text-xs text-slate-500">
-              © {new Date().getFullYear()} {SITE.name} · {SITE.area}
+            <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+              <span>
+                © {new Date().getFullYear()} {SITE.name} · {SITE.area}
+              </span>
+              {/* The crawler's front door (his ask): one hop from every
+                  page to every page. */}
+              <Link href="/site-map" className="hover:text-white">
+                Site index
+              </Link>
             </p>
           </div>
         </footer>
