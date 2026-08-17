@@ -42,7 +42,7 @@ export default function AboutPage() {
           sellers and dealers list cars and buyers browse and inquire
           directly. If you&apos;d like to be first in line when listings
           open,{" "}
-          <Link href="/#inquiry" className="text-blue-600 underline">
+          <Link href="/contact" className="text-blue-600 underline">
             tell us what you&apos;re looking for
           </Link>{" "}
           and mention it.

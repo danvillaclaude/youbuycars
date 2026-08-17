@@ -218,7 +218,7 @@ export default async function CarsPage({
       <p className="mt-1 text-sm text-slate-500">
         Every listing is reviewed before it goes live. Don&apos;t see what you
         want?{" "}
-        <Link href="/#inquiry" className="text-blue-600 underline">
+        <Link href="/contact" className="text-blue-600 underline">
           Tell us — we&apos;ll find it and text you.
         </Link>
       </p>
@@ -385,7 +385,7 @@ export default async function CarsPage({
               <p className="mt-1 text-sm text-slate-500">
                 Save this search above and we&apos;ll email you when a match
                 lands, or{" "}
-                <Link href="/#inquiry" className="text-blue-600 underline">
+                <Link href="/contact" className="text-blue-600 underline">
                   tell us what you&apos;re after
                 </Link>{" "}
                 and a real person will text you options. Selling?{" "}

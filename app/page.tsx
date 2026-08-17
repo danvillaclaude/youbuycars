@@ -1,30 +1,23 @@
 import Link from "next/link";
-import { SITE } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { type Listing, type ListingPhoto } from "@/lib/listings";
 import { ListingCard } from "@/app/listing-card";
-import { InquiryForm } from "./inquiry-form";
 import { LastSearchChip } from "./last-search";
 import { PromoSplit } from "./promo-split";
 
 /**
- * The front door — and the A2P campaign's primary Call-to-Action URL.
- * Every compliance sentence on this page is registered with carriers;
- * change the words here and the campaign registration must change too.
- *
- * Rebuilt to Concept A (15 Aug 2026, the owner's report: "it doesn't
- * feel like cargurus"): a light search-first hero and REAL CARS above
- * the fold — the marketplace leads with its inventory, and the
- * tell-us-what-you-want funnel follows it. Every registered sentence
- * survives verbatim; only the frame around them changed.
+ * The front door. Cut to what CarGurus' own homepage is (16 Aug 2026,
+ * the owner's correction after two rounds of restyling missed the
+ * point: "notice none of this is on cargurus home page"): search,
+ * inventory, promos — NOTHING else. The Text-START band and its
+ * registered disclosure live on /contact now; the texting explainer's
+ * canonical home is /sms-consent (always was — the homepage copy
+ * mirrored it); the find-a-car form belongs to dealer pages, gated to
+ * paying tiers. Every registered sentence still lives at a public URL,
+ * and /sms-consent — the campaign's registered proof page — is
+ * untouched.
  */
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ about?: string }>;
-}) {
-  const { about } = await searchParams;
-
+export default async function HomePage() {
   // The shelf above the fold: newest live cars, and the makes the search
   // select offers — same vocabulary the browse page filters on.
   const supabase = await createClient();
@@ -275,120 +268,8 @@ export default async function HomePage({
         </PromoSplit>
       </section>
 
-      {/* Text-us-first — the second registered opt-in path. Restyled to
-          the accent-sky band CarGurus uses (pale stripe, navy headline,
-          product proof beside it) — the loud blue slab read as an ad, not
-          a premium marketplace. EVERY registered sentence is verbatim;
-          only the frame changed, same rule as the Concept A rebuild. */}
-      <section className="bg-sky-50 px-6 py-14">
-        <div className="mx-auto grid max-w-5xl items-center gap-8 sm:grid-cols-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-600">
-              Prefer to skip the form?
-            </p>
-            <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-              Text <span className="rounded-lg bg-white px-2 text-blue-600 shadow-sm">START</span> to{" "}
-              <a href={`sms:${SITE.phoneE164}`} className="whitespace-nowrap underline decoration-blue-300 underline-offset-4 hover:decoration-blue-600">
-                {SITE.phoneDisplay}
-              </a>
-            </p>
-            <p className="mt-2 text-slate-600">
-              and a real person will text you back about your next car.
-            </p>
-            <a
-              href={`sms:${SITE.phoneE164}?&body=START`}
-              className="mt-5 inline-block rounded-full bg-blue-600 px-7 py-3 text-sm font-bold text-white hover:bg-blue-700"
-            >
-              💬 Text START now
-            </a>
-          </div>
-
-          {/* Product proof, their phone-in-hand trick in CSS: the thread
-              a shopper actually starts. The reply bubble deliberately
-              reuses the page's own sentence — nothing invented. */}
-          <div className="flex justify-center">
-            <div className="w-64 rounded-[2rem] border-8 border-slate-900 bg-white p-3 shadow-xl shadow-blue-900/10">
-              <p className="text-center text-[10px] font-semibold text-slate-400">
-                {SITE.phoneDisplay}
-              </p>
-              <div className="mt-2 ml-auto w-fit rounded-2xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white">
-                START
-              </div>
-              <div className="mt-2 max-w-[85%] rounded-2xl bg-slate-100 px-3.5 py-2 text-xs leading-relaxed text-slate-700">
-                A real person will text you back about your next car. 👋
-              </div>
-              <div className="mt-2 flex w-fit gap-1 rounded-2xl bg-slate-100 px-3.5 py-2.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-200" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <p className="mx-auto mt-8 max-w-2xl text-center text-xs leading-relaxed text-slate-500">
-          By texting START (or any message) to {SITE.phoneDisplay}, you agree
-          to receive text messages from YouBuyCars about your vehicle inquiry,
-          appointments, and follow-ups. Consent is not a condition of
-          purchase. Message frequency varies. Message and data rates may
-          apply. Reply STOP to opt out at any time, or HELP for help. See our{" "}
-          <Link href="/privacy" className="underline">
-            Privacy Policy
-          </Link>{" "}
-          and{" "}
-          <Link href="/terms" className="underline">
-            Terms &amp; Conditions
-          </Link>
-          .
-        </p>
-      </section>
-
-      {/* How it works — the teardown's numbered-circle explainer (a real
-          sequence, so the numbers carry information), no emoji cards. */}
-      <section className="mx-auto max-w-4xl px-6 py-16">
-        <h2 className="text-center text-2xl font-bold">How it works</h2>
-        <div className="mt-10 grid gap-8 sm:grid-cols-3">
-          {[
-            {
-              title: "Tell us what you want",
-              body: "Year, make, model, budget — or just describe what you need.",
-            },
-            {
-              title: "We text you back",
-              body: "A real person texts you options that actually fit. No phone tag.",
-            },
-            {
-              title: "Come drive it",
-              body: "Like what you see? We'll have it pulled up and ready for you.",
-            },
-          ].map((step, i) => (
-            <div key={step.title} className="text-center">
-              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-base font-bold text-white">
-                {i + 1}
-              </span>
-              <h3 className="mt-3 font-semibold">{step.title}</h3>
-              <p className="mt-1 text-sm text-slate-500">{step.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* The form — the first registered opt-in path, now in the
-          teardown's floating-white-card dress over a pale stripe. The
-          form component itself (registered consent language) untouched. */}
-      <section id="inquiry" className="bg-slate-50 px-6 py-16">
-        <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/5 sm:p-8">
-          <h2 className="text-2xl font-bold">What are you looking for?</h2>
-          <p className="mt-1 mb-6 text-sm text-slate-500">
-            Fill this out and we&apos;ll text you back shortly.
-          </p>
-          <InquiryForm defaultLookingFor={about ?? ""} />
-        </div>
-      </section>
-
-      {/* The saved-search promo — white stripe, below the form so the
-          zebra alternates cleanly all the way to the footer. */}
-      <section className="px-6 py-14">
+      {/* The saved-search promo — gray stripe in the zebra. */}
+      <section className="bg-slate-50 px-6 py-14">
         <PromoSplit
           flip
           eyebrow="Save a search"
@@ -425,67 +306,40 @@ export default async function HomePage({
         </PromoSplit>
       </section>
 
-      {/* The consent story, in plain sight — mirrors /sms-consent.
-          Gray stripe closes the zebra before the dark footer. */}
-      <section className="bg-slate-50 px-6 py-16">
-        <div className="mx-auto max-w-3xl">
-        <h2 className="text-xl font-bold">About our text messages</h2>
-        <p className="mt-3 text-sm leading-relaxed text-slate-600">
-          You&apos;ll only ever receive texts from YouBuyCars through one of
-          the three ways below — each one is you choosing to hear from us, and
-          messages are always about your vehicle inquiry, appointments, and
-          follow-ups.
-        </p>
-        {/* Same three ways, same words — the circles just carry the
-            numbering the way the rest of the page now does. */}
-        <ol className="mt-6 space-y-5 text-sm leading-relaxed text-slate-600">
-          <li className="flex gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-              1
-            </span>
-            <span>
-              <strong className="text-slate-800">The form on this page.</strong>{" "}
-              You fill it out with your number, and tick the optional consent
-              checkbox next to the full disclosure. The box is never pre-checked
-              and never required — you can send the form without it, and if you
-              do, we won&apos;t text you.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-              2
-            </span>
-            <span>
-              <strong className="text-slate-800">Texting us first.</strong> You
-              text START — or any message — to {SITE.phoneDisplay}. Starting the
-              conversation is your consent to receive our replies about it, and
-              replying STOP at any time ends it immediately.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-              3
-            </span>
-            <span>
-              <strong className="text-slate-800">In person or on a call.</strong>{" "}
-              You give us your number and tell us it&apos;s OK to text you. The
-              salesperson records that you agreed, when, and how, before any
-              message is sent.{" "}
-              <Link href="/sms-consent" className="text-blue-600 underline">
-                See exactly how that works →
-              </Link>
-            </span>
-          </li>
-        </ol>
-        <ul className="mt-6 space-y-1 text-xs text-slate-500">
-          <li>Message frequency varies based on our conversation.</li>
-          <li>Message and data rates may apply.</li>
-          <li>Reply STOP at any time to opt out, or HELP for help.</li>
-          <li>
-            We never sell or share your mobile number or SMS consent with
-            third parties or affiliates for marketing.
-          </li>
-          </ul>
+      {/* How it works — the closer, with the one door to /contact. */}
+      <section className="mx-auto max-w-4xl px-6 py-16">
+        <h2 className="text-center text-2xl font-bold">How it works</h2>
+        <div className="mt-10 grid gap-8 sm:grid-cols-3">
+          {[
+            {
+              title: "Tell us what you want",
+              body: "Year, make, model, budget — or just describe what you need.",
+            },
+            {
+              title: "We text you back",
+              body: "A real person texts you options that actually fit. No phone tag.",
+            },
+            {
+              title: "Come drive it",
+              body: "Like what you see? We'll have it pulled up and ready for you.",
+            },
+          ].map((step, i) => (
+            <div key={step.title} className="text-center">
+              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-base font-bold text-white">
+                {i + 1}
+              </span>
+              <h3 className="mt-3 font-semibold">{step.title}</h3>
+              <p className="mt-1 text-sm text-slate-500">{step.body}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-9 text-center">
+          <Link
+            href="/contact"
+            className="rounded-full bg-blue-600 px-7 py-3 text-sm font-bold text-white hover:bg-blue-700"
+          >
+            Start a conversation
+          </Link>
         </div>
       </section>
     </main>

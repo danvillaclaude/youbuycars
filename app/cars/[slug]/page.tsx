@@ -147,7 +147,7 @@ export default async function ListingPage({
       {sold && (
         <div className="mt-4 rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
           This one&apos;s sold — but we can find you another.{" "}
-          <Link href="/#inquiry" className="text-blue-600 underline">
+          <Link href="/contact" className="text-blue-600 underline">
             Tell us what you&apos;re after
           </Link>
           .
@@ -219,10 +219,10 @@ export default async function ListingPage({
                   💬 Text about this car
                 </TrackedContact>
                 <Link
-                  href={`/?about=${askAbout}#inquiry`}
+                  href="/contact"
                   className="rounded-full border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  Ask by form instead
+                  Other ways to reach us
                 </Link>
               </div>
             ))}

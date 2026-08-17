@@ -20,14 +20,16 @@ async function loadSeller(slug: string) {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, phone, about, city, logo_path, public_slug, tier, financing_offered",
+      "id, display_name, phone, about, city, logo_path, public_slug, tier, financing_offered, is_crm",
     )
     .eq("public_slug", slug)
     .maybeSingle();
-  return data as Pick<
-    Profile,
-    "id" | "display_name" | "phone" | "about" | "city" | "logo_path" | "public_slug" | "tier" | "financing_offered"
-  > | null;
+  return data as
+    | (Pick<
+        Profile,
+        "id" | "display_name" | "phone" | "about" | "city" | "logo_path" | "public_slug" | "tier" | "financing_offered"
+      > & { is_crm: boolean })
+    | null;
 }
 
 export async function generateMetadata({
@@ -171,16 +173,23 @@ export default async function SellerPage({
       )}
 
       {/* The seller's own funnel (0010): lands on their dashboard, and in
-          a CRM dealership's CRM as a real lead within the minute. */}
-      <h2 className="mt-12 text-lg font-bold">
-        Ask {seller.display_name ?? "this seller"} about a car
-      </h2>
-      <div className="mt-3">
-        <SellerInquiryForm
-          sellerId={seller.id}
-          sellerName={seller.display_name ?? "this seller"}
-        />
-      </div>
+          a CRM dealership's CRM as a real lead within the minute. Gated
+          (16 Aug 2026, the owner's call): the inquiry form is a paying
+          feature — dealers and Pro/Ultimate accounts only. Free sellers
+          keep the on-site Message button above. */}
+      {(seller.is_crm || seller.tier !== "free") && (
+        <>
+          <h2 className="mt-12 text-lg font-bold">
+            Ask {seller.display_name ?? "this seller"} about a car
+          </h2>
+          <div className="mt-3">
+            <SellerInquiryForm
+              sellerId={seller.id}
+              sellerName={seller.display_name ?? "this seller"}
+            />
+          </div>
+        </>
+      )}
 
       {/* Ratings (0009): approved reviews, then the door to add one. */}
       <h2 className="mt-12 text-lg font-bold">Reviews</h2>
