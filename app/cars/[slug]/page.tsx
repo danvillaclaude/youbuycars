@@ -207,7 +207,7 @@ export default async function ListingPage({
   const messageHref = `/messages/start?seller=${listing.seller_id}&listing=${listing.id}`;
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-8">
+    <main className="mx-auto max-w-6xl px-6 py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

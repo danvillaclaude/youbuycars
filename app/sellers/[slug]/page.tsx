@@ -102,7 +102,7 @@ export default async function SellerPage({
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-7xl px-6 py-10">
       <div className="flex flex-wrap items-center gap-5">
         {seller.logo_path ? (
           // eslint-disable-next-line @next/next/no-img-element

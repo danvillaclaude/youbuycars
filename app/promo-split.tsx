@@ -28,7 +28,7 @@ export function PromoSplit({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto grid max-w-5xl items-center gap-6 sm:grid-cols-2">
+    <div className="mx-auto grid max-w-7xl items-center gap-6 sm:grid-cols-2">
       <div
         className={`rounded-3xl bg-blue-50 p-8 sm:p-10 ${flip ? "sm:order-2" : ""}`}
       >

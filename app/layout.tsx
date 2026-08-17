@@ -44,7 +44,7 @@ export default function RootLayout({
             choice — nothing pre-expanded, nothing shouting). Every link
             the old footer carried survives inside a group. */}
         <footer className="bg-slate-900 px-6 py-10 text-sm text-slate-300">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-7xl">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
               <span className="text-lg font-bold text-white">
                 You<span className="text-blue-500">Buy</span>Cars

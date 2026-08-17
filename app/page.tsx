@@ -164,7 +164,7 @@ export default async function HomePage() {
 
       {/* Shop-by-style tiles + the trust strip — the premium furniture the
           big sites teach shoppers to expect. Tiles are just searches. */}
-      <section className="mx-auto max-w-5xl px-6 pt-10">
+      <section className="mx-auto max-w-7xl px-6 pt-10">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {/* Real body-style searches now (0015) — the q= keyword hack
               is dead. */}
@@ -207,7 +207,7 @@ export default async function HomePage() {
           in the zebra: full-bleed background, contained content. */}
       {latest.length > 0 && (
         <section className="mt-10 bg-slate-50 px-6 py-12">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-7xl">
           <div className="flex items-baseline justify-between">
             <h2 className="text-xl font-bold text-slate-900">
               Fresh on the lot

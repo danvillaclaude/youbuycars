@@ -293,7 +293,7 @@ export default async function CarsPage({
           headline over dark, the search riding in the band, the white
           sheet rounding up over it. Same title derivation as the tab. */}
       <section className="bg-slate-900 px-4 pb-14 pt-8 sm:px-6">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-7xl">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
             Every listing reviewed before it goes live
           </p>
@@ -327,7 +327,7 @@ export default async function CarsPage({
       </section>
 
       {/* The sheet. */}
-      <div className="mx-auto -mt-6 max-w-6xl rounded-t-3xl bg-white px-4 pb-10 pt-7 sm:px-6">
+      <div className="mx-auto -mt-6 max-w-7xl rounded-t-3xl bg-white px-4 pb-10 pt-7 sm:px-6">
       <div className="grid items-start gap-8 lg:grid-cols-[230px_1fr]">
         {/* The filter rail — collapsed accordions, the teardown's shape.
             A group with something set opens itself; the rest stay shut. */}

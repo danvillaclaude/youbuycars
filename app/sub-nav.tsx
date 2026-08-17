@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const LINKS = [
+export const NAV_LINKS = [
   { href: "/cars", label: "Shop" },
   { href: "/sell", label: "Sell" },
   { href: "/compare", label: "Compare" },
@@ -16,14 +16,18 @@ const LINKS = [
  * state (his ask: "it should show what i've clicked"): the current
  * section carries a blue underline bar and blue ink, tab-style. A
  * listing page lights Shop; a guide lights Research.
+ *
+ * MOBILE ONLY since the desktop pass (17 Aug 2026): at lg+ these same
+ * links live inside the header itself (header-nav.tsx), the way
+ * CarGurus only stacks a second row on small screens.
  */
 export function SubNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="border-b border-slate-100 bg-white px-4 sm:px-6">
-      <div className="mx-auto flex h-11 max-w-5xl items-center justify-center gap-5 text-sm font-semibold sm:gap-7">
-        {LINKS.map((l) => {
+    <nav className="border-b border-slate-100 bg-white px-4 sm:px-6 lg:hidden">
+      <div className="mx-auto flex h-11 max-w-7xl items-center justify-center gap-5 text-sm font-semibold sm:gap-7">
+        {NAV_LINKS.map((l) => {
           const active =
             pathname === l.href || pathname.startsWith(`${l.href}/`);
           return (
