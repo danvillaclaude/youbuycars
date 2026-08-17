@@ -28,7 +28,7 @@ export function ContactBox({
   const [agreed, setAgreed] = useState(false);
 
   const btn = (enabled: boolean, solid: boolean) =>
-    `rounded-xl px-4 py-3 text-center text-sm font-bold ${
+    `rounded-full px-4 py-3 text-center text-sm font-bold ${
       solid
         ? enabled
           ? "bg-blue-600 text-white hover:bg-blue-700"

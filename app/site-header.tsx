@@ -45,7 +45,7 @@ export async function SiteHeader() {
           {user ? (
             <Link
               href="/dashboard"
-              className="rounded-lg bg-blue-600 px-3 py-1.5 text-white hover:bg-blue-700"
+              className="rounded-full bg-blue-600 px-4 py-1.5 text-white hover:bg-blue-700"
             >
               My listings
             </Link>
@@ -58,7 +58,7 @@ export async function SiteHeader() {
                   in one button, the same line every page already texts. */}
               <a
                 href={`sms:${SITE.phoneE164}`}
-                className="rounded-lg bg-blue-600 px-3 py-1.5 text-white hover:bg-blue-700"
+                className="rounded-full bg-blue-600 px-4 py-1.5 text-white hover:bg-blue-700"
               >
                 Text us
               </a>

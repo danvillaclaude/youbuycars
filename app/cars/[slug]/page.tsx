@@ -14,6 +14,9 @@ import { estimateMonthly } from "@/lib/payments";
 import { PaymentCalculator } from "./payment-calculator";
 import { TrackedContact, TrackView } from "@/app/track-client";
 import { ContactBox } from "./contact-box";
+import { Gallery } from "./gallery";
+import { SummaryBar } from "./summary-bar";
+import { ExpandText } from "@/app/expand-text";
 
 async function loadListing(slug: string) {
   const supabase = await createClient();
@@ -156,31 +159,20 @@ export default async function ListingPage({
           and the seller card in one glanceable column. */}
       <div className="mt-4 grid gap-7 lg:grid-cols-[3fr_2fr]">
         <div>
-          <div className="overflow-hidden rounded-2xl bg-slate-100">
-            {photos.length > 0 ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={photoUrl(photos[0].storage_path)}
-                alt={name}
-                className="aspect-[16/10] w-full object-cover"
-              />
-            ) : (
-              <div className="flex aspect-[16/10] items-center justify-center text-6xl">
-                🚗
-              </div>
-            )}
-          </div>
-          {photos.length > 1 && (
-            <div className="mt-2.5 grid grid-cols-4 gap-2.5 sm:grid-cols-5">
-              {photos.slice(1).map((p) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={p.id}
-                  src={photoUrl(p.storage_path)}
-                  alt=""
-                  className="aspect-[4/3] w-full rounded-lg object-cover"
-                />
-              ))}
+          {photos.length > 0 ? (
+            /* Gallery + lightbox (the teardown's counter-chip → modal
+               pattern) — thumbnails swap the main image in place. */
+            <Gallery
+              photos={photos.map((p) => ({
+                id: p.id,
+                url: photoUrl(p.storage_path),
+              }))}
+              name={name}
+              price={formatPrice(listing.price)}
+            />
+          ) : (
+            <div className="flex aspect-[16/10] items-center justify-center rounded-2xl bg-slate-100 text-6xl">
+              🚗
             </div>
           )}
         </div>
@@ -222,13 +214,13 @@ export default async function ListingPage({
                   href={smsHref}
                   listingId={listing.id}
                   kind="text_tap"
-                  className="rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
+                  className="rounded-full bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
                 >
                   💬 Text about this car
                 </TrackedContact>
                 <Link
                   href={`/?about=${askAbout}#inquiry`}
-                  className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="rounded-full border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   Ask by form instead
                 </Link>
@@ -249,7 +241,7 @@ export default async function ListingPage({
           {!sold && (
             <Link
               href={`/messages/start?seller=${listing.seller_id}&listing=${listing.id}`}
-              className="mt-2 block rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-center text-sm font-semibold text-blue-700 hover:bg-blue-100"
+              className="mt-2 block rounded-full border border-blue-200 bg-blue-50 px-4 py-2.5 text-center text-sm font-semibold text-blue-700 hover:bg-blue-100"
             >
               💬 Message on-site — no phone needed
             </Link>
@@ -281,10 +273,32 @@ export default async function ListingPage({
         </div>
       </div>
 
+      {/* The sticky summary bar arms here: once the buy box above scrolls
+          away, the name/price/CTA follow the reader down the page. */}
+      {!sold && (
+        <SummaryBar
+          name={name}
+          mileage={formatMileage(listing.mileage)}
+          price={formatPrice(listing.price)}
+          monthly={
+            financed
+              ? `$${estimateMonthly(listing.price).toLocaleString("en-US")}/mo est.`
+              : null
+          }
+          photoUrl={photos.length > 0 ? photoUrl(photos[0].storage_path) : null}
+          contactHref={sellerTel ? "#contact" : smsHref}
+        />
+      )}
+
       {listing.description && (
-        <p className="mt-8 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-slate-600">
-          {listing.description}
-        </p>
+        <div className="mt-8 max-w-3xl">
+          <ExpandText
+            text={listing.description}
+            limit={450}
+            moreLabel="Show full description"
+            className="whitespace-pre-line text-sm leading-relaxed text-slate-600"
+          />
+        </div>
       )}
 
       {/* The financing switch (0008): a seller who doesn't offer it shows

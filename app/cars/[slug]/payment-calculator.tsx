@@ -47,7 +47,7 @@ export function PaymentCalculator({
   const monthly = Math.round(monthlyPayment(Math.max(0, price - down), apr, term));
 
   const chip = (on: boolean) =>
-    `rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors ${
+    `rounded-full border px-2 py-1.5 text-xs font-semibold ${
       on
         ? "border-blue-600 bg-blue-50 text-blue-700"
         : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"
@@ -123,7 +123,7 @@ export function PaymentCalculator({
       <a
         href={smsHref}
         onClick={() => listingId && track(listingId, "text_tap")}
-        className="mt-5 block rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
+        className="mt-5 block rounded-full bg-blue-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-700"
       >
         💬 Text the seller about financing
       </a>

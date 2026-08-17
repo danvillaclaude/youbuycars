@@ -9,6 +9,7 @@ import {
   type ListingPhoto,
 } from "@/lib/listings";
 import { ListingCard } from "@/app/listing-card";
+import { ExpandText } from "@/app/expand-text";
 import { ReviewForm } from "./review-form";
 import { SellerInquiryForm } from "./inquiry-form";
 
@@ -133,15 +134,21 @@ export default async function SellerPage({
 
       <Link
         href={`/messages/start?seller=${seller.id}`}
-        className="mt-5 inline-block rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
+        className="mt-5 inline-block rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
       >
         💬 Message {seller.display_name ?? "this seller"}
       </Link>
 
       {seller.about && (
-        <p className="mt-6 max-w-3xl whitespace-pre-line text-sm leading-relaxed text-slate-600">
-          {seller.about}
-        </p>
+        <div className="mt-6 max-w-3xl">
+          {/* Seller-authored text gets the teardown's truncate-and-reveal
+              treatment, so a long back-story can't bury the inventory. */}
+          <ExpandText
+            text={seller.about}
+            limit={350}
+            className="whitespace-pre-line text-sm leading-relaxed text-slate-600"
+          />
+        </div>
       )}
 
       <h2 className="mt-10 text-lg font-bold">Inventory</h2>

@@ -109,7 +109,7 @@ export function ChatThread({
         />
         <button
           disabled={busy || !text.trim()}
-          className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-full bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
         >
           Send
         </button>

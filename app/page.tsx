@@ -94,8 +94,10 @@ export default async function HomePage({
 
   return (
     <main>
-      {/* Hero — search first, the way car shoppers actually arrive. */}
-      <section className="border-b border-slate-100 bg-gradient-to-b from-blue-50 to-white px-6 pb-14 pt-14">
+      {/* Hero — search first, the way car shoppers actually arrive.
+          Section separation below is the teardown's zebra rhythm: the
+          backgrounds alternate and NOTHING draws a border between them. */}
+      <section className="bg-gradient-to-b from-blue-50 to-white px-6 pb-14 pt-14">
         <div className="mx-auto max-w-4xl text-center">
           <h1 className="mx-auto max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl">
             Find your next car without the runaround.
@@ -115,7 +117,7 @@ export default async function HomePage({
             <select
               name="make"
               defaultValue=""
-              className="rounded-xl border-0 bg-slate-50 px-3 py-3 text-sm font-medium text-slate-700 outline-none"
+              className="rounded-full border-0 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700"
             >
               <option value="">All makes</option>
               {makes.map((m) => (
@@ -127,16 +129,16 @@ export default async function HomePage({
             <input
               name="q"
               placeholder="Model or keyword — Equinox, F-150…"
-              className="min-w-40 flex-1 rounded-xl border-0 bg-slate-50 px-3 py-3 text-sm text-slate-700 outline-none"
+              className="min-w-40 flex-1 rounded-full border-0 bg-slate-50 px-4 py-3 text-sm text-slate-700"
             />
             <input
               name="max_price"
               type="number"
               min={0}
               placeholder="Max $"
-              className="w-24 rounded-xl border-0 bg-slate-50 px-3 py-3 text-sm text-slate-700 outline-none"
+              className="w-24 rounded-full border-0 bg-slate-50 px-4 py-3 text-sm text-slate-700"
             />
-            <button className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-700">
+            <button className="rounded-full bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-700">
               Search
             </button>
           </form>
@@ -172,7 +174,7 @@ export default async function HomePage({
             <Link
               key={t.label}
               href={t.href}
-              className="group flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
+              className="group flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-5 text-center hover:border-blue-300"
             >
               {t.art ? (
                 <svg viewBox="0 0 80 44" className="h-9 w-16 text-slate-400 group-hover:text-blue-600" fill="none">
@@ -198,9 +200,11 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* Real inventory above the fold — the CarGurus move. */}
+      {/* Real inventory above the fold — the CarGurus move. Gray stripe
+          in the zebra: full-bleed background, contained content. */}
       {latest.length > 0 && (
-        <section className="mx-auto max-w-5xl px-6 py-12">
+        <section className="mt-10 bg-slate-50 px-6 py-12">
+          <div className="mx-auto max-w-5xl">
           <div className="flex items-baseline justify-between">
             <h2 className="text-xl font-bold text-slate-900">
               Fresh on the lot
@@ -227,6 +231,7 @@ export default async function HomePage({
                 />
               );
             })}
+            </div>
           </div>
         </section>
       )}

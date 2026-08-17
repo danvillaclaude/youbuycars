@@ -150,7 +150,7 @@ export function InquiryForm({
 
       <button
         disabled={pending}
-        className="w-full rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 sm:w-auto"
+        className="w-full rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 sm:w-auto"
       >
         {pending ? "Sending…" : "Text me options"}
       </button>

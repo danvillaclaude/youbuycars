@@ -16,7 +16,7 @@ export function DashboardRowButtons({ listing }: { listing: Listing }) {
         <>
           <Link
             href={`/cars/${listing.slug}`}
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
           >
             View
           </Link>
@@ -28,7 +28,7 @@ export function DashboardRowButtons({ listing }: { listing: Listing }) {
                 router.refresh();
               })
             }
-            className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
           >
             Mark sold
           </button>
@@ -37,7 +37,7 @@ export function DashboardRowButtons({ listing }: { listing: Listing }) {
       {listing.status !== "sold" && (
         <Link
           href={`/dashboard/${listing.id}/edit`}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
         >
           Edit
         </Link>

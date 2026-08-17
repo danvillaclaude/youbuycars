@@ -98,13 +98,13 @@ export default function SellPage() {
       <div className="mt-10 flex gap-3">
         <Link
           href="/signup"
-          className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+          className="rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
         >
           Create your free account
         </Link>
         <Link
           href="/login"
-          className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
         >
           I already have one
         </Link>

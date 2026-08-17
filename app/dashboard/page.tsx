@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { requireApprovedSeller } from "@/lib/auth";
 import {
@@ -11,6 +12,10 @@ import {
 import { DashboardRowButtons } from "./row-buttons";
 
 export const metadata: Metadata = { title: "My listings · YouBuyCars" };
+
+// One clock read per request (react-hooks/purity): render must not call
+// Date.now() directly, and cache() pins the value for the whole render.
+const now = cache(() => Date.now());
 
 const STATUS_STYLES: Record<Listing["status"], string> = {
   pending: "bg-amber-100 text-amber-800",
@@ -49,8 +54,8 @@ export default async function DashboardPage() {
    */
   const statsByListing = new Map<string, ListingStats>();
   if (listings.length > 0) {
-    const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
-    const weekAgo = Date.now() - 7 * 86_400_000;
+    const since = new Date(now() - 90 * 86_400_000).toISOString();
+    const weekAgo = now() - 7 * 86_400_000;
     const { data: eventData } = await supabase
       .from("listing_events")
       .select("listing_id, kind, created_at")
@@ -88,25 +93,25 @@ export default async function DashboardPage() {
         <div className="flex gap-2">
           <Link
             href="/messages"
-            className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             Messages
           </Link>
           <Link
             href="/dashboard/inquiries"
-            className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             Inquiries
           </Link>
           <Link
             href="/dashboard/profile"
-            className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             My dealer page
           </Link>
           <Link
             href="/dashboard/new"
-            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
           >
             + List a car
           </Link>

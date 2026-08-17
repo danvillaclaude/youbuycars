@@ -1,7 +1,15 @@
 @import "tailwindcss";
 
 /* YouBuyCars — one accent (blue-600), dark hero, light paper below.
-   The marketplace inherits this file; keep tokens here, not per-page. */
+   The marketplace inherits this file; keep tokens here, not per-page.
+
+   The structural system is the CarGurus teardown's (16 Aug 2026), worn
+   in our own colors: ONE fully-rounded pill radius for every button and
+   chip (rounded-full in markup — there is no second button radius),
+   zebra section backgrounds with no borders between them, hover only on
+   filled buttons (one instant step darker, no transition), and the
+   focus treatment below. Restraint is part of the system: nav links,
+   icon buttons and thumbnails get cursor alone. */
 
 :root {
   --brand: #2563eb;
@@ -9,4 +17,18 @@
 
 body {
   -webkit-font-smoothing: antialiased;
+}
+
+/* The teardown's focus halo, copied as-is (its one pattern worth taking
+   verbatim): a two-layer box-shadow — white gap, then brand — on real
+   keyboard/assistive focus only. Never the native outline, never fired
+   by a mouse click that merely happens to focus something. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--brand);
 }

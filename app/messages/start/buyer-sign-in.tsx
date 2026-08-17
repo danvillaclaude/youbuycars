@@ -64,7 +64,7 @@ export function BuyerSignIn({
       />
       <button
         disabled={busy}
-        className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60"
+        className="w-full rounded-full bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60"
       >
         {busy ? "Sending…" : "Email me a sign-in link"}
       </button>

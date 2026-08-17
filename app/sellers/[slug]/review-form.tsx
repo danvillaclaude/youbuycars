@@ -49,7 +49,7 @@ export function ReviewForm({ sellerId }: { sellerId: string }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
       >
         ⭐ Rate this dealer
       </button>
@@ -124,7 +124,7 @@ export function ReviewForm({ sellerId }: { sellerId: string }) {
       </label>
       <button
         disabled={busy}
-        className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60"
+        className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60"
       >
         {busy ? "Sending…" : "Submit review"}
       </button>

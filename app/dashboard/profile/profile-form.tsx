@@ -124,13 +124,13 @@ export function ProfileForm({ profile }: { profile: Profile }) {
           <span className="font-medium">Offer financing</span>
           <span className="block text-xs text-slate-500">
             Off = every one of your listings shows no monthly estimate and no
-            payment calculator, regardless of each listing's own setting.
+            payment calculator, regardless of each listing&apos;s own setting.
           </span>
         </span>
       </label>
 
       <button disabled={busy}
-        className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
+        className="rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
         {busy ? "Saving…" : "Save my page"}
       </button>
     </form>

@@ -36,7 +36,9 @@ export function ListingCard({
   return (
     <Link
       href={`/cars/${l.slug}`}
-      className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-lg"
+      /* Hover restraint is the teardown's rule, not an omission: cards
+         get one instant border step, no shadow bloom, no photo zoom. */
+      className="group overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-slate-300"
     >
       <div className="aspect-[4/3] bg-slate-100">
         {photoPath ? (
@@ -44,7 +46,7 @@ export function ListingCard({
           <img
             src={photoUrl(photoPath)}
             alt={title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            className="h-full w-full object-cover"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl">

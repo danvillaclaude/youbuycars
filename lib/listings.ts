@@ -116,6 +116,42 @@ export function logoUrl(storagePath: string): string {
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/dealer-logos/${storagePath}`;
 }
 
+/**
+ * The browse board's filter set — one shape shared by the /cars rail,
+ * the saved-search row (0014), and the CRM-side alert sender. Adding a
+ * filter means adding it in all three places; the shared type is what
+ * makes forgetting one a compile error instead of a silent mismatch.
+ */
+export interface SearchFilters {
+  make?: string | null;
+  q?: string | null;
+  year_min?: number | null;
+  year_max?: number | null;
+  max_price?: number | null;
+  max_miles?: number | null;
+  financing?: boolean;
+}
+
+/**
+ * "Chevrolet · under $15,000 · financing offered" — the saved-search
+ * label, built once at save time and stored, so the alert letter can say
+ * what it's watching without re-deriving it later.
+ */
+export function describeSearch(f: SearchFilters): string {
+  const parts: string[] = [];
+  if (f.make) parts.push(f.make);
+  if (f.q) parts.push(`“${f.q}”`);
+  if (f.year_min && f.year_max) parts.push(`${f.year_min}–${f.year_max}`);
+  else if (f.year_min) parts.push(`${f.year_min} or newer`);
+  else if (f.year_max) parts.push(`${f.year_max} or older`);
+  if (f.max_price)
+    parts.push(`under $${f.max_price.toLocaleString("en-US")}`);
+  if (f.max_miles)
+    parts.push(`under ${f.max_miles.toLocaleString("en-US")} mi`);
+  if (f.financing) parts.push("financing offered");
+  return parts.length > 0 ? parts.join(" · ") : "all cars";
+}
+
 /** What a status chip says and wears, one place. */
 export const STATUS_LABELS: Record<Listing["status"], string> = {
   pending: "Waiting for approval",

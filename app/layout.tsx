@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Inter } from "next/font/google";
 import { SITE } from "@/lib/site";
 import { SiteHeader } from "./site-header";
 import "./globals.css";
+
+// The teardown's face is Graphik — commercial. Inter is its named free
+// lookalike (tall x-height, confident at display sizes); self-hosted at
+// build by next/font, so no runtime font request ever leaves the page.
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.domain),
@@ -18,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-dvh bg-white text-slate-900">
+      <body className={`${inter.className} min-h-dvh bg-white text-slate-900`}>
         <SiteHeader />
         {children}
         <footer className="border-t border-slate-200 bg-slate-50 px-6 py-8 text-center text-sm text-slate-500">
