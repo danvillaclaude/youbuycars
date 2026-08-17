@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Inter } from "next/font/google";
 import { SITE } from "@/lib/site";
 import { SiteHeader } from "./site-header";
+import { BackToTop } from "./back-to-top";
 import "./globals.css";
 
 // The teardown's face is Graphik — commercial. Inter is its named free
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-dvh bg-white text-slate-900`}>
         <SiteHeader />
         {children}
+        <BackToTop />
         {/* The teardown's footer: dark, full-bleed, accordion groups that
             start COLLAPSED even on desktop (their pattern, copied as a
             choice — nothing pre-expanded, nothing shouting). Every link
