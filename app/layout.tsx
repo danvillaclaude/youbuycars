@@ -34,7 +34,7 @@ export default function RootLayout({
             under the floating header, at the top of the page — it
             scrolls AWAY with the page, deliberately not sticky. */}
         <nav className="border-b border-slate-100 bg-white px-4 sm:px-6">
-          <div className="mx-auto flex h-11 max-w-5xl items-center gap-7 text-sm font-semibold text-slate-800">
+          <div className="mx-auto flex h-11 max-w-5xl items-center justify-center gap-7 text-sm font-semibold text-slate-800">
             <Link href="/cars">Shop</Link>
             <Link href="/sell">Sell</Link>
             <Link href="/compare">Compare</Link>
