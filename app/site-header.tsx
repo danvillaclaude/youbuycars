@@ -36,6 +36,9 @@ export async function SiteHeader() {
           <Link href="/sell" className="hover:text-slate-900">
             Sell your car
           </Link>
+          <Link href="/compare" className="hidden hover:text-slate-900 sm:block">
+            Compare
+          </Link>
           <span className="flex-1" />
           {isAdmin && (
             <Link href="/admin" className="hover:text-slate-900">

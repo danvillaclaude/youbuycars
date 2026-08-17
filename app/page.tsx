@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { type Listing, type ListingPhoto } from "@/lib/listings";
 import { ListingCard } from "@/app/listing-card";
 import { InquiryForm } from "./inquiry-form";
+import { LastSearchChip } from "./last-search";
+import { PromoSplit } from "./promo-split";
 
 /**
  * The front door — and the A2P campaign's primary Call-to-Action URL.
@@ -158,6 +160,9 @@ export default async function HomePage({
               </Link>
             ))}
           </div>
+          {/* Returning visitors get their last search back — content
+              personalizes, the layout never moves (the teardown's rule). */}
+          <LastSearchChip />
         </div>
       </section>
 
@@ -236,6 +241,38 @@ export default async function HomePage({
         </section>
       )}
 
+      {/* The teardown's 50/50 promo module — sell-side pitch, product
+          proof mocked in CSS. White stripe in the zebra. */}
+      <section className="px-6 py-14">
+        <PromoSplit
+          eyebrow="Sell with us"
+          headline="Your car, listed by tonight."
+          sub="Free to list your own car. A real person reviews it, it goes live to Metro Detroit buyers, and interested buyers text — your number never sits on a classifieds board."
+          ctaLabel="List your car — free"
+          ctaHref="/sell"
+        >
+          {/* Product proof: a mini listing card with the live chip. */}
+          <div className="relative w-64 rounded-xl border border-slate-200 bg-white shadow-lg shadow-blue-900/5">
+            <div className="flex aspect-[4/3] items-center justify-center rounded-t-xl bg-gradient-to-br from-slate-100 to-slate-200 text-5xl">
+              🚙
+            </div>
+            <div className="p-4">
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-extrabold text-slate-900">$14,500</span>
+                <span className="text-xs font-semibold text-green-700">$258/mo est.</span>
+              </div>
+              <div className="mt-0.5 text-sm font-semibold text-slate-900">
+                2018 Chevrolet Equinox LT
+              </div>
+              <div className="mt-0.5 text-xs text-slate-500">74,200 mi</div>
+            </div>
+            <span className="absolute -right-3 -top-3 rounded-full bg-green-600 px-3 py-1 text-xs font-bold text-white shadow">
+              ✓ Live — reviewed today
+            </span>
+          </div>
+        </PromoSplit>
+      </section>
+
       {/* Text-us-first — the second registered opt-in path. */}
       <section className="bg-blue-600 px-6 py-12 text-center text-white">
         <p className="text-xs font-semibold uppercase tracking-widest text-blue-200">
@@ -300,8 +337,46 @@ export default async function HomePage({
         </div>
       </section>
 
+      {/* Second promo module — the saved-search letters. Gray stripe. */}
+      <section className="bg-slate-50 px-6 py-14">
+        <PromoSplit
+          flip
+          eyebrow="Save a search"
+          headline="Let the cars come to you."
+          sub="Save any search with your email and we'll send one letter when new matching cars go live — the day they're approved. One-click unsubscribe in every letter, nothing else, ever."
+          ctaLabel="Browse & save a search"
+          ctaHref="/cars"
+        >
+          {/* Product proof: the alert letter, in miniature. */}
+          <div className="relative w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-lg shadow-blue-900/5">
+            <p className="text-xs font-semibold text-slate-400">
+              From: YouBuyCars
+            </p>
+            <p className="mt-1 text-sm font-bold text-slate-900">
+              2 new cars match your search
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Watching: <span className="font-semibold">Chevrolet · under $15,000</span>
+            </p>
+            <div className="mt-3 space-y-2">
+              {["2018 Equinox LT — $14,500", "2016 Malibu — $11,900"].map((c) => (
+                <div
+                  key={c}
+                  className="rounded-lg bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700"
+                >
+                  {c} · <span className="text-blue-600">See this car →</span>
+                </div>
+              ))}
+            </div>
+            <span className="absolute -left-3 -top-3 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow">
+              🔔 New match
+            </span>
+          </div>
+        </PromoSplit>
+      </section>
+
       {/* The form — the first registered opt-in path. */}
-      <section id="inquiry" className="bg-slate-50 px-6 py-16">
+      <section id="inquiry" className="px-6 py-16">
         <div className="mx-auto max-w-xl">
           <h2 className="text-2xl font-bold">What are you looking for?</h2>
           <p className="mt-1 mb-6 text-sm text-slate-500">
@@ -311,8 +386,10 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* The consent story, in plain sight — mirrors /sms-consent. */}
-      <section className="mx-auto max-w-3xl px-6 py-16">
+      {/* The consent story, in plain sight — mirrors /sms-consent.
+          Gray stripe closes the zebra before the dark footer. */}
+      <section className="bg-slate-50 px-6 py-16">
+        <div className="mx-auto max-w-3xl">
         <h2 className="text-xl font-bold">About our text messages</h2>
         <p className="mt-3 text-sm leading-relaxed text-slate-600">
           You&apos;ll only ever receive texts from YouBuyCars through one of
@@ -352,7 +429,8 @@ export default async function HomePage({
             We never sell or share your mobile number or SMS consent with
             third parties or affiliates for marketing.
           </li>
-        </ul>
+          </ul>
+        </div>
       </section>
     </main>
   );

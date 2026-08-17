@@ -27,33 +27,81 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-dvh bg-white text-slate-900`}>
         <SiteHeader />
         {children}
-        <footer className="border-t border-slate-200 bg-slate-50 px-6 py-8 text-center text-sm text-slate-500">
-          <nav className="mb-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <Link href="/cars" className="hover:text-slate-800">
-              Browse cars
-            </Link>
-            <Link href="/sell" className="hover:text-slate-800">
-              Sell your car
-            </Link>
-            <Link href="/about" className="hover:text-slate-800">
-              About
-            </Link>
-            <Link href="/contact" className="hover:text-slate-800">
-              Contact
-            </Link>
-            <Link href="/sms-consent" className="hover:text-slate-800">
-              How texting consent works
-            </Link>
-            <Link href="/privacy" className="hover:text-slate-800">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-slate-800">
-              Terms &amp; Conditions
-            </Link>
-          </nav>
-          <p>
-            © {new Date().getFullYear()} {SITE.name} · {SITE.area}
-          </p>
+        {/* The teardown's footer: dark, full-bleed, accordion groups that
+            start COLLAPSED even on desktop (their pattern, copied as a
+            choice — nothing pre-expanded, nothing shouting). Every link
+            the old footer carried survives inside a group. */}
+        <footer className="bg-slate-900 px-6 py-10 text-sm text-slate-300">
+          <div className="mx-auto max-w-5xl">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
+              <span className="text-lg font-bold text-white">
+                You<span className="text-blue-500">Buy</span>Cars
+              </span>
+              <a
+                href={`sms:${SITE.phoneE164}`}
+                className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
+              >
+                Text us · {SITE.phoneDisplay}
+              </a>
+            </div>
+
+            <div className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  title: "Shop",
+                  links: [
+                    { href: "/cars", label: "Browse cars" },
+                    { href: "/cars?max_price=15000", label: "Under $15k" },
+                    { href: "/compare", label: "Compare cars" },
+                  ],
+                },
+                {
+                  title: "Sell",
+                  links: [
+                    { href: "/sell", label: "Sell your car" },
+                    { href: "/dealers", label: "For dealers" },
+                    { href: "/login", label: "Seller sign in" },
+                  ],
+                },
+                {
+                  title: "Company",
+                  links: [
+                    { href: "/about", label: "About" },
+                    { href: "/contact", label: "Contact" },
+                  ],
+                },
+                {
+                  title: "Legal & texting",
+                  links: [
+                    { href: "/sms-consent", label: "How texting consent works" },
+                    { href: "/privacy", label: "Privacy Policy" },
+                    { href: "/terms", label: "Terms & Conditions" },
+                  ],
+                },
+              ].map((group) => (
+                <details key={group.title} className="border-b border-slate-800 py-3">
+                  <summary className="flex cursor-pointer list-none items-center justify-between font-semibold text-white [&::-webkit-details-marker]:hidden">
+                    {group.title} <span className="text-slate-600">▾</span>
+                  </summary>
+                  <nav className="mt-2 grid gap-1.5 pb-1">
+                    {group.links.map((l) => (
+                      <Link
+                        key={l.href}
+                        href={l.href}
+                        className="text-slate-400 hover:text-white"
+                      >
+                        {l.label}
+                      </Link>
+                    ))}
+                  </nav>
+                </details>
+              ))}
+            </div>
+
+            <p className="mt-6 text-xs text-slate-500">
+              © {new Date().getFullYear()} {SITE.name} · {SITE.area}
+            </p>
+          </div>
         </footer>
       </body>
     </html>

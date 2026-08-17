@@ -10,6 +10,7 @@ import {
 import { DEFAULT_ESTIMATE } from "@/lib/payments";
 import { ListingCard } from "@/app/listing-card";
 import { SaveSearch } from "./save-search";
+import { RememberSearch } from "./remember-search";
 
 export const metadata: Metadata = {
   title: "Cars for sale · YouBuyCars",
@@ -205,6 +206,14 @@ export default async function CarsPage({
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-8">
+      {/* A real search (filters set) is remembered for the homepage's
+          returning-visitor chip. A bare browse remembers nothing. */}
+      {chips.length > 0 && (
+        <RememberSearch
+          label={describeSearch(filters)}
+          qs={href(params, {}).split("?")[1] ?? ""}
+        />
+      )}
       <h1 className="text-2xl font-bold">Cars for sale</h1>
       <p className="mt-1 text-sm text-slate-500">
         Every listing is reviewed before it goes live. Don&apos;t see what you
