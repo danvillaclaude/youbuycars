@@ -96,3 +96,84 @@ export async function submitInquiry(input: {
   }
   return { ok: true };
 }
+
+const dealerSchema = z.object({
+  dealership: z.string().trim().min(1, "Tell us the dealership's name.").max(160),
+  name: z.string().trim().min(1, "Tell us your name.").max(120),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[\d\s()+.-]{7,20}$/, "That phone number doesn't look right."),
+  email: z.string().trim().email().max(200).optional().or(z.literal("")),
+  message: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
+/**
+ * The dealer walkthrough form on /dealers (18 Aug 2026) — the page's whole
+ * revenue path in one submit: a dealer raising a hand becomes a LEAD in the
+ * platform owner's own CRM, worked like any other. Deliberately consented:
+ * false — this is B2B contact, no marketing-text consent is asked for or
+ * recorded, and the bot therefore can't text them; the owner calls. The
+ * dealer marker rides at the front of the message so the inbox reads it at
+ * a glance.
+ */
+export async function submitDealerInterest(input: {
+  dealership: string;
+  name: string;
+  phone: string;
+  email: string;
+  message: string;
+  website: string; // Honeypot — humans never see it, bots fill it.
+}): Promise<InquiryResult> {
+  if (input.website) return { ok: true }; // Silently drop bot spam.
+
+  const parsed = dealerSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Check the form and retry.",
+    };
+  }
+  const d = parsed.data;
+  const story = `🏪 Dealer walkthrough request — ${d.dealership}. ${
+    d.message || "Wants to see the storefront and the CRM."
+  }`;
+
+  const supabase = createServerClient();
+  const { error } = await supabase.from("inquiries").insert({
+    name: `${d.name} (${d.dealership})`,
+    phone: d.phone,
+    email: d.email || null,
+    looking_for: story,
+    sms_consent: false,
+    consent_language: null,
+  });
+  if (error) {
+    return { ok: false, error: "Something went wrong — please try again." };
+  }
+
+  // Same best-effort bridge as buyer inquiries: the row above is the
+  // durable record; this is what makes the request ring the CRM inbox.
+  const crmUrl = process.env.CRM_INQUIRY_URL;
+  const crmSecret = process.env.CRM_INQUIRY_SECRET;
+  if (crmUrl && crmSecret) {
+    try {
+      await fetch(crmUrl, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${crmSecret}`,
+        },
+        body: JSON.stringify({
+          name: `${d.name} (${d.dealership})`,
+          phone: d.phone,
+          message: story + (d.email ? `\nEmail: ${d.email}` : ""),
+          consented: false,
+        }),
+      });
+    } catch (e) {
+      console.error("CRM forward failed (dealer interest kept):", e);
+    }
+  }
+  return { ok: true };
+}
