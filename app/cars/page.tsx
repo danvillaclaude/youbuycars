@@ -343,7 +343,7 @@ export default async function CarsPage({
       <div className="grid items-start gap-8 lg:grid-cols-[230px_1fr]">
         {/* The filter rail — collapsed accordions, the teardown's shape.
             A group with something set opens itself; the rest stay shut. */}
-        <form method="get" className="rounded-2xl border border-slate-200 bg-white px-4 py-2 lg:sticky lg:top-4">
+        <form method="get" className="rounded-2xl border border-slate-200 bg-white px-4 py-2 lg:sticky lg:top-[85px]">
           {params.sort && <input type="hidden" name="sort" value={params.sort} />}
 
           <details className={groupCls} open={Boolean(filters.make)}>

@@ -57,7 +57,7 @@ export function PaymentCalculator({
     }`;
 
   return (
-    <section id="calculator" className="mt-10 max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section id="calculator" className="mt-10 max-w-md scroll-mt-28 lg:scroll-mt-32 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="text-base font-bold text-slate-900">
         Estimate your payment
       </h2>
@@ -88,7 +88,7 @@ export function PaymentCalculator({
       </div>
 
       <div className="mt-4 text-xs font-semibold text-slate-700">Term</div>
-      <div className="mt-1 grid grid-cols-4 gap-1.5">
+      <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {TERM_OPTIONS.map((n) => (
           <button
             key={n}

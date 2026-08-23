@@ -19,6 +19,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* iOS Safari zooms the page into any focused field set under 16px, and
+   most of ours are text-sm (14px). Below the sm breakpoint every form
+   control holds 1rem, so tapping a filter or the search box never
+   lurches the layout. Unlayered on purpose: it has to beat the
+   utilities. Desktop keeps its sizes. */
+@media (max-width: 639.98px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}
+
 /* The drawer's entrance (his call: "it should slide out from the left...
    doesn't feel premium" — a mount-time CSS animation, so no state
    choreography). The overlay fades as the panel slides. Exit is an

@@ -26,7 +26,7 @@ export function CompareTray() {
   if (picked.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-slate-200 bg-white py-2 pl-5 pr-2 shadow-xl shadow-slate-900/15">
+    <div className="fixed bottom-[4.5rem] left-1/2 z-40 flex -translate-x-1/2 sm:bottom-4 items-center gap-3 rounded-full border border-slate-200 bg-white py-2 pl-5 pr-2 shadow-xl shadow-slate-900/15">
       <span className="text-sm font-semibold text-slate-700 tabular-nums">
         {picked.length === 1 ? "Pick one more to compare" : "2 cars picked"}
       </span>

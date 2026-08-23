@@ -73,7 +73,7 @@ export default async function ChatPage({
   } | null;
 
   return (
-    <main className="mx-auto flex h-[calc(100dvh-57px)] max-w-2xl flex-col px-4 py-4">
+    <main className="mx-auto flex h-[calc(100dvh-102px)] max-w-2xl flex-col px-4 py-4 lg:h-[calc(100dvh-69px)]">
       <div className="flex items-baseline justify-between border-b border-slate-100 pb-3">
         <div>
           <h1 className="text-lg font-bold">

@@ -47,7 +47,7 @@ export function ContactBox({
   }
 
   return (
-    <div id="contact" className="mt-4">
+    <div id="contact" className="mt-4 scroll-mt-28 lg:scroll-mt-32">
       <label className="flex items-start gap-2 rounded-xl bg-slate-50 p-3">
         <input
           type="checkbox"

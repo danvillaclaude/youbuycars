@@ -67,8 +67,10 @@ export function SummaryBar({
       <div ref={sentinel} aria-hidden />
       {shown && (
         /* top-14: the masthead is sticky now (his floating-header ask),
-           so the summary bar docks BELOW it, never over it. */
-        <div className="fixed inset-x-0 top-14 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+           so the summary bar docks BELOW it, never over it. The masthead
+           grows to 68px at lg, so the dock point follows it — at one
+           value the bar sat 12px up inside the desktop header. */
+        <div className="fixed inset-x-0 top-14 z-40 lg:top-[68px] border-b border-slate-200 bg-white/95 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-2">
             {photoUrl && (
               // eslint-disable-next-line @next/next/no-img-element

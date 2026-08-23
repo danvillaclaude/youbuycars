@@ -77,7 +77,7 @@ export function ChatThread({
         {initialMessages.map((m) => (
           <div
             key={m.id}
-            className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+            className={`max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
               m.sender === me
                 ? "ml-auto bg-blue-600 text-white"
                 : "bg-slate-100 text-slate-800"

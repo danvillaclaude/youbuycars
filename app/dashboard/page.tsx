@@ -90,7 +90,7 @@ export default async function DashboardPage() {
             slots used · {profile.tier} plan
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link
             href="/messages"
             className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
