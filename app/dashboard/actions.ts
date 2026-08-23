@@ -1,5 +1,6 @@
 "use server";
 
+import { userMessage } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
@@ -109,7 +110,7 @@ export async function createListingAction(
     })
     .select("id")
     .single();
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userMessage(error) };
 
   revalidatePath("/dashboard");
   revalidatePath("/admin");
@@ -176,7 +177,7 @@ export async function updateListingAction(
       financing_offered: d.financing_offered,
     })
     .eq("id", id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userMessage(error) };
 
   revalidatePath("/dashboard");
   revalidatePath("/admin");
@@ -192,7 +193,7 @@ export async function markSoldAction(id: string): Promise<ListingResult> {
     .update({ status: "sold", sold_at: new Date().toISOString() })
     .eq("id", id)
     .eq("status", "active");
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/dashboard");
   revalidatePath("/cars");
   return { ok: true };
@@ -202,7 +203,7 @@ export async function markSoldAction(id: string): Promise<ListingResult> {
 export async function deleteListingAction(id: string): Promise<ListingResult> {
   const { supabase } = await requireUser();
   const { error } = await supabase.from("listings").delete().eq("id", id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/dashboard");
   revalidatePath("/admin");
   return { ok: true };
@@ -245,7 +246,7 @@ export async function recordPhotosAction(
       sort_order: (count ?? 0) + i,
     })),
   );
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/dashboard");
   revalidatePath("/cars");
   return { ok: true };
@@ -257,7 +258,7 @@ export async function deletePhotoAction(photoId: string): Promise<ListingResult>
     .from("listing_photos")
     .delete()
     .eq("id", photoId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/dashboard");
   revalidatePath("/cars");
   return { ok: true };

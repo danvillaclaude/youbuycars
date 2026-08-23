@@ -1,5 +1,6 @@
 "use server";
 
+import { userMessage } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireApprovedSeller } from "@/lib/auth";
@@ -46,7 +47,7 @@ export async function saveProfileAction(
       public_slug,
     })
     .eq("id", user.id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userMessage(error) };
 
   revalidatePath("/dashboard/profile");
   revalidatePath(`/sellers/${public_slug}`);

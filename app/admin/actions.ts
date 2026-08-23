@@ -1,5 +1,6 @@
 "use server";
 
+import { userMessage } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 
@@ -19,7 +20,7 @@ export async function approveListingAction(id: string): Promise<Result> {
       rejected_reason: null,
     })
     .eq("id", id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/admin");
   revalidatePath("/cars");
   return { ok: true };
@@ -37,7 +38,7 @@ export async function rejectListingAction(
     .from("listings")
     .update({ status: "rejected", rejected_reason: clean })
     .eq("id", id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/admin");
   return { ok: true };
 }
