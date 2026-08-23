@@ -4,9 +4,11 @@
  */
 import {
   BODY_STYLES,
+  canonicalFor,
   capFor,
   CONDITIONS,
   describeSearch,
+  searchTerm,
   DRIVETRAINS,
   formatMileage,
   formatPrice,
@@ -139,6 +141,32 @@ for (const price of [5000, 14500, 24995, 62000]) {
   );
 }
 check("payment inverse of zero is zero", maxPriceForPayment(0) === 0);
+
+// searchTerm — the search box is a VALUE, never PostgREST filter syntax
+// (23 Aug 2026 audit: "ford, xlt" split into filters; a crafted q
+// injected its own). The "lexus" pin is the one that matters: a lost
+// backslash once turned \s+ into s+ and stripped every letter s.
+check("searchTerm passes a plain term through", searchTerm("Equinox") === "Equinox");
+check("searchTerm keeps every letter — lexus stays lexus", searchTerm("lexus") === "lexus");
+check("searchTerm strips the or() operators", searchTerm("zzzz,model.ilike.%Edge") === "zzzz model.ilike.%Edge");
+check("searchTerm turns a comma into a space", searchTerm("ford, xlt") === "ford xlt");
+check("searchTerm drops parentheses and quotes", searchTerm('("F-150")') === "F-150");
+check("searchTerm keeps ilike wildcards for the buyer", searchTerm("F_150%") === "F_150%");
+check("searchTerm of only operators is empty", searchTerm(',()"') === "");
+check("searchTerm of nothing is empty", searchTerm(null) === "");
+
+// canonicalFor — one URL per board view.
+check("canonicalFor bare board is /cars", canonicalFor({}) === "/cars");
+check(
+  "canonicalFor orders filters regardless of request order",
+  canonicalFor({ body: "SUV", make: "Ford" }) === "/cars?make=Ford&body=SUV",
+);
+check(
+  "canonicalFor drops sort and q",
+  canonicalFor({ make: "Ford", sort: "price_asc", q: "xlt" } as Parameters<typeof canonicalFor>[0]) ===
+    "/cars?make=Ford",
+);
+check("canonicalFor skips empty values", canonicalFor({ make: "", body: "SUV" }) === "/cars?body=SUV");
 
 console.log(`${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

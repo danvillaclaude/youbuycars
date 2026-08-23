@@ -3,7 +3,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   BODY_STYLES,
+  canonicalFor,
   describeSearch,
+  searchTerm,
   type Listing,
   type ListingPhoto,
   type PriceChange,
@@ -76,25 +78,7 @@ export async function generateMetadata({
   };
 }
 
-/**
- * The canonical URL for a board view (23 Aug 2026): the structured
- * filters in one fixed order, so ?make=Ford&body=suv and
- * ?body=suv&make=Ford resolve to a single page. Sort is a preference
- * and q is a query — neither makes a different page, so both drop.
- */
-const CANONICAL_KEYS: (keyof Params)[] = [
-  "make", "body", "year_min", "year_max", "max_price", "max_payment",
-  "max_miles", "financing",
-];
-function canonicalFor(p: Params): string {
-  const qs = new URLSearchParams();
-  for (const k of CANONICAL_KEYS) {
-    const v = p[k];
-    if (v) qs.set(k, v);
-  }
-  const s = qs.toString();
-  return s ? `/cars?${s}` : "/cars";
-}
+// canonicalFor + searchTerm live in lib/listings.ts so the suite pins them.
 
 /** Rebuild the page URL with some params patched (null drops one). */
 function href(params: Params, patch: Partial<Record<keyof Params, string | null>>): string {
@@ -162,7 +146,7 @@ export default async function CarsPage({
      * Edge). Stripping the four reserved characters leaves every real
      * search intact; the ilike wildcards % and _ are a buyer's to use.
      */
-    const term = filters.q.replace(/[,()"]/g, " ").replace(/s+/g, " ").trim();
+    const term = searchTerm(filters.q);
     if (term) {
       query = query.or(
         `model.ilike.%${term}%,make.ilike.%${term}%,trim_level.ilike.%${term}%`,

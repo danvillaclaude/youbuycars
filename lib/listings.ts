@@ -236,6 +236,40 @@ export function describeSearch(f: SearchFilters): string {
   return parts.length > 0 ? parts.join(" · ") : "all cars";
 }
 
+/**
+ * The search term as a VALUE (23 Aug 2026 audit). It rides inside
+ * PostgREST's or() grammar, where , ( ) and " are OPERATORS — a comma
+ * split "ford, xlt" into extra filters, a parenthesis closed the group
+ * early, and a crafted q injected its own filter (proven live). The
+ * four reserved characters become spaces; % and _ stay a buyer's to use.
+ * Returns "" when nothing searchable is left.
+ */
+export function searchTerm(q: string | null | undefined): string {
+  return (q ?? "").replace(/[,()"]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * The canonical URL for a board view: the structured filters in ONE
+ * fixed order, so ?make=Ford&body=suv and ?body=suv&make=Ford resolve
+ * to a single page. Sort is a preference and q is a query — neither
+ * makes a different page, so both drop. Keys are the URL's own names.
+ */
+export const CANONICAL_KEYS = [
+  "make", "body", "year_min", "year_max", "max_price", "max_payment",
+  "max_miles", "financing",
+] as const;
+export function canonicalFor(
+  p: Partial<Record<(typeof CANONICAL_KEYS)[number], string | undefined>>,
+): string {
+  const qs = new URLSearchParams();
+  for (const k of CANONICAL_KEYS) {
+    const v = p[k];
+    if (v) qs.set(k, v);
+  }
+  const s = qs.toString();
+  return s ? `/cars?${s}` : "/cars";
+}
+
 /** What a status chip says and wears, one place. */
 export const STATUS_LABELS: Record<Listing["status"], string> = {
   pending: "Waiting for approval",
