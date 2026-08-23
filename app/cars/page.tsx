@@ -206,10 +206,18 @@ export default async function CarsPage({
     { name: string | null; city: string | null; financing: boolean }
   >();
   const ratingBySeller = new Map<string, { avg: number; count: number }>();
+  // Latest price change per listing, only when it FELL — his call,
+  // increases stay quiet. Filled from the batched fetch below.
+  const dropByListing = new Map<string, number>();
   if (listings.length > 0) {
     const ids = listings.map((l) => l.id);
     const sellerIds = [...new Set(listings.map((l) => l.seller_id))];
-    const [{ data: photoData }, { data: sellerData }, { data: reviewData }] = await Promise.all([
+    const [
+      { data: photoData },
+      { data: sellerData },
+      { data: reviewData },
+      { data: changeData },
+    ] = await Promise.all([
       supabase
         .from("listing_photos")
         .select("listing_id, storage_path, sort_order")
@@ -224,7 +232,20 @@ export default async function CarsPage({
         .from("seller_reviews")
         .select("seller_id, rating")
         .in("seller_id", sellerIds),
+      // Price history (0015) — its only input is the same id list, so
+      // it rides in this round trip instead of a third serial one.
+      supabase
+        .from("price_changes")
+        .select("listing_id, old_price, new_price, changed_at")
+        .in("listing_id", ids)
+        .order("changed_at", { ascending: false }),
     ]);
+    for (const c of (changeData ?? []) as PriceChange[]) {
+      if (dropByListing.has(c.listing_id)) continue; // newest wins
+      if (c.new_price < c.old_price)
+        dropByListing.set(c.listing_id, c.old_price - c.new_price);
+      else dropByListing.set(c.listing_id, 0); // latest change was a raise — no chip
+    }
     for (const p of (photoData ?? []) as ListingPhoto[]) {
       if (!photosByListing.has(p.listing_id)) {
         photosByListing.set(p.listing_id, p.storage_path);
@@ -261,23 +282,6 @@ export default async function CarsPage({
     listings = listings.filter(
       (l) => sellersById.get(l.seller_id)?.financing !== false,
     );
-  }
-
-  // Price drops (0015): the latest change per visible listing, chipped
-  // only when it FELL — his call, increases stay quiet.
-  const dropByListing = new Map<string, number>();
-  if (listings.length > 0) {
-    const { data: changeData } = await supabase
-      .from("price_changes")
-      .select("listing_id, old_price, new_price, changed_at")
-      .in("listing_id", listings.map((l) => l.id))
-      .order("changed_at", { ascending: false });
-    for (const c of (changeData ?? []) as PriceChange[]) {
-      if (dropByListing.has(c.listing_id)) continue; // newest wins
-      if (c.new_price < c.old_price)
-        dropByListing.set(c.listing_id, c.old_price - c.new_price);
-      else dropByListing.set(c.listing_id, 0); // latest change was a raise — no chip
-    }
   }
 
   // Active-filter chips: one removable chip per set filter.

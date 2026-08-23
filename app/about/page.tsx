@@ -37,15 +37,17 @@ export default function AboutPage() {
           by text, because only a lender can decide those.
         </p>
         <p>
-          <strong className="text-slate-800">What&apos;s next:</strong>{" "}
-          YouBuyCars is growing into a full vehicle marketplace, where local
-          sellers and dealers list cars and buyers browse and inquire
-          directly. If you&apos;d like to be first in line when listings
-          open,{" "}
-          <Link href="/contact" className="text-blue-600 underline">
-            tell us what you&apos;re looking for
-          </Link>{" "}
-          and mention it.
+          <strong className="text-slate-800">The marketplace:</strong>{" "}
+          local sellers and dealers list their cars on the{" "}
+          <Link href="/cars" className="text-blue-600 underline">
+            board
+          </Link>
+          , a real person reviews every listing before it goes live, and
+          buyers deal with the seller directly. Selling?{" "}
+          <Link href="/sell" className="text-blue-600 underline">
+            List yours free
+          </Link>
+          .
         </p>
         <p>
           Questions? Everything — text, call, email — lives on the{" "}

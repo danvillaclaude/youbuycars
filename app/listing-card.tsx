@@ -53,12 +53,18 @@ export function ListingCard({
   const sellerLine = [sellerName, sellerCity].filter(Boolean).join(" · ");
 
   return (
-    <Link
-      href={`/cars/${l.slug}`}
-      /* Hover restraint is the teardown's rule, not an omission: cards
-         get one instant border step, no shadow bloom, no photo zoom. */
-      className="group overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-slate-300"
-    >
+    /*
+     * A div, not a link (23 Aug 2026 audit): the whole card WAS one <a>
+     * with the Save and Compare <button>s inside it — interactive content
+     * inside interactive content, which HTML forbids and screen readers
+     * flatten into a single link named "title, title, Save this car,
+     * Add to compare, $14,500…". The title link below stretches over
+     * the card with an ::after, so every pixel still navigates; the two
+     * buttons sit above it at z-10 and are announced as themselves.
+     * Hover restraint is the teardown's rule, not an omission: cards
+     * get one instant border step, no shadow bloom, no photo zoom.
+     */
+    <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-slate-300">
       <div className="relative aspect-[4/3] bg-slate-100">
         {/* The teardown's card anatomy, completed: the circular save
             heart floating over the photo — and the compare pick under
@@ -69,14 +75,14 @@ export function ListingCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={photoUrl(photoPath, PHOTO_WIDTHS.card)}
-            alt={title}
+            alt=""
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : "auto"}
             decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-4xl">
+          <div aria-hidden="true" className="flex h-full items-center justify-center text-4xl">
             🚗
           </div>
         )}
@@ -101,9 +107,12 @@ export function ListingCard({
             </span>
           </div>
         )}
-        <div className="mt-0.5 text-sm font-semibold text-slate-900 group-hover:text-blue-700">
+        <Link
+          href={`/cars/${l.slug}`}
+          className="mt-0.5 block text-sm font-semibold text-slate-900 after:absolute after:inset-0 after:content-[''] group-hover:text-blue-700"
+        >
           {title}
-        </div>
+        </Link>
         <div className="mt-0.5 text-xs text-slate-500">
           {formatMileage(l.mileage)}
           {l.vin ? " · VIN on file" : ""}
@@ -120,6 +129,6 @@ export function ListingCard({
           </div>
         )}
       </div>
-    </Link>
+    </div>
   );
 }

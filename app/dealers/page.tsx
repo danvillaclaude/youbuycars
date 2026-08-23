@@ -206,17 +206,20 @@ export default function DealersPage() {
                 </li>
                 <li>✓ Your own dealer page & reviews</li>
                 <li>✓ Buyer texts, chats & inquiry forms</li>
-                {p.tier !== "free" && <li>✓ Saved-search alert letters</li>}
+                {/* Every tier: the alert sender matches every live
+                    listing with no tier filter, so gating the bullet
+                    was a false claim, not a feature. */}
+                <li>✓ Saved-search alert letters</li>
               </ul>
             </div>
           ))}
         </div>
         <p className="mt-4 text-center text-xs text-slate-500">
-          Plans are managed from your{" "}
-          <Link href="/sell" className="underline">
-            seller dashboard
-          </Link>
-          .
+          To upgrade to Pro or Ultimate, contact us at the email on the{" "}
+          <Link href="/contact" className="underline">
+            Contact page
+          </Link>{" "}
+          — online checkout is coming.
         </p>
       </section>
 

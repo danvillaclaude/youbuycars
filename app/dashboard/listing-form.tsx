@@ -97,6 +97,14 @@ export function ListingForm({
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  /*
+   * The id of a listing THIS form already created (23 Aug 2026 audit):
+   * create succeeded, the photo upload threw, the seller pressed Submit
+   * again — and a second listing appeared, or a Free seller hit "limit
+   * of 1 listing" about a car they never saw. The retry now updates
+   * the one that exists.
+   */
+  const [createdId, setCreatedId] = useState<string | null>(null);
   const [uploadNote, setUploadNote] = useState<string | null>(null);
   /*
    * The pills' view of the form, refreshed from the form's own onInput —
@@ -239,15 +247,25 @@ export function ListingForm({
     setBusy(true);
     setError(null);
     try {
-      const res = listing
-        ? await updateListingAction(listing.id, input)
+      const existingId = listing?.id ?? createdId;
+      const res = existingId
+        ? await updateListingAction(existingId, input)
         : await createListingAction(input);
       if (!res.ok || !res.id) {
         setError(res.error ?? "Something went wrong.");
         setBusy(false);
         return;
       }
-      await uploadPhotos(res.id, files);
+      if (!existingId) setCreatedId(res.id);
+      try {
+        await uploadPhotos(res.id, files);
+      } catch (err) {
+        setError(
+          `Your listing was saved, but the photos didn't upload (${(err as Error).message}). Try Submit again — it will add the photos to the listing you just saved.`,
+        );
+        setBusy(false);
+        return;
+      }
       router.push("/dashboard");
       router.refresh();
     } catch (err) {

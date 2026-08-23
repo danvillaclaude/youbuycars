@@ -74,7 +74,7 @@ export default function SellPage() {
             },
             {
               title: "Buyers reach out.",
-              body: "Interested buyers contact us, and we connect them with your car. Mark it sold whenever it sells — the listing stays up as sold, which helps the next one.",
+              body: "Buyers text, call, or message you straight from your listing — nothing goes through us. Mark it sold whenever it sells — the listing stays up as sold, which helps the next one.",
             },
           ].map((step, i) => (
             <li key={step.title} className="flex gap-4">
