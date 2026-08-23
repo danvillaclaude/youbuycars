@@ -10,9 +10,12 @@ import { createClient } from "@/lib/supabase/client";
  * audit): `?next=` used to be pushed verbatim, so /login?next=https://
  * evil.example would hand a freshly signed-in seller to a stranger.
  * proxy.ts only ever writes a path here, so nothing real is lost.
+ * Browsers read a backslash as a slash in URLs, so "/\evil.example" is
+ * "//evil.example" — protocol-relative, off-site. One leading slash,
+ * then anything but a slash or backslash, and no backslash anywhere.
  */
 function safeNext(next: string | null): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/dashboard";
+  if (!next || !/^\/(?![/\\])/.test(next) || next.includes("\\")) return "/dashboard";
   return next;
 }
 

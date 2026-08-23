@@ -41,6 +41,10 @@ import {
 
 type SectionKey = "basics" | "numbers" | "specs" | "photos" | "story";
 
+/** Mirrors migration 0018's listing-photos bucket rules. */
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
 const SECTIONS: {
   key: SectionKey;
   title: string;
@@ -256,6 +260,26 @@ export function ListingForm({
           room === 0
             ? `This listing already has ${MAX_PHOTOS} photos — remove one to add another.`
             : `Up to ${MAX_PHOTOS} photos per listing — you can add ${room} more.`,
+      });
+      setOpen((o) => ({ ...o, photos: true }));
+      document
+        .getElementById("section-photos")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    // The bucket's own rules (0018): 10 MB, and the formats every
+    // browser and the image transformer can paint. Checked here so a
+    // HEIC or a 48 MP shot is refused with a sentence, not a storage
+    // error after the listing has already saved.
+    const bad = files.find(
+      (f) => f.size > MAX_PHOTO_BYTES || !PHOTO_TYPES.includes(f.type),
+    );
+    if (bad) {
+      setErrors({
+        photos:
+          bad.size > MAX_PHOTO_BYTES
+            ? bad.name + " is over 10 MB — photos must be 10 MB or smaller."
+            : bad.name + " isn't a JPG, PNG, WebP, AVIF or GIF — export it as a JPG and try again.",
       });
       setOpen((o) => ({ ...o, photos: true }));
       document
@@ -541,7 +565,7 @@ export function ListingForm({
             {photos.length > 0 ? "Add photos" : "Photos"}{" "}
             <span className="font-normal text-slate-400">(up to 12, first one is the cover)</span>
           </span>
-          <input name="photos" type="file" accept="image/*" multiple
+          <input name="photos" type="file" accept=".jpg,.jpeg,.png,.webp,.avif,.gif,image/jpeg,image/png,image/webp,image/avif,image/gif" multiple
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
         </label>
         {fieldError("photos")}

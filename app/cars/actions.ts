@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { describeSearch, type SearchFilters } from "@/lib/listings";
+import { describeSearch, searchTerm, type SearchFilters } from "@/lib/listings";
 import { maxPriceForPayment } from "@/lib/payments";
 
 /**
@@ -38,7 +38,9 @@ export async function saveSearchAction(
   const row = {
     email: cleanEmail,
     make: filters.make?.slice(0, 60) || null,
-    q: filters.q?.slice(0, 80) || null,
+    // Sanitised like the board query: the CRM alert sender puts this
+    // straight into an or() filter.
+    q: searchTerm(filters.q).slice(0, 80) || null,
     body_style: filters.body_style?.slice(0, 40) || null,
     year_min: numberOrNull(filters.year_min),
     year_max: numberOrNull(filters.year_max),

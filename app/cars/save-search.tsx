@@ -86,8 +86,8 @@ export function SaveSearch({
       </button>
       {note && <span role="alert" className="text-xs text-red-600">{note}</span>}
       <span className="w-full text-[11px] text-slate-500">
-        A daily email when new cars match — every letter has a one-click
-        unsubscribe. Nothing else, ever.
+        A daily email when new cars match — every letter has an
+        unsubscribe link. Nothing else, ever.
       </span>
     </form>
   );

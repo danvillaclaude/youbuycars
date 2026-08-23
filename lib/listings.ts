@@ -157,7 +157,6 @@ export function formatMileage(mileage: number): string {
   return `${mileage.toLocaleString("en-US")} mi`;
 }
 
-/** The public URL for a photo in the public listing-photos bucket. */
 /**
  * Storage URLs, SIZED (23 Aug 2026 overnight pass). The browse board was
  * pulling every card photo at its full upload size — one live card

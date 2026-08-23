@@ -110,7 +110,7 @@ export default async function CarsPage({
   const params = await searchParams;
   const filters: SearchFilters = {
     make: params.make || null,
-    q: params.q || null,
+    q: searchTerm(params.q) || null,
     body_style:
       params.body && (BODY_STYLES as readonly string[]).includes(params.body)
         ? params.body
@@ -318,7 +318,7 @@ export default async function CarsPage({
           sheet rounding up over it. Same title derivation as the tab. */}
       <section className="bg-slate-900 px-4 pb-14 pt-8 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
             Every listing reviewed before it goes live
           </p>
           <h1 className="mt-1.5 max-w-3xl text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
