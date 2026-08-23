@@ -52,7 +52,14 @@ export async function generateMetadata({
   const { slug } = await params;
   const seller = await loadSeller(slug);
   const name = seller?.display_name ?? "Seller";
-  const where = seller?.city ? `${seller.city}, MI` : "Metro Detroit";
+  // Sellers type their city free-form, and some already wrote the
+  // state ("South East, Michigan") — append it only when it's absent.
+  const city = seller?.city?.trim();
+  const where = !city
+    ? "Metro Detroit"
+    : /michigan|\bMI\b/i.test(city)
+      ? city
+      : `${city}, MI`;
   const title = seller
     ? `${name} — Used Cars for Sale in ${where} | YouBuyCars`
     : "Seller | YouBuyCars";
