@@ -161,17 +161,27 @@ export function formatMileage(mileage: number): string {
  * Storage URLs, SIZED (23 Aug 2026 overnight pass). The browse board was
  * pulling every card photo at its full upload size — one live card
  * measured 3.57 MB, served no-cache — nine to a grid. Supabase's image
- * transform endpoint (/render/image/...?width=) hands the same photo back
- * at 216 KB for a 640px card, cached an hour, WebP when the browser
- * accepts it. Every <img> now asks for the width it actually paints;
- * omit width only where the original is genuinely wanted (nowhere, today).
+ * transform endpoint (/render/image/...) hands the same photo back at
+ * ~200 KB for a card, cached an hour, WebP when the browser accepts it.
+ * Every <img> asks for the size it actually paints; omit the size only
+ * where the original is genuinely wanted (nowhere, today).
+ *
+ * BOTH dimensions, resize=contain — his 07:00 report, "the thumbnails
+ * are too zoomed in": with only ?width= the endpoint does NOT keep the
+ * aspect ratio. It kept the original HEIGHT and cropped the width, so a
+ * 1920×1446 photo came back as 320×1446 — a vertical slice of the
+ * centre — which object-cover then zoomed further. A square bound with
+ * contain scales the whole frame so its longest side is the size
+ * (720×720 contain → 720×542 for that photo); the browser crops into
+ * each box exactly as it did with the originals, and the lightbox,
+ * which fits with object-contain, still gets the full picture.
  * Height follows the aspect automatically; quality 75 is indistinguishable
  * on a car photo and a third the bytes of the default.
  */
 function storageUrl(bucket: string, storagePath: string, width?: number): string {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!width) return `${base}/storage/v1/object/public/${bucket}/${storagePath}`;
-  return `${base}/storage/v1/render/image/public/${bucket}/${storagePath}?width=${width}&quality=75`;
+  return `${base}/storage/v1/render/image/public/${bucket}/${storagePath}?width=${width}&height=${width}&resize=contain&quality=75`;
 }
 
 /** The public URL for a listing photo, at the painted width. */

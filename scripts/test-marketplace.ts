@@ -8,6 +8,7 @@ import {
   capFor,
   CONDITIONS,
   describeSearch,
+  photoUrl,
   searchTerm,
   DRIVETRAINS,
   formatMileage,
@@ -154,6 +155,17 @@ check("searchTerm drops parentheses and quotes", searchTerm('("F-150")') === "F-
 check("searchTerm keeps ilike wildcards for the buyer", searchTerm("F_150%") === "F_150%");
 check("searchTerm of only operators is empty", searchTerm(',()"') === "");
 check("searchTerm of nothing is empty", searchTerm(null) === "");
+
+// photoUrl — the resize endpoint needs BOTH dimensions and contain, or it
+// keeps the original height and crops the width to a vertical slice (his
+// 23 Aug 07:00 report: "the thumbnails are too zoomed in").
+{
+  const u = photoUrl("seller/listing/a.jpg", 720);
+  check("photoUrl goes through the render endpoint", u.includes("/storage/v1/render/image/public/listing-photos/"));
+  check("photoUrl asks for width AND a matching height", u.includes("width=720") && u.includes("height=720"));
+  check("photoUrl fits, never crops, server-side", u.includes("resize=contain"));
+  check("photoUrl without a size is the original object", photoUrl("seller/listing/a.jpg").includes("/storage/v1/object/public/"));
+}
 
 // canonicalFor — one URL per board view.
 check("canonicalFor bare board is /cars", canonicalFor({}) === "/cars");
