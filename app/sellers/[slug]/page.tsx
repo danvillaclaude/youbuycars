@@ -53,13 +53,29 @@ export async function generateMetadata({
   const seller = await loadSeller(slug);
   const name = seller?.display_name ?? "Seller";
   const where = seller?.city ? `${seller.city}, MI` : "Metro Detroit";
+  const title = seller
+    ? `${name} — Used Cars for Sale in ${where} | YouBuyCars`
+    : "Seller | YouBuyCars";
+  const description =
+    blurb(seller?.about) ??
+    `Browse ${name}'s used cars for sale in ${where} on YouBuyCars — reviewed listings, payment estimates and a seller you contact directly.`;
   return {
-    title: seller
-      ? `${name} — Used Cars for Sale in ${where} | YouBuyCars`
-      : "Seller | YouBuyCars",
-    description:
-      blurb(seller?.about) ??
-      `Browse ${name}'s used cars for sale in ${where} on YouBuyCars — reviewed listings, payment estimates and a seller you contact directly.`,
+    title,
+    description,
+    // Storefront links get shared; a self-canonical keeps appended
+    // tracking params from minting duplicates, and the logo makes the
+    // unfurl a card instead of a blank.
+    alternates: { canonical: `/sellers/${slug}` },
+    openGraph: {
+      type: "website",
+      siteName: "YouBuyCars",
+      locale: "en_US",
+      title,
+      description,
+      images: seller?.logo_path
+        ? [{ url: logoUrl(seller.logo_path, PHOTO_WIDTHS.og) }]
+        : [],
+    },
   };
 }
 
@@ -75,22 +91,24 @@ export default async function SellerPage({
   if (!seller) notFound();
 
   const supabase = await createClient();
-  const { data: listingData } = await supabase
-    .from("listings")
-    .select("*")
-    .eq("seller_id", seller.id)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
-  const listings = (listingData ?? []) as Listing[];
-
+  // Listings and reviews depend only on the seller id — one round trip.
   // Approved reviews only — RLS is the guarantee. Columns deliberately
   // exclude the reviewer's phone; that's the desk's alone (0009).
-  const { data: reviewData } = await supabase
-    .from("seller_reviews")
-    .select("id, reviewer_name, rating, body, created_at")
-    .eq("seller_id", seller.id)
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const [{ data: listingData }, { data: reviewData }] = await Promise.all([
+    supabase
+      .from("listings")
+      .select("*")
+      .eq("seller_id", seller.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("seller_reviews")
+      .select("id, reviewer_name, rating, body, created_at")
+      .eq("seller_id", seller.id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
+  const listings = (listingData ?? []) as Listing[];
   const reviews = (reviewData ?? []) as {
     id: string;
     reviewer_name: string;

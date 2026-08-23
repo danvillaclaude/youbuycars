@@ -120,6 +120,7 @@ export async function generateMetadata({
      * shows the CAR, not a blank tile — in a business where links get
      * texted around, this is the photo doing sales work off-site.
      */
+    alternates: { canonical: `/cars/${listing.slug}` },
     openGraph: {
       type: "website",
       siteName: "YouBuyCars",

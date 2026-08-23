@@ -18,6 +18,7 @@ export async function generateMetadata({
   return {
     title: `${article.title} | YouBuyCars Research`,
     description: article.dek,
+    alternates: { canonical: `/research/${article.slug}` },
   };
 }
 

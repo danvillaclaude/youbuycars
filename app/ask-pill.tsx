@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * The persistent Ask-AI pill (17 Aug 2026, from the fresh CarGurus
@@ -20,6 +21,11 @@ import { useEffect, useState } from "react";
  */
 export function AskPill() {
   const [hidden, setHidden] = useState(false);
+  // A chat thread's composer sits in the pill's corner, and its Send
+  // button is the one control on that page (23 Aug 2026 audit). The
+  // pill stays off the threads; the inbox list keeps it.
+  const pathname = usePathname();
+  const onThread = /^\/messages\/(?!start$)[^/]+$/.test(pathname ?? "");
 
   useEffect(() => {
     let ticking = false;
@@ -47,10 +53,10 @@ export function AskPill() {
   return (
     <Link
       href="/ask"
-      aria-hidden={hidden || undefined}
-      tabIndex={hidden ? -1 : undefined}
+      aria-hidden={hidden || onThread || undefined}
+      tabIndex={hidden || onThread ? -1 : undefined}
       className={`fixed bottom-4 right-4 z-40 rounded-full bg-slate-900/75 px-5 py-3 text-sm font-bold text-white shadow-xl shadow-slate-900/20 transition-opacity duration-150 hover:bg-slate-900/90 ${
-        hidden ? "pointer-events-none opacity-0" : ""
+        hidden || onThread ? "pointer-events-none opacity-0" : ""
       }`}
     >
       ✦ Ask AI
