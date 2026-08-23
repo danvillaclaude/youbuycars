@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice, type Listing } from "@/lib/listings";
+import { ARTICLES } from "@/app/research/articles";
 
 export const metadata: Metadata = {
   title: "Site index · YouBuyCars",
@@ -62,9 +63,10 @@ export default async function SiteIndexPage() {
       <nav className={list}>
         {[
           { href: "/", label: "Home" },
-          { href: "/cars", label: "Cars for sale" },
+          { href: "/cars", label: "Browse cars" },
           { href: "/compare", label: "Compare cars" },
           { href: "/research", label: "Research & guides" },
+          { href: "/ask", label: "✦ Ask AI" },
           { href: "/sell", label: "Sell your car" },
           { href: "/dealers", label: "For dealers" },
           { href: "/about", label: "About" },
@@ -75,6 +77,15 @@ export default async function SiteIndexPage() {
         ].map((p) => (
           <Link key={p.href} href={p.href} className={link}>
             {p.label}
+          </Link>
+        ))}
+      </nav>
+
+      <h2 className={h2}>Guides</h2>
+      <nav className={list}>
+        {ARTICLES.map((g) => (
+          <Link key={g.slug} href={`/research/${g.slug}`} className={link}>
+            {g.title}
           </Link>
         ))}
       </nav>

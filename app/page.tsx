@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { type Listing, type ListingPhoto } from "@/lib/listings";
+import { formatPrice, type Listing, type ListingPhoto } from "@/lib/listings";
+import { estimateMonthly } from "@/lib/payments";
 import { ListingCard } from "@/app/listing-card";
 import { LastSearchChip } from "./last-search";
 import { PromoSplit } from "./promo-split";
@@ -262,8 +263,8 @@ export default async function HomePage() {
             </div>
             <div className="p-4">
               <div className="flex items-baseline gap-2">
-                <span className="text-lg font-extrabold text-slate-900">$14,500</span>
-                <span className="text-xs font-semibold text-green-700">$258/mo est.</span>
+                <span className="text-lg font-extrabold text-slate-900">{formatPrice(14500)}</span>
+                <span className="text-xs font-semibold text-green-700">{`$${estimateMonthly(14500).toLocaleString("en-US")}/mo est.`}</span>
               </div>
               <div className="mt-0.5 text-sm font-semibold text-slate-900">
                 2018 Chevrolet Equinox LT

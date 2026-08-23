@@ -68,14 +68,14 @@ export function QueueCard({
           <button
             onClick={approve}
             disabled={pending}
-            className="rounded-lg bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+            className="rounded-full bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
           >
             Approve
           </button>
           <button
             onClick={() => setRejecting((r) => !r)}
             disabled={pending}
-            className="rounded-lg border border-red-200 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+            className="rounded-full border border-red-200 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
           >
             Reject…
           </button>
@@ -114,7 +114,7 @@ export function QueueCard({
           <button
             onClick={reject}
             disabled={pending || !reason.trim()}
-            className="rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            className="rounded-full bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
           >
             Reject listing
           </button>

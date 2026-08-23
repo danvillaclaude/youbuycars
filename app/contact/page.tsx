@@ -100,6 +100,15 @@ export default function ContactPage() {
               {SITE.phoneDisplay}
             </a>
           </p>
+          <p className="mt-1 text-sm">
+            <a
+              href={`tel:${SITE.phoneE164}`}
+              aria-label={`Call ${SITE.phoneDisplay}`}
+              className="font-semibold text-blue-600 underline"
+            >
+              Call instead
+            </a>
+          </p>
           <p className="mt-1 text-xs text-slate-500">
             Texting us first is consent to receive our replies — STOP ends it
             anytime. See{" "}

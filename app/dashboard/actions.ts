@@ -19,7 +19,8 @@ const listingSchema = z.object({
   make: z.string().trim().min(1).max(60),
   model: z.string().trim().min(1).max(60),
   trim_level: z.string().trim().max(60).optional().or(z.literal("")),
-  vin: z.string().trim().max(20).optional().or(z.literal("")),
+  // Uppercased: a phone keyboard's lowercase VIN used to publish as typed.
+  vin: z.string().trim().toUpperCase().max(20).optional().or(z.literal("")),
   mileage: z.coerce.number().int().min(0).max(2_000_000),
   price: z.coerce.number().int().min(0).max(10_000_000),
   // 5,500: slightly above Facebook Marketplace's 5,000 (the owner's rule),

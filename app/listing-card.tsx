@@ -70,7 +70,9 @@ export function ListingCard({
             heart floating over the photo — and the compare pick under
             it, so choosing happens where the cars are seen. */}
         <SaveHeart slug={l.slug} className="absolute right-2 top-2 z-10" />
-        <CompareToggle slug={l.slug} className="absolute right-2 top-[52px] z-10" />
+        {l.status !== "sold" && (
+          <CompareToggle slug={l.slug} className="absolute right-2 top-[52px] z-10" />
+        )}
         {photoPath ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -94,7 +96,7 @@ export function ListingCard({
           </span>
           {/* Only when the seller actually offers financing (0008) — a
               cash-only car must not wear a monthly payment. */}
-          {l.financing_offered && sellerFinancing && (
+          {l.status !== "sold" && l.financing_offered && sellerFinancing && (
             <span className="text-xs font-semibold text-green-700 tabular-nums">
               ${estimateMonthly(l.price).toLocaleString("en-US")}/mo est.
             </span>

@@ -175,6 +175,22 @@ export default async function ComparePage({
       ]
     : [];
 
+  // Why there's no table: say which of the three reasons it is. A sold or
+  // removed car drops out of `listings` (active only), and "pick two
+  // different cars" is the wrong answer to a shared link whose car sold.
+  const chosen = [a, b].filter((s): s is string => Boolean(s));
+  const missing = chosen.filter((s) => !listings.some((l) => l.slug === s));
+  const hint =
+    chosen.length === 0
+      ? "Choose two cars above — or start from the board and come back."
+      : missing.length > 1
+        ? "Those cars have left the board — pick two others."
+        : missing.length === 1
+          ? "One of those cars has left the board — pick another."
+          : chosen.length < 2
+            ? "Pick a second car and hit Compare."
+            : "Those are the same car — pick two different ones.";
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <h1 className="text-2xl font-bold">Compare cars</h1>
@@ -281,9 +297,7 @@ export default async function ComparePage({
         </div>
       ) : (
         <div className="mt-10 rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">
-          {a || b
-            ? "Pick two different cars and hit Compare."
-            : "Choose two cars above — or start from the board and come back."}{" "}
+          {hint}{" "}
           <Link href="/cars" className="text-blue-600 underline">
             Browse the board →
           </Link>

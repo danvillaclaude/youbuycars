@@ -110,8 +110,8 @@ export default function SellPage() {
                 $100<span className="text-sm font-normal text-slate-500">/mo</span>
               </div>
               <p className="mt-2 text-sm text-slate-600">
-                Up to {TIER_CAPS.pro} active listings, plus your own public
-                dealer page with logo and inventory.
+                Up to {TIER_CAPS.pro} active listings on your public dealer
+                page, with the buyer inquiry form switched on.
               </p>
               <p className="mt-2 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700">
                 Included free with the{" "}
@@ -133,7 +133,7 @@ export default function SellPage() {
               </div>
               <p className="mt-2 text-sm text-slate-600">
                 Up to {TIER_CAPS.ultimate} active listings — full-lot scale,
-                with the dealer page included.
+                inquiry form included.
               </p>
             </div>
           </div>

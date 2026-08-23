@@ -25,10 +25,13 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(
-    params.get("confirmed") ? "Email confirmed — sign in below." : null,
-  );
+  const notice = params.get("confirmed")
+    ? "Email confirmed — sign in below."
+    : null;
   const [busy, setBusy] = useState(false);
+  // Signup success REPLACES the form (23 Aug 2026 audit): the notice used
+  // to sit above a still-live form, so a second press re-submitted.
+  const [sent, setSent] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -52,9 +55,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       });
       setBusy(false);
       if (error) return setError(error.message);
-      setNotice(
-        "Almost there — confirm your email, then sign in. A real person reviews every new seller account; you can post as soon as you're approved.",
-      );
+      setSent(true);
       return;
     }
 
@@ -66,6 +67,21 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     if (error) return setError(error.message);
     router.push(safeNext(params.get("next")));
     router.refresh();
+  }
+
+  if (mode === "signup" && sent) {
+    return (
+      <div
+        role="status"
+        className="rounded-2xl border border-green-200 bg-green-50 p-6 text-sm text-green-800"
+      >
+        Almost there — confirm your email, then sign in. A real person reviews
+        every new seller account; you can post as soon as you&apos;re approved.{" "}
+        <Link href="/login" className="font-semibold underline">
+          Go to sign in
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -88,6 +104,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           </span>
           <input
             name="display_name"
+            autoComplete="name"
             required
             maxLength={80}
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-600 focus:outline-none"

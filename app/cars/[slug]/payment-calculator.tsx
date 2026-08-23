@@ -61,16 +61,17 @@ export function PaymentCalculator({
       <h2 className="text-base font-bold text-slate-900">
         Estimate your payment
       </h2>
-      <div className="mt-2 text-4xl font-extrabold tracking-tight text-green-700 tabular-nums">
+      <div aria-live="polite" className="mt-2 text-4xl font-extrabold tracking-tight text-green-700 tabular-nums">
         ${monthly.toLocaleString("en-US")}
         <span className="text-base font-semibold text-slate-400">/mo</span>
       </div>
 
-      <label className="mt-5 block text-xs font-semibold text-slate-700">
+      <label htmlFor="calc-down" className="mt-5 block text-xs font-semibold text-slate-700">
         Down payment —{" "}
         <span className="tabular-nums">${down.toLocaleString("en-US")}</span>
       </label>
       <input
+        id="calc-down"
         type="range"
         min={0}
         max={maxDown}
@@ -87,8 +88,8 @@ export function PaymentCalculator({
         <span>${maxDown.toLocaleString("en-US")}</span>
       </div>
 
-      <div className="mt-4 text-xs font-semibold text-slate-700">Term</div>
-      <div className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <div id="calc-term" className="mt-4 text-xs font-semibold text-slate-700">Term</div>
+      <div role="group" aria-labelledby="calc-term" className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {TERM_OPTIONS.map((n) => (
           <button
             key={n}
@@ -97,6 +98,7 @@ export function PaymentCalculator({
               touched();
               setTerm(n);
             }}
+            aria-pressed={term === n}
             className={chip(term === n)}
           >
             {n} mo
@@ -104,10 +106,10 @@ export function PaymentCalculator({
         ))}
       </div>
 
-      <div className="mt-4 text-xs font-semibold text-slate-700">
+      <div id="calc-credit" className="mt-4 text-xs font-semibold text-slate-700">
         How&apos;s your credit?
       </div>
-      <div className="mt-1 grid grid-cols-4 gap-1.5">
+      <div role="group" aria-labelledby="calc-credit" className="mt-1 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {CREDIT_BANDS.map((b) => (
           <button
             key={b.label}
@@ -116,6 +118,7 @@ export function PaymentCalculator({
               touched();
               setApr(b.apr);
             }}
+            aria-pressed={apr === b.apr}
             className={chip(apr === b.apr)}
           >
             {b.label}

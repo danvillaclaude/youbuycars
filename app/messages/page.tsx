@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE } from "@/lib/site";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -72,6 +73,7 @@ export default async function MessagesPage() {
               </span>
               <span className="text-xs text-slate-500">
                 {new Date(c.last_message_at).toLocaleDateString("en-US", {
+                  timeZone: SITE.timeZone,
                   month: "short",
                   day: "numeric",
                 })}

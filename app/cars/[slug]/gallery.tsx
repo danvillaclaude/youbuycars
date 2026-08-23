@@ -83,7 +83,7 @@ export function Gallery({
         type="button"
         onClick={() => setOpen(true)}
         className="relative block w-full cursor-zoom-in overflow-hidden rounded-2xl bg-slate-100"
-        aria-label={`Open photo gallery, ${photos.length} photos`}
+        aria-label={`Open photo gallery, ${photos.length} ${photos.length === 1 ? "photo" : "photos"}`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -100,7 +100,7 @@ export function Gallery({
 
       {photos.length > 1 && (
         <div className="mt-2.5 grid grid-cols-4 gap-2.5 sm:grid-cols-5">
-          {photos.slice(0, 10).map((p, i) => (
+          {photos.map((p, i) => (
             <button
               key={p.id}
               type="button"

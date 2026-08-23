@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { SITE } from "@/lib/site";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -247,9 +248,15 @@ export default async function SellerPage({
                 <span className="text-sm font-semibold text-slate-900">
                   {r.reviewer_name}
                 </span>
-                <span className="text-sm font-semibold text-amber-500">
-                  {"★".repeat(r.rating)}
-                  <span className="text-slate-200">{"★".repeat(5 - r.rating)}</span>
+                <span
+                  role="img"
+                  aria-label={`${r.rating} out of 5 stars`}
+                  className="text-sm font-semibold text-amber-500"
+                >
+                  <span aria-hidden="true">{"★".repeat(r.rating)}</span>
+                  <span aria-hidden="true" className="text-slate-200">
+                    {"★".repeat(5 - r.rating)}
+                  </span>
                 </span>
               </div>
               {r.body && (
@@ -260,6 +267,7 @@ export default async function SellerPage({
               <p className="mt-1.5 text-[11px] text-slate-500">
                 Verified contact ·{" "}
                 {new Date(r.created_at).toLocaleDateString("en-US", {
+                  timeZone: SITE.timeZone,
                   month: "short",
                   year: "numeric",
                 })}

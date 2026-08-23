@@ -205,7 +205,13 @@ export default function DealersPage() {
                   {TIER_CAPS[p.tier] === 1 ? "" : "s"}
                 </li>
                 <li>✓ Your own dealer page & reviews</li>
-                <li>✓ Buyer texts, chats & inquiry forms</li>
+                {/* The inquiry form is gated to paying/CRM sellers on the
+                    dealer page (sellers/[slug]); Free gets texts + chat. */}
+                <li>
+                  {p.tier === "free"
+                    ? "✓ Buyer texts & on-site chat"
+                    : "✓ Buyer texts, chats & inquiry forms"}
+                </li>
                 {/* Every tier: the alert sender matches every live
                     listing with no tier filter, so gating the bullet
                     was a false claim, not a feature. */}

@@ -10,6 +10,8 @@ export const SITE = {
   phoneE164: "+13135468313",
   email: "isolduacar@gmail.com",
   area: "Metro Detroit, Michigan",
+  /** Every server-rendered time is shown in the market's zone, not Vercel's UTC. */
+  timeZone: "America/Detroit",
 } as const;
 
 /**

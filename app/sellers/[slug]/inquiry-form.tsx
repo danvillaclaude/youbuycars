@@ -65,6 +65,7 @@ export function SellerInquiryForm({
           </span>
           <input
             name="name"
+            autoComplete="name"
             required
             maxLength={80}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -76,6 +77,9 @@ export function SellerInquiryForm({
           </span>
           <input
             name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             required
             maxLength={30}
             placeholder="(555) 555-5555"

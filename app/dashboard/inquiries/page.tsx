@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE } from "@/lib/site";
 import Link from "next/link";
 import { requireApprovedSeller } from "@/lib/auth";
 
@@ -77,6 +78,7 @@ export default async function InquiriesPage() {
                 )}
                 <span className="ml-auto text-[11px] text-slate-500">
                   {new Date(q.created_at).toLocaleString("en-US", {
+                    timeZone: SITE.timeZone,
                     month: "short",
                     day: "numeric",
                     hour: "numeric",

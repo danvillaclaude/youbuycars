@@ -100,7 +100,7 @@ export default function RootLayout({
               ].map((group) => (
                 <details key={group.title} className="border-b border-slate-800 py-3">
                   <summary className="flex cursor-pointer list-none items-center justify-between font-semibold text-white [&::-webkit-details-marker]:hidden">
-                    {group.title} <span className="text-slate-600">▾</span>
+                    {group.title} <span aria-hidden="true" className="text-slate-600">▾</span>
                   </summary>
                   <nav className="mt-2 grid gap-1.5 pb-1">
                     {group.links.map((l) => (

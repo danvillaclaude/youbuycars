@@ -95,12 +95,15 @@ export function ChatThread({
       </div>
 
       {error && (
-        <p className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+        <p role="alert" className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
           {error}
         </p>
       )}
       <form onSubmit={send} className="flex gap-2 border-t border-slate-100 pt-3">
         <input
+          aria-label="Message"
+          autoComplete="off"
+          enterKeyHint="send"
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={2000}

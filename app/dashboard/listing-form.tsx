@@ -73,11 +73,15 @@ function validate(fd: FormData): Record<string, string> {
   if (!String(fd.get("make") ?? "").trim()) errors.make = "Enter the make.";
   if (!String(fd.get("model") ?? "").trim()) errors.model = "Enter the model.";
   const mileage = Number(fd.get("mileage"));
-  if (fd.get("mileage") === "" || !Number.isFinite(mileage) || mileage < 0)
-    errors.mileage = "Enter the mileage.";
+  if (fd.get("mileage") === "" || !Number.isInteger(mileage) || mileage < 0)
+    errors.mileage = "Enter the mileage in whole miles.";
+  else if (mileage > 2_000_000)
+    errors.mileage = "That's more miles than any car has — check the number.";
   const price = Number(fd.get("price"));
-  if (!fd.get("price") || !Number.isFinite(price) || price <= 0)
-    errors.price = "Enter an asking price.";
+  if (!fd.get("price") || !Number.isInteger(price) || price <= 0)
+    errors.price = "Enter an asking price in whole dollars.";
+  else if (price > 10_000_000)
+    errors.price = "Check the price — that's over $10,000,000.";
   // Body style is the one required spec (his call): it's what the
   // homepage tiles and the body-style filter run on.
   if (!fd.get("body_style")) errors.body_style = "Pick the body style.";
@@ -253,6 +257,7 @@ export function ListingForm({
         : await createListingAction(input);
       if (!res.ok || !res.id) {
         setError(res.error ?? "Something went wrong.");
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
         setBusy(false);
         return;
       }
@@ -270,6 +275,7 @@ export function ListingForm({
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
       setBusy(false);
     }
   }
@@ -342,15 +348,13 @@ export function ListingForm({
       className="space-y-3"
     >
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+        <p role="alert" className="scroll-mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
           {error}
         </p>
       )}
       {listing?.status === "active" && (
         <p className="rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-800">
-          This listing is live. Changing its details sends it back for
-          review before the changes show — buyers keep seeing the approved
-          version in the meantime.
+            {`This listing is live. Changing the year, make, model, trim, VIN, mileage, price or description sends it back for review — it comes off the board until it's approved again, usually the same day. Body style, colors, drivetrain and the other specs update in place.`}
         </p>
       )}
 
@@ -388,13 +392,13 @@ export function ListingForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-slate-700">Mileage</span>
-            <input name="mileage" type="number" min={0}
+            <input name="mileage" type="number" min={0} max={2000000} step={1} inputMode="numeric"
               defaultValue={listing?.mileage ?? ""} className={inputCls("mileage")} />
             {fieldError("mileage")}
           </label>
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-slate-700">Price (USD)</span>
-            <input name="price" type="number" min={0}
+            <input name="price" type="number" min={0} max={10000000} step={1} inputMode="numeric"
               defaultValue={listing?.price ?? ""} className={inputCls("price")} />
             {fieldError("price")}
           </label>
@@ -548,7 +552,7 @@ export function ListingForm({
           <span className="mb-1 block text-sm font-medium text-slate-700">
             VIN <span className="font-normal text-slate-400">(optional — builds trust)</span>
           </span>
-          <input name="vin" maxLength={20}
+          <input name="vin" maxLength={20} autoCapitalize="characters" autoComplete="off" spellCheck={false}
             defaultValue={listing?.vin ?? ""}
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
         </label>

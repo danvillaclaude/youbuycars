@@ -56,6 +56,9 @@ export function BuyerSignIn({
       )}
       <input
         type="email"
+        aria-label="Your email address"
+        autoComplete="email"
+        inputMode="email"
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}

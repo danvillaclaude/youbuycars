@@ -327,6 +327,8 @@ export default async function CarsPage({
           <form
             action="/cars"
             method="get"
+            role="search"
+            aria-label="Search the board"
             className="mt-5 flex max-w-xl items-stretch gap-2 rounded-full bg-white p-1.5 pl-5"
           >
             {/* The band search changes the WORDS, keeps the filters. */}
@@ -339,6 +341,8 @@ export default async function CarsPage({
             )}
             <input
               name="q"
+              type="search"
+              aria-label="Search make, model or keyword"
               defaultValue={params.q ?? ""}
               placeholder="Search make, model, keyword…"
               className="w-full border-0 bg-transparent text-sm text-slate-800"
@@ -360,7 +364,7 @@ export default async function CarsPage({
 
           <details className={groupCls} open={Boolean(filters.make)}>
             <summary className={summaryCls}>
-              Make <span className="text-slate-300">▾</span>
+              Make <span aria-hidden="true" className="text-slate-300">▾</span>
             </summary>
             <select name="make" aria-label="Make" defaultValue={params.make ?? ""} className={inputCls}>
               <option value="">Any</option>
@@ -374,7 +378,7 @@ export default async function CarsPage({
 
           <details className={groupCls} open={Boolean(filters.body_style)}>
             <summary className={summaryCls}>
-              Body style <span className="text-slate-300">▾</span>
+              Body style <span aria-hidden="true" className="text-slate-300">▾</span>
             </summary>
             <select name="body" aria-label="Body style" defaultValue={params.body ?? ""} className={inputCls}>
               <option value="">Any</option>
@@ -388,7 +392,7 @@ export default async function CarsPage({
 
           <details className={groupCls} open={Boolean(filters.q)}>
             <summary className={summaryCls}>
-              Model or keyword <span className="text-slate-300">▾</span>
+              Model or keyword <span aria-hidden="true" className="text-slate-300">▾</span>
             </summary>
             <input
               name="q" aria-label="Model or keyword"
@@ -403,7 +407,7 @@ export default async function CarsPage({
             open={Boolean(filters.year_min || filters.year_max)}
           >
             <summary className={summaryCls}>
-              Year <span className="text-slate-300">▾</span>
+              Year <span aria-hidden="true" className="text-slate-300">▾</span>
             </summary>
             <div className="flex items-center gap-2">
               <input
@@ -432,7 +436,7 @@ export default async function CarsPage({
             open={Boolean(filters.max_price || filters.max_payment)}
           >
             <summary className={summaryCls}>
-              Price &amp; monthly payment <span className="text-slate-300">▾</span>
+              Price &amp; monthly payment <span aria-hidden="true" className="text-slate-300">▾</span>
             </summary>
             <input
               name="max_price" aria-label="Maximum price"
@@ -459,7 +463,7 @@ export default async function CarsPage({
 
           <details className={groupCls} open={Boolean(filters.max_miles)}>
             <summary className={summaryCls}>
-              Mileage <span className="text-slate-300">▾</span>
+              Mileage <span aria-hidden="true" className="text-slate-300">▾</span>
             </summary>
             <input
               name="max_miles" aria-label="Maximum mileage"
