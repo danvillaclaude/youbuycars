@@ -32,7 +32,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         logoPath = `${profile.id}/${Date.now()}-${clean}`;
         const { error } = await supabase.storage
           .from("dealer-logos")
-          .upload(logoPath, logo, { contentType: logo.type });
+          .upload(logoPath, logo, { contentType: logo.type, cacheControl: "31536000" });
         if (error) throw new Error(`Logo upload failed: ${error.message}`);
       }
 

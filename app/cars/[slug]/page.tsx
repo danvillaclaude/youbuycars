@@ -9,6 +9,7 @@ import {
   formatPrice,
   photoUrl,
   PHOTO_WIDTHS,
+  photoSrcSet,
   type Listing,
   type ListingPhoto,
   type PriceChange,
@@ -19,6 +20,7 @@ import { TrackView } from "@/app/track-client";
 import { ContactBox } from "./contact-box";
 import { Gallery } from "./gallery";
 import { SummaryBar } from "./summary-bar";
+import { Breadcrumbs } from "@/app/breadcrumbs";
 import { ExpandText } from "@/app/expand-text";
 import { SaveHeart } from "@/app/save-heart";
 import { ListingCard } from "@/app/listing-card";
@@ -28,27 +30,31 @@ import { describeSearch } from "@/lib/listings";
 // cache(): generateMetadata and the page each call this for the same
 // slug in the same request; without it the listing, its photos, seller,
 // history and cross-sell ran twice per view.
+// Photos ride IN the listing's query (23 Aug 2026 SEO plan): the hero
+// <img> used to wait for a second round trip after the listing row, and
+// a third for the cross-sell rail's photos — the LCP image tag arrived
+// ~350ms after first byte. Two round trips now: listing+photos, then
+// everything that needs the listing's ids.
+type ListingWithPhotos = Listing & { listing_photos: ListingPhoto[] };
 const loadListing = cache(async function loadListing(slug: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("listings")
-    .select("*")
+    .select("*, listing_photos(*)")
     .eq("slug", slug)
     .in("status", ["active", "sold"])
     .maybeSingle();
-  const listing = data as Listing | null;
-  if (!listing) return null;
+  const row = data as ListingWithPhotos | null;
+  if (!row) return null;
+  const { listing_photos, ...listing } = row;
+  const photos = [...(listing_photos ?? [])].sort((a, b) => a.sort_order - b.sort_order);
+  const sold = listing.status === "sold";
   const [
-    { data: photoData },
     { data: sellerData },
     { data: changeData },
     { data: moreData },
+    { data: similarData },
   ] = await Promise.all([
-      supabase
-        .from("listing_photos")
-        .select("*")
-        .eq("listing_id", listing.id)
-        .order("sort_order"),
       supabase
         .from("profiles")
         .select("display_name, public_slug, phone, city, financing_offered")
@@ -61,33 +67,59 @@ const loadListing = cache(async function loadListing(slug: string) {
         .eq("listing_id", listing.id)
         .order("changed_at", { ascending: false })
         .limit(10),
-      // The cross-sell rail: the same seller's other live cars. It only
-      // needs seller_id, so it rides in the same round trip.
+      // The cross-sell rail: the same seller's other live cars, photos
+      // embedded. It only needs seller_id, so it rides in this round trip.
       supabase
         .from("listings")
-        .select("*")
+        .select("*, listing_photos(listing_id, storage_path, sort_order)")
         .eq("seller_id", listing.seller_id)
         .eq("status", "active")
         .neq("id", listing.id)
         .order("created_at", { ascending: false })
         .limit(3),
+      // A SOLD page's way forward: live cars across every seller, the
+      // same body style first — so a permanent sold URL hands its
+      // authority (and its reader) to inventory that can still be bought.
+      sold
+        ? supabase
+            .from("listings")
+            .select(
+              "*, listing_photos(listing_id, storage_path, sort_order), profiles(display_name, city, financing_offered)",
+            )
+            .eq("status", "active")
+            .neq("id", listing.id)
+            .order("created_at", { ascending: false })
+            .limit(12)
+        : Promise.resolve({ data: null }),
     ]);
-  const moreFromSeller = (moreData ?? []) as Listing[];
+  const cover = (l: { listing_photos?: ListingPhoto[] }): string | null =>
+    [...(l.listing_photos ?? [])].sort((a, b) => a.sort_order - b.sort_order)[0]?.storage_path ?? null;
+  const moreRows = (moreData ?? []) as ListingWithPhotos[];
+  const moreFromSeller = moreRows as Listing[]; // the embedded photos ride along harmlessly
   const morePhotos: Record<string, string> = {};
-  if (moreFromSeller.length > 0) {
-    const { data: mp } = await supabase
-      .from("listing_photos")
-      .select("listing_id, storage_path, sort_order")
-      .in("listing_id", moreFromSeller.map((l) => l.id))
-      .order("sort_order");
-    for (const p of (mp ?? []) as ListingPhoto[]) {
-      if (!morePhotos[p.listing_id]) morePhotos[p.listing_id] = p.storage_path;
-    }
+  for (const l of moreRows) {
+    const c = cover(l);
+    if (c) morePhotos[l.id] = c;
   }
+  type SimilarRow = ListingWithPhotos & {
+    profiles: { display_name: string | null; city: string | null; financing_offered: boolean } | null;
+  };
+  const similar = ((similarData ?? []) as SimilarRow[])
+    .sort((a, b) => {
+      const am = a.body_style && a.body_style === listing.body_style ? 0 : 1;
+      const bm = b.body_style && b.body_style === listing.body_style ? 0 : 1;
+      return am - bm;
+    })
+    .slice(0, 3)
+    .map(({ listing_photos: _p, profiles, ...l }) => ({
+      listing: l as Listing,
+      photo: cover({ listing_photos: _p }),
+      seller: profiles,
+    }));
 
   return {
     listing,
-    photos: (photoData ?? []) as ListingPhoto[],
+    photos,
     seller: sellerData as {
       display_name: string | null;
       public_slug: string | null;
@@ -98,6 +130,7 @@ const loadListing = cache(async function loadListing(slug: string) {
     priceChanges: (changeData ?? []) as PriceChange[],
     moreFromSeller,
     morePhotos,
+    similar,
   };
 });
 
@@ -110,10 +143,14 @@ export async function generateMetadata({
   const found = await loadListing(slug);
   if (!found) return { title: "Listing · YouBuyCars" };
   const { listing, photos } = found;
-  const name = `${listing.year} ${listing.make} ${listing.model}`;
+  const name = `${listing.year} ${listing.make} ${listing.model}${listing.trim_level ? ` ${listing.trim_level}` : ""}`;
   const description = `${name}, ${formatMileage(listing.mileage)}, ${formatPrice(listing.price)} — for sale on YouBuyCars, Metro Detroit.`;
   return {
-    title: `${name} — ${formatPrice(listing.price)} · YouBuyCars`,
+    // "2016 GMC Acadia SLT AWD for Sale in Metro Detroit, MI – $16,995":
+    // the long-tail query a small site can actually rank for, in the
+    // order people type it. The city will replace "Metro Detroit" once
+    // seller cities come from a list rather than free text.
+    title: `${name} for Sale in Metro Detroit, MI – ${formatPrice(listing.price)} | YouBuyCars`,
     description,
     /*
      * The share card (17 Aug 2026): a listing link texted or posted
@@ -154,7 +191,7 @@ export default async function ListingPage({
   const { slug } = await params;
   const found = await loadListing(slug);
   if (!found) notFound();
-  const { listing, photos, seller, priceChanges, moreFromSeller, morePhotos } =
+  const { listing, photos, seller, priceChanges, moreFromSeller, morePhotos, similar } =
     found;
   const name = `${listing.year} ${listing.make} ${listing.model}${listing.trim_level ? ` ${listing.trim_level}` : ""}`;
   const sold = listing.status === "sold";
@@ -184,12 +221,22 @@ export default async function ListingPage({
   // listing from day one.
   const jsonLd = {
     "@context": "https://schema.org",
-    // Car, not Vehicle (23 Aug 2026): the specific type the vehicle
-    // rich result reads, with the stored CarGurus-eight specs (0015)
-    // where the seller filled them. Every listing here is used, so
-    // itemCondition is constant — not a field a seller could get wrong.
-    "@type": "Car",
+    // ["Product", "Car"] (23 Aug 2026 SEO plan): Google retired the
+    // Vehicle Listing rich result in June 2025, and its merchant-listing
+    // parser does not read a bare Car as a Product — so a Car alone is
+    // parsed as nothing. Co-typing makes the page eligible for product
+    // snippets (price, in stock / sold out). Product requires an image,
+    // so a photo-less listing stays a plain Car. Every listing here is
+    // used, so itemCondition is constant — not a field a seller could
+    // get wrong. No shipping or return properties: nobody buys a car on
+    // this page.
+    "@type": photos.length > 0 ? ["Product", "Car"] : "Car",
     name,
+    sku: listing.slug,
+    url: `${SITE.domain}/cars/${listing.slug}`,
+    ...(listing.description
+      ? { description: listing.description.replace(/\s+/g, " ").trim().slice(0, 500) }
+      : {}),
     vehicleModelDate: String(listing.year),
     brand: { "@type": "Brand", name: listing.make },
     model: listing.model,
@@ -224,6 +271,20 @@ export default async function ListingPage({
         ? "https://schema.org/SoldOut"
         : "https://schema.org/InStock",
       url: `${SITE.domain}/cars/${listing.slug}`,
+      ...(seller?.display_name
+        ? { seller: { "@type": "Organization", name: seller.display_name } }
+        : {}),
+      // A live price is good for a month from its last change; the
+      // trigger restamps updated_at on every edit, so this rolls forward.
+      ...(!sold
+        ? {
+            priceValidUntil: new Date(
+              new Date(listing.updated_at).getTime() + 30 * 86400000,
+            )
+              .toISOString()
+              .slice(0, 10),
+          }
+        : {}),
     },
   };
 
@@ -251,9 +312,14 @@ export default async function ListingPage({
           for nothing. Sold pages don't count views — nobody's shopping. */}
       {!sold && <TrackView listingId={listing.id} />}
 
-      <Link href="/cars" className="text-sm text-slate-400 hover:text-slate-600">
-        ← All cars
-      </Link>
+      <Breadcrumbs
+        items={[
+          { name: "Home", href: "/" },
+          { name: "Used cars", href: "/cars" },
+          { name: listing.make, href: `/cars?make=${encodeURIComponent(listing.make)}` },
+          { name },
+        ]}
+      />
 
       {sold && (
         <div className="mt-4 rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
@@ -277,6 +343,7 @@ export default async function ListingPage({
               photos={photos.map((p) => ({
                 id: p.id,
                 url: photoUrl(p.storage_path, PHOTO_WIDTHS.gallery),
+                srcSet: photoSrcSet(p.storage_path),
                 thumb: photoUrl(p.storage_path, PHOTO_WIDTHS.thumb),
               }))}
               name={name}
@@ -507,6 +574,31 @@ export default async function ListingPage({
 
       {/* More from this dealer — the teardown's cross-sell rail, the
           same shared card at a smaller count. */}
+      {sold && similar.length > 0 && (
+        <section className="mt-12">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-base font-bold text-slate-900">
+              Similar cars still available
+            </h2>
+            <Link href="/cars" className="text-sm font-semibold text-blue-600 hover:underline">
+              See every car →
+            </Link>
+          </div>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {similar.map((s) => (
+              <ListingCard
+                key={s.listing.id}
+                listing={s.listing}
+                photoPath={s.photo}
+                sellerName={s.seller?.display_name}
+                sellerCity={s.seller?.city}
+                sellerFinancing={s.seller?.financing_offered ?? true}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       {moreFromSeller.length > 0 && (
         <section className="mt-12">
           <div className="flex items-baseline justify-between">

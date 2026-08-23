@@ -14,7 +14,7 @@ export function Gallery({
   name,
   price,
 }: {
-  photos: { id: string; url: string; thumb: string }[];
+  photos: { id: string; url: string; srcSet: string; thumb: string }[];
   name: string;
   price: string;
 }) {
@@ -88,6 +88,8 @@ export function Gallery({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={current.url}
+          srcSet={current.srcSet}
+          sizes="(min-width: 1152px) 660px, (min-width: 1024px) 60vw, 100vw"
           alt={name}
           fetchPriority="high"
           decoding="async"
@@ -112,7 +114,7 @@ export function Gallery({
               aria-current={i === index ? "true" : undefined}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.thumb} alt="" loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
+              <img src={p.thumb} alt="" loading="lazy" fetchPriority="low" decoding="async" className="aspect-[4/3] w-full object-cover" />
             </button>
           ))}
         </div>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { preconnect } from "react-dom";
 import Link from "next/link";
 import { Inter } from "next/font/google";
 import { SITE } from "@/lib/site";
@@ -36,6 +37,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Every photo on the site comes from the Supabase origin; without this
+  // the browser met it for the first time when the hero <img> arrived
+  // (23 Aug 2026 SEO plan: DNS + TLS were on the LCP critical path).
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) preconnect(process.env.NEXT_PUBLIC_SUPABASE_URL);
   return (
     <html lang="en">
       <body className={`${inter.className} min-h-dvh bg-white text-slate-900`}>

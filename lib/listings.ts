@@ -184,6 +184,17 @@ function storageUrl(bucket: string, storagePath: string, width?: number): string
   return `${base}/storage/v1/render/image/public/${bucket}/${storagePath}?width=${width}&height=${width}&resize=contain&quality=75`;
 }
 
+/**
+ * A srcset for the listing hero (23 Aug 2026 SEO plan): the page used to
+ * send the 1600px rendition to every screen, so a phone painted a 364px
+ * box from 297 KB. The browser now picks by viewport and DPR; the
+ * largest rendition stays the src fallback and the lightbox's full frame.
+ */
+export const HERO_WIDTHS = [640, 960, 1280, 1600] as const;
+export function photoSrcSet(storagePath: string): string {
+  return HERO_WIDTHS.map((w) => `${photoUrl(storagePath, w)} ${w}w`).join(", ");
+}
+
 /** The public URL for a listing photo, at the painted width. */
 export function photoUrl(storagePath: string, width?: number): string {
   return storageUrl("listing-photos", storagePath, width);

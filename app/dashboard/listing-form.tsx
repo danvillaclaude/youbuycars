@@ -192,7 +192,10 @@ export function ListingForm({
       const path = `${userId}/${listingId}/${Date.now()}-${i}-${clean}`;
       const { error } = await supabase.storage
         .from("listing-photos")
-        .upload(path, file, { contentType: file.type });
+        // Paths are unique (timestamp + index) and never overwritten, so
+        // a year of CDN cache is safe; the default hour let photos fall
+        // out of the edge cache and cost a cold transform on the LCP.
+        .upload(path, file, { contentType: file.type, cacheControl: "31536000" });
       if (error) throw new Error(`Photo upload failed: ${error.message}`);
       paths.push(path);
     }
