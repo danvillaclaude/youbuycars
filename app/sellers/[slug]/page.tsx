@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,7 +15,8 @@ import { ExpandText } from "@/app/expand-text";
 import { ReviewForm } from "./review-form";
 import { SellerInquiryForm } from "./inquiry-form";
 
-async function loadSeller(slug: string) {
+// cache(): generateMetadata and the page both load the seller.
+const loadSeller = cache(async function loadSeller(slug: string) {
   const supabase = await createClient();
   // RLS only surfaces approved, unsuspended sellers — a suspended dealer
   // page goes dark by policy, not by code remembering to check.
@@ -31,6 +33,15 @@ async function loadSeller(slug: string) {
         "id" | "display_name" | "phone" | "about" | "city" | "logo_path" | "public_slug" | "tier" | "financing_offered"
       > & { is_crm: boolean })
     | null;
+});
+
+/** Trim to ~155 chars on a word boundary, never mid-word. */
+function blurb(text: string | null | undefined): string | undefined {
+  const t = (text ?? "").replace(/\s+/g, " ").trim();
+  if (!t) return undefined;
+  if (t.length <= 155) return t;
+  const cut = t.slice(0, 155);
+  return cut.slice(0, Math.max(cut.lastIndexOf(" "), 80)).trimEnd() + "…";
 }
 
 export async function generateMetadata({
@@ -40,11 +51,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const seller = await loadSeller(slug);
+  const name = seller?.display_name ?? "Seller";
+  const where = seller?.city ? `${seller.city}, MI` : "Metro Detroit";
   return {
     title: seller
-      ? `${seller.display_name ?? "Seller"} · YouBuyCars`
-      : "Seller · YouBuyCars",
-    description: seller?.about?.slice(0, 150) ?? undefined,
+      ? `${name} — Used Cars for Sale in ${where} | YouBuyCars`
+      : "Seller | YouBuyCars",
+    description:
+      blurb(seller?.about) ??
+      `Browse ${name}'s used cars for sale in ${where} on YouBuyCars — reviewed listings, payment estimates and a seller you contact directly.`,
   };
 }
 

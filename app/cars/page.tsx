@@ -69,7 +69,31 @@ export async function generateMetadata({
   return {
     title: `${title} | YouBuyCars`,
     description: `${title}. Every listing reviewed before it goes live — browse prices, payment estimates and local sellers, or save the search and get emailed when new matches arrive.`,
+    alternates: { canonical: canonicalFor(p) },
+    // A free-text search is the buyer's query, not a page: keep those
+    // results out of the index and point them at the filtered board.
+    ...(p.q ? { robots: { index: false, follow: true } } : {}),
   };
+}
+
+/**
+ * The canonical URL for a board view (23 Aug 2026): the structured
+ * filters in one fixed order, so ?make=Ford&body=suv and
+ * ?body=suv&make=Ford resolve to a single page. Sort is a preference
+ * and q is a query — neither makes a different page, so both drop.
+ */
+const CANONICAL_KEYS: (keyof Params)[] = [
+  "make", "body", "year_min", "year_max", "max_price", "max_payment",
+  "max_miles", "financing",
+];
+function canonicalFor(p: Params): string {
+  const qs = new URLSearchParams();
+  for (const k of CANONICAL_KEYS) {
+    const v = p[k];
+    if (v) qs.set(k, v);
+  }
+  const s = qs.toString();
+  return s ? `/cars?${s}` : "/cars";
 }
 
 /** Rebuild the page URL with some params patched (null drops one). */

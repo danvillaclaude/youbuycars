@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- The favicon (23 Aug 2026): the wordmark's one coloured syllable,
+       set on the brand blue so the tab reads as the site at 16px. Until
+       this file existed every page view fetched /favicon.ico and got a
+       full not-found render of the app. -->
+  <rect width="64" height="64" rx="14" fill="#2563eb"/>
+  <text x="32" y="46" text-anchor="middle" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="40" font-weight="800" fill="#ffffff">B</text>
+</svg>

@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   title: "Used Cars for Sale in Metro Detroit | YouBuyCars",
   description:
     "Buy and sell used cars in Metro Detroit, Michigan — SUVs, trucks and sedans from local dealers and sellers. Reviewed listings, payment estimates, price drops, and sellers you contact directly.",
+  // Open Graph defaults (23 Aug 2026): type, site name and locale only.
+  // Title and description fall through from whichever page is sharing,
+  // so a link to /cars or /sell unfurls with its own words, not these.
+  openGraph: { type: "website", siteName: "YouBuyCars", locale: "en_US" },
 };
 
 export default function RootLayout({

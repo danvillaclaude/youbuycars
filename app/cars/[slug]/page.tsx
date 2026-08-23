@@ -25,7 +25,10 @@ import { ListingCard } from "@/app/listing-card";
 import { SaveSearch } from "@/app/cars/save-search";
 import { describeSearch } from "@/lib/listings";
 
-async function loadListing(slug: string) {
+// cache(): generateMetadata and the page each call this for the same
+// slug in the same request; without it the listing, its photos, seller,
+// history and cross-sell ran twice per view.
+const loadListing = cache(async function loadListing(slug: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("listings")
@@ -35,8 +38,12 @@ async function loadListing(slug: string) {
     .maybeSingle();
   const listing = data as Listing | null;
   if (!listing) return null;
-  const [{ data: photoData }, { data: sellerData }, { data: changeData }] =
-    await Promise.all([
+  const [
+    { data: photoData },
+    { data: sellerData },
+    { data: changeData },
+    { data: moreData },
+  ] = await Promise.all([
       supabase
         .from("listing_photos")
         .select("*")
@@ -54,16 +61,17 @@ async function loadListing(slug: string) {
         .eq("listing_id", listing.id)
         .order("changed_at", { ascending: false })
         .limit(10),
+      // The cross-sell rail: the same seller's other live cars. It only
+      // needs seller_id, so it rides in the same round trip.
+      supabase
+        .from("listings")
+        .select("*")
+        .eq("seller_id", listing.seller_id)
+        .eq("status", "active")
+        .neq("id", listing.id)
+        .order("created_at", { ascending: false })
+        .limit(3),
     ]);
-  // The cross-sell rail: the same seller's other live cars.
-  const { data: moreData } = await supabase
-    .from("listings")
-    .select("*")
-    .eq("seller_id", listing.seller_id)
-    .eq("status", "active")
-    .neq("id", listing.id)
-    .order("created_at", { ascending: false })
-    .limit(3);
   const moreFromSeller = (moreData ?? []) as Listing[];
   const morePhotos: Record<string, string> = {};
   if (moreFromSeller.length > 0) {
@@ -91,7 +99,7 @@ async function loadListing(slug: string) {
     moreFromSeller,
     morePhotos,
   };
-}
+});
 
 export async function generateMetadata({
   params,
@@ -113,6 +121,9 @@ export async function generateMetadata({
      * texted around, this is the photo doing sales work off-site.
      */
     openGraph: {
+      type: "website",
+      siteName: "YouBuyCars",
+      locale: "en_US",
       title: `${name} — ${formatPrice(listing.price)}`,
       description,
       images:
@@ -172,11 +183,31 @@ export default async function ListingPage({
   // listing from day one.
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Vehicle",
+    // Car, not Vehicle (23 Aug 2026): the specific type the vehicle
+    // rich result reads, with the stored CarGurus-eight specs (0015)
+    // where the seller filled them. Every listing here is used, so
+    // itemCondition is constant — not a field a seller could get wrong.
+    "@type": "Car",
     name,
     vehicleModelDate: String(listing.year),
     brand: { "@type": "Brand", name: listing.make },
     model: listing.model,
+    itemCondition: "https://schema.org/UsedCondition",
+    ...(listing.body_style ? { bodyType: listing.body_style } : {}),
+    ...(listing.exterior_color ? { color: listing.exterior_color } : {}),
+    ...(listing.interior_color
+      ? { vehicleInteriorColor: listing.interior_color }
+      : {}),
+    ...(listing.drivetrain
+      ? { driveWheelConfiguration: listing.drivetrain }
+      : {}),
+    ...(listing.transmission
+      ? { vehicleTransmission: listing.transmission }
+      : {}),
+    ...(listing.fuel_type ? { fuelType: listing.fuel_type } : {}),
+    ...(listing.engine
+      ? { vehicleEngine: { "@type": "EngineSpecification", name: listing.engine } }
+      : {}),
     mileageFromOdometer: {
       "@type": "QuantitativeValue",
       value: listing.mileage,

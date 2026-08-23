@@ -7,6 +7,11 @@ import { SITE } from "@/lib/site";
  * private desks (dashboard, admin, messages) crawlable and never points
  * at the sitemap. Public pages stay fully open; sold listings included,
  * by the spec's permanent-slug rule.
+ *
+ * Login, signup, saved, messages and pending are NOT listed: each is
+ * linked from every page, and a Disallow stops the crawler READING the
+ * noindex they carry — so the URL gets indexed from anchor text alone,
+ * with no title. Letting them be crawled is what makes the noindex work.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -14,17 +19,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: [
-          "/admin",
-          "/dashboard",
-          "/messages",
-          "/login",
-          "/signup",
-          "/pending",
-          "/saved",
-          "/alerts/unsubscribe",
-          "/api/",
-        ],
+        disallow: ["/admin", "/dashboard", "/alerts/unsubscribe", "/api/"],
       },
     ],
     sitemap: `${SITE.domain}/sitemap.xml`,
