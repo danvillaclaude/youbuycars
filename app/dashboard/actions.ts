@@ -84,7 +84,7 @@ export async function createListingAction(
   if ((count ?? 0) >= cap) {
     return {
       ok: false,
-      error: `You're at your plan's limit of ${cap} listings. Mark one sold (or delete a pending one) to post another.`,
+      error: `You're at your plan's limit of ${cap} listing${cap === 1 ? "" : "s"}. Mark one sold (or delete a pending one) to post another.`,
     };
   }
 

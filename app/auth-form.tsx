@@ -6,6 +6,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 /**
+ * The post-sign-in destination, held to a same-origin PATH (23 Aug 2026
+ * audit): `?next=` used to be pushed verbatim, so /login?next=https://
+ * evil.example would hand a freshly signed-in seller to a stranger.
+ * proxy.ts only ever writes a path here, so nothing real is lost.
+ */
+function safeNext(next: string | null): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/dashboard";
+  return next;
+}
+
+/**
  * One form, two modes. Auth happens in the browser against Supabase (the
  * public pair; the ssr package syncs the session cookie), so there are no
  * credentials passing through our own server at all.
@@ -53,7 +64,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     });
     setBusy(false);
     if (error) return setError(error.message);
-    router.push(params.get("next") ?? "/dashboard");
+    router.push(safeNext(params.get("next")));
     router.refresh();
   }
 

@@ -129,10 +129,22 @@ export default async function CarsPage({
   let query = supabase.from("listings").select("*").eq("status", "active");
   if (filters.make) query = query.ilike("make", filters.make);
   if (filters.body_style) query = query.eq("body_style", filters.body_style);
-  if (filters.q)
-    query = query.or(
-      `model.ilike.%${filters.q}%,make.ilike.%${filters.q}%,trim_level.ilike.%${filters.q}%`,
-    );
+  if (filters.q) {
+    /*
+     * The term rides inside PostgREST's or() grammar, where , ( ) and "
+     * are OPERATORS — a comma split "ford, xlt" into extra filters, a
+     * parenthesis closed the group early, and a crafted q could inject
+     * its own filter (proven live: q=zzzz,model.ilike.%Edge matched the
+     * Edge). Stripping the four reserved characters leaves every real
+     * search intact; the ilike wildcards % and _ are a buyer's to use.
+     */
+    const term = filters.q.replace(/[,()"]/g, " ").replace(/s+/g, " ").trim();
+    if (term) {
+      query = query.or(
+        `model.ilike.%${term}%,make.ilike.%${term}%,trim_level.ilike.%${term}%`,
+      );
+    }
+  }
   if (filters.year_min) query = query.gte("year", filters.year_min);
   if (filters.year_max) query = query.lte("year", filters.year_max);
   if (priceCap !== Infinity) query = query.lte("price", priceCap);

@@ -217,6 +217,21 @@ export function ListingForm({
       mileage: fd.get("mileage"),
       price: fd.get("price"),
       description: fd.get("description"),
+      /*
+       * The CarGurus eight (0015). These were RENDERED but never READ —
+       * every Submit since 16 Aug returned zod's raw "Invalid option:
+       * expected one of..." because body_style is required server-side.
+       * Caught by the 23 Aug overnight audit; the payload now carries
+       * exactly what the form shows.
+       */
+      body_style: fd.get("body_style"),
+      exterior_color: fd.get("exterior_color"),
+      interior_color: fd.get("interior_color"),
+      drivetrain: fd.get("drivetrain"),
+      transmission: fd.get("transmission"),
+      fuel_type: fd.get("fuel_type"),
+      engine: fd.get("engine"),
+      condition: fd.get("condition"),
       financing_offered: fd.get("financing_offered") != null,
     };
     const files = (fd.getAll("photos") as File[]).filter((f) => f && f.size > 0);
