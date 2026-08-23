@@ -55,10 +55,15 @@ export async function SiteHeader() {
           </div>
 
           {/* The wordmark: absolutely centered on mobile so the sides
-              can't push it around; seated left at display size on lg+. */}
+              can't push it around; seated left at display size on lg+.
+              lg:translate-x-0, NOT transform-none: Tailwind v4 moved the
+              translate utilities onto the CSS translate property, which
+              transform-none never touched — the wordmark sat half its
+              width off the left edge on every desktop (caught by a
+              headless screenshot, 23 Aug 2026). */}
           <Link
             href="/"
-            className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-slate-900 lg:static lg:transform-none lg:text-2xl"
+            className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-slate-900 lg:static lg:translate-x-0 lg:text-2xl"
           >
             You<span className="text-blue-600">Buy</span>Cars
           </Link>
