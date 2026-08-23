@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/auth";
-import { logoUrl } from "@/lib/listings";
+import { logoUrl, PHOTO_WIDTHS } from "@/lib/listings";
 import { saveProfileAction } from "./actions";
 
 export function ProfileForm({ profile }: { profile: Profile }) {
@@ -68,7 +68,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       <div className="flex items-center gap-4">
         {profile.logo_path ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl(profile.logo_path)} alt=""
+          <img src={logoUrl(profile.logo_path, PHOTO_WIDTHS.logo)} alt=""
             className="h-16 w-16 rounded-xl border border-slate-200 object-cover" />
         ) : (
           <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-slate-100 text-2xl">🏪</div>

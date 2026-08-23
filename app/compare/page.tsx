@@ -7,6 +7,7 @@ import {
   photoUrl,
   type Listing,
   type ListingPhoto,
+  PHOTO_WIDTHS,
 } from "@/lib/listings";
 import { estimateMonthly } from "@/lib/payments";
 
@@ -227,7 +228,7 @@ export default async function ComparePage({
                     {cover ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={photoUrl(cover)}
+                        src={photoUrl(cover, PHOTO_WIDTHS.compare)}
                         alt={title(l)}
                         className="h-full w-full object-cover"
                       />

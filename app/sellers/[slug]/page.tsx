@@ -7,6 +7,7 @@ import {
   logoUrl,
   type Listing,
   type ListingPhoto,
+  PHOTO_WIDTHS,
 } from "@/lib/listings";
 import { ListingCard } from "@/app/listing-card";
 import { ExpandText } from "@/app/expand-text";
@@ -107,7 +108,7 @@ export default async function SellerPage({
         {seller.logo_path ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={logoUrl(seller.logo_path)}
+            src={logoUrl(seller.logo_path, PHOTO_WIDTHS.logo)}
             alt=""
             className="h-20 w-20 rounded-2xl border border-slate-200 object-cover"
           />

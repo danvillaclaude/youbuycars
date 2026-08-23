@@ -13,6 +13,7 @@ import {
   TRANSMISSIONS,
   type Listing,
   type ListingPhoto,
+  PHOTO_WIDTHS,
 } from "@/lib/listings";
 import {
   createListingAction,
@@ -470,7 +471,7 @@ export function ListingForm({
               {photos.map((p) => (
                 <div key={p.id} className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photoUrl(p.storage_path)} alt=""
+                  <img src={photoUrl(p.storage_path, PHOTO_WIDTHS.thumb)} alt=""
                     className="aspect-[4/3] w-full rounded-lg object-cover" />
                   <button type="button" onClick={() => removePhoto(p.id)}
                     aria-label="Remove photo"

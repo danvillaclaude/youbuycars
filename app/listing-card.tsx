@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { formatMileage, formatPrice, photoUrl, type Listing } from "@/lib/listings";
+import {
+  formatMileage,
+  formatPrice,
+  photoUrl,
+  PHOTO_WIDTHS,
+  type Listing,
+} from "@/lib/listings";
 import { estimateMonthly } from "@/lib/payments";
 import { SaveHeart } from "@/app/save-heart";
 import { CompareToggle } from "@/app/compare-toggle";
@@ -54,7 +60,7 @@ export function ListingCard({
         {photoPath ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={photoUrl(photoPath)}
+            src={photoUrl(photoPath, PHOTO_WIDTHS.card)}
             alt={title}
             className="h-full w-full object-cover"
           />

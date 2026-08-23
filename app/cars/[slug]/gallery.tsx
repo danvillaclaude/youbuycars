@@ -14,7 +14,7 @@ export function Gallery({
   name,
   price,
 }: {
-  photos: { id: string; url: string }[];
+  photos: { id: string; url: string; thumb: string }[];
   name: string;
   price: string;
 }) {
@@ -77,7 +77,7 @@ export function Gallery({
               aria-label={`Photo ${i + 1}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.url} alt="" className="aspect-[4/3] w-full object-cover" />
+              <img src={p.thumb} alt="" className="aspect-[4/3] w-full object-cover" />
             </button>
           ))}
         </div>
@@ -117,7 +117,7 @@ export function Gallery({
                     aria-label={`Photo ${i + 1}`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.url} alt="" className="aspect-[4/3] w-full object-cover" />
+                    <img src={p.thumb} alt="" className="aspect-[4/3] w-full object-cover" />
                   </button>
                 ))}
               </div>

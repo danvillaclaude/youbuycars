@@ -8,6 +8,7 @@ import {
   formatMileage,
   formatPrice,
   photoUrl,
+  PHOTO_WIDTHS,
   type Listing,
   type ListingPhoto,
   type PriceChange,
@@ -115,7 +116,9 @@ export async function generateMetadata({
       title: `${name} — ${formatPrice(listing.price)}`,
       description,
       images:
-        photos.length > 0 ? [{ url: photoUrl(photos[0].storage_path) }] : [],
+        photos.length > 0
+          ? [{ url: photoUrl(photos[0].storage_path, PHOTO_WIDTHS.og) }]
+          : [],
     },
     twitter: {
       card: photos.length > 0 ? "summary_large_image" : "summary",
@@ -180,7 +183,7 @@ export default async function ListingPage({
       unitCode: "SMI",
     },
     ...(listing.vin ? { vehicleIdentificationNumber: listing.vin } : {}),
-    image: photos.map((p) => photoUrl(p.storage_path)),
+    image: photos.map((p) => photoUrl(p.storage_path, PHOTO_WIDTHS.gallery)),
     offers: {
       "@type": "Offer",
       price: listing.price,
@@ -241,7 +244,8 @@ export default async function ListingPage({
             <Gallery
               photos={photos.map((p) => ({
                 id: p.id,
-                url: photoUrl(p.storage_path),
+                url: photoUrl(p.storage_path, PHOTO_WIDTHS.gallery),
+                thumb: photoUrl(p.storage_path, PHOTO_WIDTHS.thumb),
               }))}
               name={name}
               price={formatPrice(listing.price)}
@@ -367,7 +371,11 @@ export default async function ListingPage({
               ? `$${estimateMonthly(listing.price).toLocaleString("en-US")}/mo est.`
               : null
           }
-          photoUrl={photos.length > 0 ? photoUrl(photos[0].storage_path) : null}
+          photoUrl={
+            photos.length > 0
+              ? photoUrl(photos[0].storage_path, PHOTO_WIDTHS.bar)
+              : null
+          }
           contactHref={sellerTel ? "#contact" : messageHref}
           contactLabel={sellerTel ? "💬 Text" : "💬 Message"}
         />

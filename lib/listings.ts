@@ -155,14 +155,44 @@ export function formatMileage(mileage: number): string {
 }
 
 /** The public URL for a photo in the public listing-photos bucket. */
-export function photoUrl(storagePath: string): string {
-  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-photos/${storagePath}`;
+/**
+ * Storage URLs, SIZED (23 Aug 2026 overnight pass). The browse board was
+ * pulling every card photo at its full upload size — one live card
+ * measured 3.57 MB, served no-cache — nine to a grid. Supabase's image
+ * transform endpoint (/render/image/...?width=) hands the same photo back
+ * at 216 KB for a 640px card, cached an hour, WebP when the browser
+ * accepts it. Every <img> now asks for the width it actually paints;
+ * omit width only where the original is genuinely wanted (nowhere, today).
+ * Height follows the aspect automatically; quality 75 is indistinguishable
+ * on a car photo and a third the bytes of the default.
+ */
+function storageUrl(bucket: string, storagePath: string, width?: number): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!width) return `${base}/storage/v1/object/public/${bucket}/${storagePath}`;
+  return `${base}/storage/v1/render/image/public/${bucket}/${storagePath}?width=${width}&quality=75`;
 }
 
-/** The public URL for a dealer logo. */
-export function logoUrl(storagePath: string): string {
-  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/dealer-logos/${storagePath}`;
+/** The public URL for a listing photo, at the painted width. */
+export function photoUrl(storagePath: string, width?: number): string {
+  return storageUrl("listing-photos", storagePath, width);
 }
+
+/** The public URL for a dealer logo, at the painted width. */
+export function logoUrl(storagePath: string, width?: number): string {
+  return storageUrl("dealer-logos", storagePath, width);
+}
+
+/** The widths the site paints at — one place, so a card and its OG card
+ *  can never disagree. Retina-doubled where it shows. */
+export const PHOTO_WIDTHS = {
+  card: 720,
+  gallery: 1600,
+  thumb: 320,
+  bar: 160,
+  compare: 800,
+  og: 1200,
+  logo: 160,
+} as const;
 
 /**
  * The browse board's filter set — one shape shared by the /cars rail,

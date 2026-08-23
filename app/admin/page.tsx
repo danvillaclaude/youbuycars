@@ -6,6 +6,7 @@ import {
   photoUrl,
   type Listing,
   type ListingPhoto,
+  PHOTO_WIDTHS,
 } from "@/lib/listings";
 import { QueueCard } from "./queue-card";
 
@@ -50,7 +51,7 @@ export default async function AdminPage() {
   const photosByListing = new Map<string, string[]>();
   for (const p of (photoData ?? []) as ListingPhoto[]) {
     const arr = photosByListing.get(p.listing_id) ?? [];
-    arr.push(photoUrl(p.storage_path));
+    arr.push(photoUrl(p.storage_path, PHOTO_WIDTHS.thumb));
     photosByListing.set(p.listing_id, arr);
   }
 
