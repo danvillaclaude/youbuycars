@@ -23,6 +23,7 @@ export async function approveListingAction(id: string): Promise<Result> {
   if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/admin");
   revalidatePath("/cars");
+  revalidatePath("/sitemap.xml");
   return { ok: true };
 }
 

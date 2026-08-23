@@ -182,6 +182,7 @@ export async function updateListingAction(
   revalidatePath("/dashboard");
   revalidatePath("/admin");
   revalidatePath("/cars");
+  revalidatePath("/sitemap.xml");
   return { ok: true, id };
 }
 
@@ -196,6 +197,7 @@ export async function markSoldAction(id: string): Promise<ListingResult> {
   if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/dashboard");
   revalidatePath("/cars");
+  revalidatePath("/sitemap.xml");
   return { ok: true };
 }
 
@@ -249,6 +251,7 @@ export async function recordPhotosAction(
   if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/dashboard");
   revalidatePath("/cars");
+  revalidatePath("/sitemap.xml");
   return { ok: true };
 }
 
@@ -261,6 +264,7 @@ export async function deletePhotoAction(photoId: string): Promise<ListingResult>
   if (error) return { ok: false, error: userMessage(error) };
   revalidatePath("/dashboard");
   revalidatePath("/cars");
+  revalidatePath("/sitemap.xml");
   return { ok: true };
 }
 
