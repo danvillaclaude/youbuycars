@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { SITE } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice, type Listing, type ListingPhoto } from "@/lib/listings";
 import { estimateMonthly } from "@/lib/payments";
@@ -18,6 +20,50 @@ import { PromoSplit } from "./promo-split";
  * and /sms-consent — the campaign's registered proof page — is
  * untouched.
  */
+/**
+ * Brand-first on the home page (23 Aug 2026 SEO plan): the layout's
+ * keyword title is what /cars wears, and the two pages used to be
+ * byte-identical in the tab. The brand query is the one query a small
+ * site must win, and it is currently owned by an unrelated company —
+ * so the home page says its own name first, and declares its canonical.
+ */
+export const metadata: Metadata = {
+  title: "YouBuyCars — Used Cars for Sale in Metro Detroit, Michigan",
+  alternates: { canonical: "/" },
+};
+
+/**
+ * Organization + WebSite JSON-LD — the brand-level structured data Google
+ * still reads. Email only: the platform phone number lives on /contact
+ * alone (the owner's rule), so it is deliberately not in this markup.
+ * sameAs is empty until the owner's own profiles exist (Facebook and
+ * LinkedIn pages named exactly YouBuyCars) — add their URLs here.
+ */
+const ORG_JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE.domain}/#organization`,
+      name: SITE.name,
+      url: SITE.domain,
+      logo: `${SITE.domain}/apple-icon.png`,
+      email: SITE.email,
+      description:
+        "A used-car marketplace for Metro Detroit, Michigan: reviewed listings from local dealers and sellers, payment estimates, price drops, and sellers you contact directly.",
+      areaServed: { "@type": "Place", name: SITE.area },
+      sameAs: [] as string[],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE.domain}/#website`,
+      url: SITE.domain,
+      name: SITE.name,
+      publisher: { "@id": `${SITE.domain}/#organization` },
+    },
+  ],
+};
+
 export default async function HomePage() {
   // The shelf above the fold: newest live cars, and the makes the search
   // select offers — same vocabulary the browse page filters on.
@@ -90,6 +136,10 @@ export default async function HomePage() {
 
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}
+      />
       {/* Hero — search first, the way car shoppers actually arrive.
           Section separation below is the teardown's zebra rhythm: the
           backgrounds alternate and NOTHING draws a border between them. */}

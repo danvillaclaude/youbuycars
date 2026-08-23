@@ -22,6 +22,11 @@ export default function AboutPage() {
           person finds vehicles that actually fit and texts them to you.
         </p>
         <p>
+          YouBuyCars is an independent Metro Detroit business. It is not
+          part of, or affiliated with, any similarly named national
+          car-buying company.
+        </p>
+        <p>
           The idea is simple: buying a car shouldn&apos;t mean an afternoon
           in a showroom and a week of phone tag. Most of the work — narrowing
           options, checking availability, lining up financing questions,

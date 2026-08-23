@@ -25,6 +25,10 @@ export const metadata: Metadata = {
   // Title and description fall through from whichever page is sharing,
   // so a link to /cars or /sell unfurls with its own words, not these.
   openGraph: { type: "website", siteName: "YouBuyCars", locale: "en_US" },
+  // Search Console's HTML-tag route: set GOOGLE_SITE_VERIFICATION in the
+  // Vercel env to the token (the part after "content=") and redeploy; Next
+  // omits the tag while it is unset. The DNS TXT route needs nothing here.
+  verification: { google: process.env.GOOGLE_SITE_VERIFICATION },
 };
 
 export default function RootLayout({
