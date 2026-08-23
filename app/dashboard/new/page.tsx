@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireApprovedSeller } from "@/lib/auth";
 import { ListingForm } from "../listing-form";
 
-export const metadata: Metadata = { title: "List a car · YouBuyCars" };
+export const metadata: Metadata = { title: "List a car · YouBuyCars", robots: { index: false } };
 
 export default async function NewListingPage() {
   const { user } = await requireApprovedSeller();

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AuthForm } from "../auth-form";
 
-export const metadata: Metadata = { title: "Create account · YouBuyCars" };
+export const metadata: Metadata = { title: "Create account · YouBuyCars", robots: { index: false } };
 
 export default function SignupPage() {
   return (

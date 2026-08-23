@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { startChatAction } from "../actions";
 import { BuyerSignIn } from "./buyer-sign-in";
 
-export const metadata: Metadata = { title: "Message the seller · YouBuyCars" };
+export const metadata: Metadata = { title: "Message the seller · YouBuyCars", robots: { index: false } };
 
 /**
  * The front door to a conversation (0013). Signed in, it opens (or finds)

@@ -4,7 +4,7 @@ import { requireApprovedSeller } from "@/lib/auth";
 import type { Listing, ListingPhoto } from "@/lib/listings";
 import { ListingForm } from "../../listing-form";
 
-export const metadata: Metadata = { title: "Edit listing · YouBuyCars" };
+export const metadata: Metadata = { title: "Edit listing · YouBuyCars", robots: { index: false } };
 
 export default async function EditListingPage({
   params,

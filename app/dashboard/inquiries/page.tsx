@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireApprovedSeller } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "Inquiries · YouBuyCars" };
+export const metadata: Metadata = { title: "Inquiries · YouBuyCars", robots: { index: false } };
 
 interface Inquiry {
   id: string;

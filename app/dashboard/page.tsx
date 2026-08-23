@@ -11,7 +11,7 @@ import {
 } from "@/lib/listings";
 import { DashboardRowButtons } from "./row-buttons";
 
-export const metadata: Metadata = { title: "My listings · YouBuyCars" };
+export const metadata: Metadata = { title: "My listings · YouBuyCars", robots: { index: false } };
 
 // One clock read per request (react-hooks/purity): render must not call
 // Date.now() directly, and cache() pins the value for the whole render.

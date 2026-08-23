@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Messages · YouBuyCars" };
+export const metadata: Metadata = { title: "Messages · YouBuyCars", robots: { index: false } };
 
 interface ChatRow {
   id: string;

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { requireApprovedSeller } from "@/lib/auth";
 import { ProfileForm } from "./profile-form";
 
-export const metadata: Metadata = { title: "My dealer page · YouBuyCars" };
+export const metadata: Metadata = { title: "My dealer page · YouBuyCars", robots: { index: false } };
 
 export default async function ProfilePage() {
   const { profile } = await requireApprovedSeller();

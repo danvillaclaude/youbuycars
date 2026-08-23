@@ -9,7 +9,7 @@ import {
 } from "@/lib/listings";
 import { QueueCard } from "./queue-card";
 
-export const metadata: Metadata = { title: "Approvals · YouBuyCars" };
+export const metadata: Metadata = { title: "Approvals · YouBuyCars", robots: { index: false } };
 
 interface SellerName {
   id: string;

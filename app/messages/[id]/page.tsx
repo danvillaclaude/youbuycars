@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ChatThread } from "./chat-thread";
 
-export const metadata: Metadata = { title: "Messages · YouBuyCars" };
+export const metadata: Metadata = { title: "Messages · YouBuyCars", robots: { index: false } };
 
 /**
  * One conversation (0013). RLS scopes everything — a stranger's chat id

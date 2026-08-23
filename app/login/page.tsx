@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AuthForm } from "../auth-form";
 
-export const metadata: Metadata = { title: "Sign in · YouBuyCars" };
+export const metadata: Metadata = { title: "Sign in · YouBuyCars", robots: { index: false } };
 
 export default function LoginPage() {
   return (

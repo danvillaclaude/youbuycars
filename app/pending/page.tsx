@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { SITE } from "@/lib/site";
 import { SignOutButton } from "../sign-out-button";
 
-export const metadata: Metadata = { title: "Account status · YouBuyCars" };
+export const metadata: Metadata = { title: "Account status · YouBuyCars", robots: { index: false } };
 
 /**
  * The wall (owner's call: hard gate). Waiting, declined and suspended
