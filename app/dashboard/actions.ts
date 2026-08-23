@@ -7,6 +7,7 @@ import {
   BODY_STYLES,
   capFor,
   CONDITIONS,
+  MAX_PHOTOS,
   DRIVETRAINS,
   FUEL_TYPES,
   makeSlug,
@@ -118,21 +119,51 @@ export async function createListingAction(
 /**
  * Edit. The guard trigger sends a live listing back to 'pending' when its
  * substance changes — the admin approved specific words and numbers.
+ * Saving a REJECTED listing is a resubmission (23 Aug 2026 audit): it
+ * goes back in the queue with the reason cleared — before this it stayed
+ * "Not approved" forever, whatever the seller fixed. Rejected rows sit
+ * outside the cap and the trigger only counts at INSERT, so the cap is
+ * re-checked here.
  */
 export async function updateListingAction(
   id: string,
   input: Record<string, unknown>,
 ): Promise<ListingResult> {
-  const { supabase } = await requireUser();
+  const { supabase, user, profile } = await requireUser();
 
   const parsed = listingSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the form." };
   }
   const d = parsed.data;
+
+  const { data: cur } = await supabase
+    .from("listings")
+    .select("status")
+    .eq("id", id)
+    .eq("seller_id", user.id)
+    .maybeSingle();
+  if (!cur) return { ok: false, error: "That listing isn't yours." };
+  const resubmit = (cur as { status: string }).status === "rejected";
+  if (resubmit) {
+    const { count } = await supabase
+      .from("listings")
+      .select("id", { count: "exact", head: true })
+      .eq("seller_id", user.id)
+      .in("status", ["pending", "active"]);
+    const cap = capFor(profile.tier);
+    if ((count ?? 0) >= cap) {
+      return {
+        ok: false,
+        error: `You're at your plan's limit of ${cap} listing${cap === 1 ? "" : "s"}. Mark one sold (or delete a pending one) to resubmit this one.`,
+      };
+    }
+  }
+
   const { error } = await supabase
     .from("listings")
     .update({
+      ...(resubmit ? { status: "pending", rejected_reason: null } : {}),
       year: d.year,
       make: d.make,
       model: d.model,
@@ -194,8 +225,21 @@ export async function recordPhotosAction(
     .select("id", { count: "exact", head: true })
     .eq("listing_id", listingId);
 
+  // Per LISTING, not per batch (23 Aug 2026 audit): slice(0, 12) on each
+  // call let a 10-photo listing take 5 more. Anything past the cap is
+  // already in storage — take it back out so the bucket never holds a
+  // file no row points at.
+  const room = Math.max(0, MAX_PHOTOS - (count ?? 0));
+  const extra = paths.slice(room);
+  if (extra.length > 0) {
+    await supabase.storage.from("listing-photos").remove(extra);
+  }
+  if (room === 0) {
+    return { ok: false, error: `A listing holds up to ${MAX_PHOTOS} photos.` };
+  }
+
   const { error } = await supabase.from("listing_photos").insert(
-    paths.slice(0, 12).map((storage_path, i) => ({
+    paths.slice(0, room).map((storage_path, i) => ({
       listing_id: listingId,
       storage_path,
       sort_order: (count ?? 0) + i,

@@ -13,8 +13,8 @@ import {
 } from "@/lib/listings";
 import { DEFAULT_ESTIMATE, maxPriceForPayment } from "@/lib/payments";
 import { ListingCard } from "@/app/listing-card";
-import { SaveSearch } from "./save-search";
-import { RememberSearch } from "./remember-search";
+import { SaveSearch } from "../save-search";
+import { RememberSearch } from "../remember-search";
 
 /**
  * The board, rebuilt to the teardown's results shape (16 Aug 2026):

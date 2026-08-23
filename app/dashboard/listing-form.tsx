@@ -14,6 +14,7 @@ import {
   type Listing,
   type ListingPhoto,
   PHOTO_WIDTHS,
+  MAX_PHOTOS,
 } from "@/lib/listings";
 import {
   createListingAction,
@@ -61,7 +62,7 @@ const SECTION_FIELDS: Record<SectionKey, string[]> = {
     "body_style", "exterior_color", "interior_color", "drivetrain",
     "transmission", "fuel_type", "engine", "condition",
   ],
-  photos: [],
+  photos: ["photos"],
   story: ["description", "vin", "financing_offered"],
 };
 
@@ -247,6 +248,21 @@ export function ListingForm({
       financing_offered: fd.get("financing_offered") != null,
     };
     const files = (fd.getAll("photos") as File[]).filter((f) => f && f.size > 0);
+    // The cap the label promises, held before a single byte uploads.
+    const room = Math.max(0, MAX_PHOTOS - photos.length);
+    if (files.length > room) {
+      setErrors({
+        photos:
+          room === 0
+            ? `This listing already has ${MAX_PHOTOS} photos — remove one to add another.`
+            : `Up to ${MAX_PHOTOS} photos per listing — you can add ${room} more.`,
+      });
+      setOpen((o) => ({ ...o, photos: true }));
+      document
+        .getElementById("section-photos")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
 
     setBusy(true);
     setError(null);
@@ -528,6 +544,7 @@ export function ListingForm({
           <input name="photos" type="file" accept="image/*" multiple
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
         </label>
+        {fieldError("photos")}
         {uploadNote && <p className="text-xs text-slate-500">{uploadNote}</p>}
       </>)}
 

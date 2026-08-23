@@ -35,12 +35,22 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} min-h-dvh bg-white text-slate-900`}>
+        {/* The keyboard's way past the masthead (23 Aug 2026 audit):
+            invisible until focused, then a pill at the top-left. */}
+        <a
+          href="#content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
+        >
+          Skip to content
+        </a>
         <SiteHeader />
         {/* The sub-nav row (his spec, copying CarGurus): hyperlink words
             under the floating header, scrolling away with the page —
             now wearing the you-are-here underline (see sub-nav.tsx). */}
         <SubNav />
-        {children}
+        <div id="content" tabIndex={-1} className="outline-none">
+          {children}
+        </div>
         <AskPill />
         <CompareTray />
         {/* The teardown's footer: dark, full-bleed, accordion groups that
@@ -63,7 +73,7 @@ export default function RootLayout({
               </Link>
             </div>
 
-            <div className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
+            <nav aria-label="Footer" className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 {
                   title: "Shop",
@@ -102,20 +112,18 @@ export default function RootLayout({
                   <summary className="flex cursor-pointer list-none items-center justify-between font-semibold text-white [&::-webkit-details-marker]:hidden">
                     {group.title} <span aria-hidden="true" className="text-slate-600">▾</span>
                   </summary>
-                  <nav className="mt-2 grid gap-1.5 pb-1">
+                  <ul className="mt-2 grid gap-1.5 pb-1">
                     {group.links.map((l) => (
-                      <Link
-                        key={l.href}
-                        href={l.href}
-                        className="text-slate-400 hover:text-white"
-                      >
-                        {l.label}
-                      </Link>
+                      <li key={l.href}>
+                        <Link href={l.href} className="text-slate-400 hover:text-white">
+                          {l.label}
+                        </Link>
+                      </li>
                     ))}
-                  </nav>
+                  </ul>
                 </details>
               ))}
-            </div>
+            </nav>
 
             <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
               <span>

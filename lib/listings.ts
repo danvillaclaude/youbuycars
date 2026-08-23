@@ -114,6 +114,9 @@ export function capFor(tier: string | null | undefined): number {
 /** Kept for the free tier's sake; prefer capFor(tier). */
 export const LISTING_CAP = TIER_CAPS.free;
 
+/** Photos per listing — the form's "up to 12", enforced server-side too. */
+export const MAX_PHOTOS = 12;
+
 /** Lowercase, dashes, nothing weird — the URL-safe half of a slug. */
 export function slugify(text: string): string {
   return text

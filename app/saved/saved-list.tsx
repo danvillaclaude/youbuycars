@@ -20,6 +20,15 @@ import type { Listing, ListingPhoto } from "@/lib/listings";
  */
 export function SavedList() {
   const slugs = useSyncExternalStore(subscribeSaved, savedSnapshot, emptySnapshot);
+  // localStorage only exists on the client: until hydration the store is
+  // necessarily empty, and "No saved cars yet" is a wrong answer, not an
+  // empty one (23 Aug 2026 audit). Show the loading line instead; it
+  // flips once to the truth.
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [loaded, setLoaded] = useState<{
     listings: Listing[];
     covers: Record<string, string>;
@@ -61,6 +70,10 @@ export function SavedList() {
   const visible =
     loaded?.listings.filter((l) => slugs.includes(l.slug)) ?? null;
 
+  if (!hydrated) {
+    return <p className="mt-8 text-sm text-slate-500">Loading your shortlist…</p>;
+  }
+
   if (slugs.length === 0) {
     return (
       <div className="mt-10 rounded-2xl border border-slate-200 p-10 text-center">
@@ -77,6 +90,23 @@ export function SavedList() {
 
   if (visible === null) {
     return <p className="mt-8 text-sm text-slate-500">Loading your shortlist…</p>;
+  }
+
+  // A shortlist whose cars have all left the board used to render a
+  // blank grid. Say so, and point at the board.
+  if (visible.length === 0) {
+    return (
+      <div className="mt-10 rounded-2xl border border-slate-200 p-10 text-center">
+        <p className="font-semibold text-slate-700">
+          The cars you saved aren&apos;t on the board any more.
+        </p>
+        <p className="mt-1 text-sm text-slate-500">
+          <Link href="/cars" className="text-blue-600 underline">
+            Browse what&apos;s for sale now →
+          </Link>
+        </p>
+      </div>
+    );
   }
 
   return (
