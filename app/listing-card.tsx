@@ -29,6 +29,7 @@ export function ListingCard({
   sellerFinancing = true,
   sellerRating = null,
   priceDrop = null,
+  priority = false,
 }: {
   listing: Listing;
   photoPath: string | null;
@@ -40,6 +41,13 @@ export function ListingCard({
   sellerRating?: { avg: number; count: number } | null;
   /** Latest price change when it FELL (0015) — increases never badge. */
   priceDrop?: number | null;
+  /**
+   * Above the fold? React 19 turns every eager <img> into an SSR
+   * <link rel=preload>, so a 24-card board used to preload 24 photos
+   * before any of them painted. The board marks its first row; the
+   * rest load when they scroll near.
+   */
+  priority?: boolean;
 }) {
   const title = `${l.year} ${l.make} ${l.model}${l.trim_level ? ` ${l.trim_level}` : ""}`;
   const sellerLine = [sellerName, sellerCity].filter(Boolean).join(" · ");
@@ -62,6 +70,9 @@ export function ListingCard({
           <img
             src={photoUrl(photoPath, PHOTO_WIDTHS.card)}
             alt={title}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : "auto"}
+            decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (
@@ -98,7 +109,7 @@ export function ListingCard({
           {l.vin ? " · VIN on file" : ""}
         </div>
         {(sellerLine || sellerRating) && (
-          <div className="mt-2 border-t border-slate-100 pt-2 text-[11px] text-slate-400">
+          <div className="mt-2 border-t border-slate-100 pt-2 text-[11px] text-slate-500">
             {sellerRating && (
               <span className="mr-1.5 font-semibold text-amber-500">
                 ★ {sellerRating.avg.toFixed(1)}

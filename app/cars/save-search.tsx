@@ -81,7 +81,7 @@ export function SaveSearch({
         Cancel
       </button>
       {note && <span className="text-xs text-red-600">{note}</span>}
-      <span className="w-full text-[11px] text-slate-400">
+      <span className="w-full text-[11px] text-slate-500">
         A daily email when new cars match — every letter has a one-click
         unsubscribe. Nothing else, ever.
       </span>

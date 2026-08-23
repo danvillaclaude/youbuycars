@@ -330,7 +330,7 @@ export default async function CarsPage({
           sheet rounding up over it. Same title derivation as the tab. */}
       <section className="bg-slate-900 px-4 pb-14 pt-8 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
             Every listing reviewed before it goes live
           </p>
           <h1 className="mt-1.5 max-w-3xl text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
@@ -367,14 +367,14 @@ export default async function CarsPage({
       <div className="grid items-start gap-8 lg:grid-cols-[230px_1fr]">
         {/* The filter rail — collapsed accordions, the teardown's shape.
             A group with something set opens itself; the rest stay shut. */}
-        <form method="get" className="rounded-2xl border border-slate-200 bg-white px-4 py-2 lg:sticky lg:top-[85px]">
+        <form method="get" role="search" aria-label="Filter cars" className="rounded-2xl border border-slate-200 bg-white px-4 py-2 lg:sticky lg:top-[85px]">
           {params.sort && <input type="hidden" name="sort" value={params.sort} />}
 
           <details className={groupCls} open={Boolean(filters.make)}>
             <summary className={summaryCls}>
               Make <span className="text-slate-300">▾</span>
             </summary>
-            <select name="make" defaultValue={params.make ?? ""} className={inputCls}>
+            <select name="make" aria-label="Make" defaultValue={params.make ?? ""} className={inputCls}>
               <option value="">Any</option>
               {makes.map((m) => (
                 <option key={m} value={m}>
@@ -388,7 +388,7 @@ export default async function CarsPage({
             <summary className={summaryCls}>
               Body style <span className="text-slate-300">▾</span>
             </summary>
-            <select name="body" defaultValue={params.body ?? ""} className={inputCls}>
+            <select name="body" aria-label="Body style" defaultValue={params.body ?? ""} className={inputCls}>
               <option value="">Any</option>
               {BODY_STYLES.map((b) => (
                 <option key={b} value={b}>
@@ -403,7 +403,7 @@ export default async function CarsPage({
               Model or keyword <span className="text-slate-300">▾</span>
             </summary>
             <input
-              name="q"
+              name="q" aria-label="Model or keyword"
               defaultValue={params.q ?? ""}
               placeholder="Equinox, F-150…"
               className={inputCls}
@@ -419,7 +419,7 @@ export default async function CarsPage({
             </summary>
             <div className="flex items-center gap-2">
               <input
-                name="year_min"
+                name="year_min" aria-label="Minimum year"
                 type="number"
                 min={1900}
                 max={2100}
@@ -428,7 +428,7 @@ export default async function CarsPage({
                 className={inputCls}
               />
               <input
-                name="year_max"
+                name="year_max" aria-label="Maximum year"
                 type="number"
                 min={1900}
                 max={2100}
@@ -447,7 +447,7 @@ export default async function CarsPage({
               Price &amp; monthly payment <span className="text-slate-300">▾</span>
             </summary>
             <input
-              name="max_price"
+              name="max_price" aria-label="Maximum price"
               type="number"
               min={0}
               placeholder="Max $"
@@ -455,14 +455,14 @@ export default async function CarsPage({
               className={inputCls}
             />
             <input
-              name="max_payment"
+              name="max_payment" aria-label="Maximum monthly payment"
               type="number"
               min={0}
               placeholder="Max $/mo"
               defaultValue={params.max_payment ?? ""}
               className={inputCls}
             />
-            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
+            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">
               $/mo uses the same estimate as the cards ($
               {DEFAULT_ESTIMATE.down.toLocaleString("en-US")} down,{" "}
               {DEFAULT_ESTIMATE.termMonths} mo, {DEFAULT_ESTIMATE.apr}%).
@@ -474,7 +474,7 @@ export default async function CarsPage({
               Mileage <span className="text-slate-300">▾</span>
             </summary>
             <input
-              name="max_miles"
+              name="max_miles" aria-label="Maximum mileage"
               type="number"
               min={0}
               placeholder="Max miles"
@@ -573,11 +573,12 @@ export default async function CarsPage({
           ) : (
             <>
               <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {listings.map((l) => {
+                {listings.map((l, i) => {
                   const seller = sellersById.get(l.seller_id);
                   return (
                     <ListingCard
                       key={l.id}
+                      priority={i < 3}
                       listing={l}
                       photoPath={photosByListing.get(l.id) ?? null}
                       sellerName={seller?.name}
@@ -589,7 +590,7 @@ export default async function CarsPage({
                   );
                 })}
               </div>
-              <p className="mt-6 text-[11px] text-slate-400">
+              <p className="mt-6 text-[11px] text-slate-500">
                 Monthly estimates assume $
                 {DEFAULT_ESTIMATE.down.toLocaleString("en-US")} down,{" "}
                 {DEFAULT_ESTIMATE.termMonths} months, {DEFAULT_ESTIMATE.apr}%

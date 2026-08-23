@@ -109,10 +109,13 @@ export default async function HomePage() {
           <form
             action="/cars"
             method="get"
+            role="search"
+            aria-label="Search used cars"
             className="mx-auto mt-8 grid max-w-2xl gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg shadow-blue-900/5 sm:flex sm:flex-wrap sm:items-stretch"
           >
             <select
               name="make"
+              aria-label="Make"
               defaultValue=""
               className="w-full rounded-full border-0 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 sm:w-auto"
             >
@@ -125,11 +128,14 @@ export default async function HomePage() {
             </select>
             <input
               name="q"
+              type="search"
+              aria-label="Model or keyword"
               placeholder="Model or keyword — Equinox, F-150…"
               className="w-full rounded-full border-0 bg-slate-50 px-4 py-3 text-sm text-slate-700 sm:min-w-40 sm:w-auto sm:flex-1"
             />
             <input
               name="max_price"
+              aria-label="Maximum price"
               type="number"
               min={0}
               placeholder="Max $"
@@ -264,7 +270,7 @@ export default async function HomePage() {
               </div>
               <div className="mt-0.5 text-xs text-slate-500">74,200 mi</div>
             </div>
-            <span className="absolute -right-3 -top-3 rounded-full bg-green-600 px-3 py-1 text-xs font-bold text-white shadow">
+            <span className="absolute -right-3 -top-3 rounded-full bg-green-700 px-3 py-1 text-xs font-bold text-white shadow">
               ✓ Live — reviewed today
             </span>
           </div>
@@ -283,7 +289,7 @@ export default async function HomePage() {
         >
           {/* Product proof: the alert letter, in miniature. */}
           <div className="relative w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-lg shadow-blue-900/5">
-            <p className="text-xs font-semibold text-slate-400">
+            <p className="text-xs font-semibold text-slate-500">
               From: YouBuyCars
             </p>
             <p className="mt-1 text-sm font-bold text-slate-900">

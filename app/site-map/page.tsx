@@ -146,7 +146,7 @@ export default async function SiteIndexPage() {
       {sold.length > 0 && (
         <>
           <h2 className={h2}>Recently sold</h2>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-500">
             Sold cars keep their pages — prices and details stay visible for
             reference.
           </p>

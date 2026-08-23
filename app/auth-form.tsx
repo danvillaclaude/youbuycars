@@ -129,7 +129,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         {busy ? "Working…" : mode === "signup" ? "Create account" : "Sign in"}
       </button>
 
-      <p className="text-center text-xs text-slate-400">
+      <p className="text-center text-xs text-slate-500">
         {mode === "signup" ? (
           <>
             Already have an account?{" "}

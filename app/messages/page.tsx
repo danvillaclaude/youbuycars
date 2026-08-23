@@ -70,7 +70,7 @@ export default async function MessagesPage() {
                   c.buyer_id === user.id ? c.seller_id : c.buyer_id,
                 ) ?? "Conversation"}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-500">
                 {new Date(c.last_message_at).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",

@@ -82,7 +82,7 @@ export function PaymentCalculator({
         }}
         className="mt-1 w-full accent-blue-600"
       />
-      <div className="flex justify-between text-[11px] text-slate-400 tabular-nums">
+      <div className="flex justify-between text-[11px] text-slate-500 tabular-nums">
         <span>$0</span>
         <span>${maxDown.toLocaleString("en-US")}</span>
       </div>
@@ -131,7 +131,7 @@ export function PaymentCalculator({
         {ctaLabel}
       </a>
 
-      <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
         Estimate only — not an offer of credit, a quote, or an approval. Your
         rate and payment are set by a lender after an application. Taxes,
         title and fees not included. Assumed APR{" "}

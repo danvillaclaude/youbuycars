@@ -106,7 +106,7 @@ export function ReviewForm({ sellerId }: { sellerId: string }) {
           placeholder="(555) 555-5555"
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
-        <span className="mt-1 block text-[11px] text-slate-400">
+        <span className="mt-1 block text-[11px] text-slate-500">
           Used only to verify you really dealt with this seller — never shown
           publicly, never used for marketing.
         </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,16 +28,51 @@ export function MenuDrawer({
   const open = openedAt === pathname;
   const setOpen = (v: boolean) => setOpenedAt(v ? pathname : null);
 
+  /*
+   * A dialog the keyboard can use (23 Aug 2026 audit): the panel is
+   * portaled to the END of body, so before this, Tab from the hamburger
+   * walked the whole page under the overlay before reaching a single
+   * menu link. Focus moves into the panel on open, Tab wraps inside it,
+   * and closing hands focus back to the button that opened it. Nothing
+   * visible changes.
+   */
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!open) return;
+    const trigger = triggerRef.current;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpenedAt(null);
+      if (e.key === "Escape") {
+        setOpenedAt(null);
+        return;
+      }
+      if (e.key !== "Tab" || !panelRef.current) return;
+      const focusables = panelRef.current.querySelectorAll<HTMLElement>(
+        'a[href],button:not([disabled])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === panelRef.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (!panelRef.current.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     document.documentElement.style.overflow = "hidden";
+    panelRef.current?.focus();
     return () => {
       window.removeEventListener("keydown", onKey);
       document.documentElement.style.overflow = "";
+      trigger?.focus();
     };
   }, [open]);
 
@@ -75,6 +110,7 @@ export function MenuDrawer({
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         aria-label="Open menu"
         aria-expanded={open}
@@ -93,15 +129,26 @@ export function MenuDrawer({
           body, fixed means the viewport again. */}
       {open && createPortal(
         <div className="fixed inset-0 z-[70]">
+          {/* Click-to-close only; the ✕ inside is the one "Close menu"
+              a screen reader hears. */}
           <button
-            aria-label="Close menu"
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
             onClick={() => setOpen(false)}
             className="overlay-in absolute inset-0 bg-slate-900/40"
           />
           {/* From the LEFT (his call) — the drawer opens from the side
               its button lives on, and SLIDES in (his refinement: it
               popped; premium slides). */}
-          <div className="drawer-in absolute left-0 top-0 h-full w-72 overflow-y-auto bg-white p-5 shadow-2xl">
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+            tabIndex={-1}
+            className="drawer-in absolute left-0 top-0 h-full w-72 overflow-y-auto bg-white p-5 shadow-2xl outline-none"
+          >
             <div className="flex items-center justify-between">
               <span className="text-lg font-bold text-slate-900">
                 You<span className="text-blue-600">Buy</span>Cars
@@ -118,7 +165,7 @@ export function MenuDrawer({
 
             {groups.map((g) => (
               <div key={g.title} className="mt-5">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">
                   {g.title}
                 </p>
                 <nav className="mt-1.5 grid">

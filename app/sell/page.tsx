@@ -49,7 +49,7 @@ export default function SellPage() {
               I already have one
             </Link>
           </div>
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-slate-500">
             A real person approves every new seller — usually same day.
           </p>
         </div>
@@ -107,7 +107,7 @@ export default function SellPage() {
             <div className="rounded-2xl border-2 border-blue-600 bg-white p-5">
               <div className="text-sm font-semibold text-blue-600">Pro</div>
               <div className="mt-1 text-2xl font-bold">
-                $100<span className="text-sm font-normal text-slate-400">/mo</span>
+                $100<span className="text-sm font-normal text-slate-500">/mo</span>
               </div>
               <p className="mt-2 text-sm text-slate-600">
                 Up to {TIER_CAPS.pro} active listings, plus your own public
@@ -129,7 +129,7 @@ export default function SellPage() {
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
               <div className="text-sm font-semibold text-slate-500">Ultimate</div>
               <div className="mt-1 text-2xl font-bold">
-                $500<span className="text-sm font-normal text-slate-400">/mo</span>
+                $500<span className="text-sm font-normal text-slate-500">/mo</span>
               </div>
               <p className="mt-2 text-sm text-slate-600">
                 Up to {TIER_CAPS.ultimate} active listings — full-lot scale,
@@ -137,7 +137,7 @@ export default function SellPage() {
               </p>
             </div>
           </div>
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-slate-500">
             To upgrade to Pro or Ultimate, contact us at the email on the{" "}
             <Link href="/contact" className="underline">
               Contact page

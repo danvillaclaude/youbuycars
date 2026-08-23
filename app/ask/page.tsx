@@ -31,10 +31,10 @@ export default function AskPage() {
 
       {/* The input, previewed — looks live, honestly disabled. */}
       <div className="mx-auto mt-8 flex max-w-md items-center gap-2 rounded-full border border-blue-200 bg-white p-2 pl-5 text-left shadow-lg shadow-blue-900/5">
-        <span className="flex-1 text-sm text-slate-400">
+        <span className="flex-1 text-sm text-slate-500">
           Describe the car you want…
         </span>
-        <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-400">
+        <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-500">
           Soon
         </span>
       </div>
@@ -46,7 +46,7 @@ export default function AskPage() {
         >
           Browse the board for now
         </Link>
-        <p className="mt-4 text-xs text-slate-400">
+        <p className="mt-4 text-xs text-slate-500">
           Or save a search on the board and we&apos;ll email you when new
           matches arrive — that part works today.
         </p>

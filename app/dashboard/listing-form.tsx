@@ -570,7 +570,7 @@ export function ListingForm({
           {busy ? "Saving…" : listing ? "Save changes" : "Submit for review"}
         </button>
         {!listing && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             A real person reviews every listing before it goes live — usually
             same day.
           </p>

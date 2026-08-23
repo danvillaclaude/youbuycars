@@ -88,7 +88,7 @@ export default async function ChatPage({
             </Link>
           )}
         </div>
-        <Link href="/messages" className="text-sm text-slate-400">
+        <Link href="/messages" className="text-sm text-slate-500">
           ← All messages
         </Link>
       </div>

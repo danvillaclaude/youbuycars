@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * The photo gallery + lightbox, the teardown's shape: a counter chip on
@@ -28,18 +28,49 @@ export function Gallery({
     [photos.length],
   );
 
+  /*
+   * The lightbox promised aria-modal and delivered none of it (23 Aug
+   * 2026 audit): focus stayed on the cover button UNDER the overlay, and
+   * Tab walked the buy box behind it. Now focus lands on Close, Tab
+   * wraps inside the dialog, and closing returns to the cover.
+   */
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!open) return;
+    const trigger = triggerRef.current;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
       else if (e.key === "ArrowRight") step(1);
       else if (e.key === "ArrowLeft") step(-1);
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href],button:not([disabled])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === dialogRef.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (!dialogRef.current.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      }
     }
     window.addEventListener("keydown", onKey);
     document.documentElement.style.overflow = "hidden";
+    closeRef.current?.focus();
     return () => {
       window.removeEventListener("keydown", onKey);
       document.documentElement.style.overflow = "";
+      trigger?.focus();
     };
   }, [open, step]);
 
@@ -48,6 +79,7 @@ export function Gallery({
   return (
     <div>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
         className="relative block w-full cursor-zoom-in overflow-hidden rounded-2xl bg-slate-100"
@@ -57,6 +89,8 @@ export function Gallery({
         <img
           src={current.url}
           alt={name}
+          fetchPriority="high"
+          decoding="async"
           className="aspect-[16/10] w-full object-cover"
         />
         <span className="absolute bottom-3 right-3 rounded-full bg-slate-900/70 px-2.5 py-1 text-xs font-semibold text-white tabular-nums">
@@ -75,9 +109,10 @@ export function Gallery({
                 i === index ? "ring-2 ring-blue-600" : ""
               }`}
               aria-label={`Photo ${i + 1}`}
+              aria-current={i === index ? "true" : undefined}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.thumb} alt="" className="aspect-[4/3] w-full object-cover" />
+              <img src={p.thumb} alt="" loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
             </button>
           ))}
         </div>
@@ -85,6 +120,7 @@ export function Gallery({
 
       {open && (
         <div
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-label={`${name} photos`}
@@ -95,6 +131,7 @@ export function Gallery({
               {name} <span className="ml-2 font-bold tabular-nums">{price}</span>
             </p>
             <button
+              ref={closeRef}
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Close gallery"
@@ -115,6 +152,7 @@ export function Gallery({
                       i === index ? "ring-2 ring-blue-500" : "opacity-60 hover:opacity-100"
                     }`}
                     aria-label={`Photo ${i + 1}`}
+                    aria-current={i === index ? "true" : undefined}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.thumb} alt="" className="aspect-[4/3] w-full object-cover" />

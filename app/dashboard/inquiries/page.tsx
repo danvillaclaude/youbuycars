@@ -75,7 +75,7 @@ export default async function InquiriesPage() {
                     in your CRM
                   </span>
                 )}
-                <span className="ml-auto text-[11px] text-slate-400">
+                <span className="ml-auto text-[11px] text-slate-500">
                   {new Date(q.created_at).toLocaleString("en-US", {
                     month: "short",
                     day: "numeric",

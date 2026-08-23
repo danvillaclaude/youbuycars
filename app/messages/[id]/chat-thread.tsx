@@ -70,7 +70,7 @@ export function ChatThread({
     <>
       <div className="flex-1 space-y-2 overflow-y-auto py-4">
         {initialMessages.length === 0 && !echo && (
-          <p className="py-10 text-center text-sm text-slate-400">
+          <p className="py-10 text-center text-sm text-slate-500">
             Say hello — ask about the car, the price, a time to see it.
           </p>
         )}

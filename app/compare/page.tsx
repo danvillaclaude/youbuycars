@@ -260,7 +260,7 @@ export default async function ComparePage({
                   i % 2 === 0 ? "bg-slate-50" : "bg-white"
                 }`}
               >
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {row.label}
                 </div>
                 <div className="font-medium text-slate-800 tabular-nums">
@@ -273,7 +273,7 @@ export default async function ComparePage({
             ))}
           </div>
 
-          <p className="mt-4 text-[11px] text-slate-400">
+          <p className="mt-4 text-[11px] text-slate-500">
             Payment estimates use the same assumptions as the rest of the
             site — estimates only, never an offer of credit. Open either car
             to run your own numbers.

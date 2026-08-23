@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { startChatAction } from "../actions";
 import { BuyerSignIn } from "./buyer-sign-in";
@@ -43,9 +44,24 @@ export default async function StartChatPage({
   }
 
   if (user) {
-    // Server-side: open or find, then redirect into the thread.
-    await startChatAction(sellerProfile.id, listing || null);
-    return null;
+    // Server-side: open or find, then redirect into the thread. The
+    // action only RETURNS when it couldn't — a seller on their own page,
+    // an insert the policy refused — and a silent null here was a blank
+    // page with no way back (23 Aug 2026 audit). Say what happened.
+    const res = await startChatAction(sellerProfile.id, listing || null);
+    return (
+      <main className="mx-auto max-w-md px-6 py-16 text-center">
+        <p className="font-semibold text-slate-700">
+          {res.error ?? "Couldn't open that conversation."}
+        </p>
+        <Link
+          href="/cars"
+          className="mt-6 inline-block rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
+        >
+          Browse cars
+        </Link>
+      </main>
+    );
   }
 
   return (

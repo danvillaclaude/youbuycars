@@ -105,11 +105,13 @@ export async function sendChatMessageAction(
   });
   if (error) return { ok: false, error: "Couldn't send that." };
 
-  await supabase
-    .from("chats")
-    .update({ last_message_at: new Date().toISOString() })
-    .eq("id", d.chat_id);
-
+  /*
+   * chats.last_message_at is stamped by the database (trigger in 0017),
+   * not here. An app-side update used to sit in this spot and matched
+   * ZERO rows — chats has no UPDATE policy, and RLS fails silently — so
+   * the inbox never reordered. A trigger stamps from the message's own
+   * created_at, and nobody needs rights to rewrite a chat's parties.
+   */
   revalidatePath(`/messages/${d.chat_id}`);
   return { ok: true };
 }

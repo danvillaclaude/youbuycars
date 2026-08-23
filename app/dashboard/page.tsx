@@ -153,7 +153,7 @@ export default async function DashboardPage() {
                   const s = statsByListing.get(l.id);
                   if (!s || l.status === "pending") return null;
                   return (
-                    <div className="mt-1.5 flex flex-wrap gap-x-3 text-[11px] text-slate-400 tabular-nums">
+                    <div className="mt-1.5 flex flex-wrap gap-x-3 text-[11px] text-slate-500 tabular-nums">
                       <span>
                         <b className="font-semibold text-slate-600">{s.views}</b>{" "}
                         views

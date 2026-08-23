@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { SITE } from "@/lib/site";
 import { SignOutButton } from "../sign-out-button";
@@ -11,7 +12,21 @@ export const metadata: Metadata = { title: "Account status · YouBuyCars", robot
  * further. Approval flips this to a working dashboard with no other change.
  */
 export default async function PendingPage() {
-  const { profile } = await requireUser();
+  const { supabase, profile } = await requireUser();
+
+  // A BUYER (magic-link account, 0013) is never in the seller queue, but
+  // the header's person icon sends every signed-in user to /dashboard,
+  // whose gate sends the unapproved here — so a buyer read "your seller
+  // account is waiting for approval" about an account that isn't one.
+  // Their desk is the inbox.
+  const { data: flags } = await supabase
+    .from("profiles")
+    .select("is_buyer")
+    .eq("id", profile.id)
+    .maybeSingle();
+  if ((flags as { is_buyer: boolean } | null)?.is_buyer && !profile.approved_at) {
+    redirect("/messages");
+  }
 
   const state = profile.suspended_at
     ? {

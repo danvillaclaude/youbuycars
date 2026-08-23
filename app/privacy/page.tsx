@@ -15,7 +15,7 @@ export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <PageHeader title="Privacy Policy" />
-      <p className="text-xs text-slate-400">Last updated: August 2026</p>
+      <p className="text-xs text-slate-500">Last updated: August 2026</p>
 
       <div className="mt-6 space-y-6 text-sm leading-relaxed text-slate-600">
         <p>

@@ -54,7 +54,7 @@ export default function ContactPage() {
               reuses the page's own sentence, nothing invented. */}
           <div className="flex justify-center">
             <div className="w-56 rounded-[2rem] border-8 border-slate-900 bg-white p-3 shadow-xl shadow-blue-900/10">
-              <p className="text-center text-[10px] font-semibold text-slate-400">
+              <p className="text-center text-[10px] font-semibold text-slate-500">
                 {SITE.phoneDisplay}
               </p>
               <div className="mt-2 ml-auto w-fit rounded-2xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white">
@@ -100,7 +100,7 @@ export default function ContactPage() {
               {SITE.phoneDisplay}
             </a>
           </p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-500">
             Texting us first is consent to receive our replies — STOP ends it
             anytime. See{" "}
             <Link href="/sms-consent" className="underline">
@@ -120,7 +120,7 @@ export default function ContactPage() {
               {SITE.email}
             </a>
           </p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-500">
             Answered by a real person, usually same day.
           </p>
         </div>
@@ -131,7 +131,7 @@ export default function ContactPage() {
         Message buttons, and dealer pages have their own contact form.
       </p>
 
-      <p className="mt-8 text-xs text-slate-400">
+      <p className="mt-8 text-xs text-slate-500">
         YouBuyCars · {SITE.area}
       </p>
     </main>

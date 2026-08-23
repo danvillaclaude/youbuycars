@@ -232,7 +232,7 @@ export default async function SellerPage({
                   {r.body}
                 </p>
               )}
-              <p className="mt-1.5 text-[11px] text-slate-400">
+              <p className="mt-1.5 text-[11px] text-slate-500">
                 Verified contact ·{" "}
                 {new Date(r.created_at).toLocaleDateString("en-US", {
                   month: "short",
@@ -246,7 +246,7 @@ export default async function SellerPage({
       <div className="mt-5">
         <ReviewForm sellerId={seller.id} />
       </div>
-      <p className="mt-3 max-w-2xl text-[11px] text-slate-400">
+      <p className="mt-3 max-w-2xl text-[11px] text-slate-500">
         Every review is verified against real contact with the seller before
         it appears — no drive-by ratings.
       </p>

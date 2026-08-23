@@ -76,7 +76,7 @@ export function SavedList() {
   }
 
   if (visible === null) {
-    return <p className="mt-8 text-sm text-slate-400">Loading your shortlist…</p>;
+    return <p className="mt-8 text-sm text-slate-500">Loading your shortlist…</p>;
   }
 
   return (

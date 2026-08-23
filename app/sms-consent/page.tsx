@@ -102,7 +102,7 @@ export default function SmsConsentPage() {
         </li>
       </ul>
 
-      <p className="mt-8 text-xs text-slate-400">
+      <p className="mt-8 text-xs text-slate-500">
         Questions about this program? Contact {SITE.email}.
       </p>
     </main>

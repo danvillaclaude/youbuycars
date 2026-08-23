@@ -309,7 +309,7 @@ export default async function ListingPage({
           </div>
           {!sold && (
             /* The velocity line — the honest half of their market chips. */
-            <p className="mt-1.5 text-xs text-slate-400 tabular-nums" suppressHydrationWarning>
+            <p className="mt-1.5 text-xs text-slate-500 tabular-nums" suppressHydrationWarning>
               Listed {listedDays === 0 ? "today" : `${listedDays} day${listedDays === 1 ? "" : "s"} ago`}
               {" · "}
               {priceChanges.length === 0
@@ -446,7 +446,7 @@ export default async function ListingPage({
             .filter(([, v]) => v)
             .map(([label, value]) => (
               <div key={label}>
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   {label}
                 </div>
                 <div className="mt-0.5 text-sm font-semibold text-slate-800">
@@ -480,7 +480,7 @@ export default async function ListingPage({
                   i % 2 === 0 ? "bg-slate-50" : "bg-white"
                 }`}
               >
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {label}
                 </div>
                 <div className="font-medium text-slate-800">{value}</div>

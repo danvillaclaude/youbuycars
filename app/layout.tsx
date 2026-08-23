@@ -117,7 +117,7 @@ export default function RootLayout({
               ))}
             </div>
 
-            <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+            <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
               <span>
                 © {new Date().getFullYear()} {SITE.name} · {SITE.area}
               </span>
