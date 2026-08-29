@@ -2,6 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ARTICLES } from "../articles";
+import { DRAFT_ARTICLES } from "../draft-articles";
+import { Breadcrumbs } from "@/app/breadcrumbs";
+
+/** Live guides are listed and indexed; drafts render only at their URL. */
+function findArticle(slug: string) {
+  return ARTICLES.find((a) => a.slug === slug) ?? DRAFT_ARTICLES.find((a) => a.slug === slug);
+}
 
 export function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }));
@@ -13,12 +20,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const article = ARTICLES.find((a) => a.slug === slug);
-  if (!article) return { title: "Research · YouBuyCars" };
+  const article = findArticle(slug);
+  if (!article) return { title: "Page not found · YouBuyCars", robots: { index: false } };
   return {
     title: `${article.title} | YouBuyCars Research`,
     description: article.dek,
     alternates: { canonical: `/research/${article.slug}` },
+    ...(article.draft ? { robots: { index: false } } : {}),
   };
 }
 
@@ -29,17 +37,24 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const article = ARTICLES.find((a) => a.slug === slug);
+  const article = findArticle(slug);
   if (!article) notFound();
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
-      <Link
-        href="/research"
-        className="text-sm text-slate-400 hover:text-slate-600"
-      >
-        ← Research &amp; guides
-      </Link>
+      {article.draft && (
+        <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+          Draft — not published yet. This page is listed nowhere and marked
+          noindex; it goes live once you approve it.
+        </p>
+      )}
+      <Breadcrumbs
+        items={[
+          { name: "Home", href: "/" },
+          { name: "Research & guides", href: "/research" },
+          { name: article.title },
+        ]}
+      />
       <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900">
         {article.title}
       </h1>

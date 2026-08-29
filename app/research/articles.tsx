@@ -15,11 +15,18 @@ export interface Article {
   title: string;
   dek: string;
   minutes: number;
+  /**
+   * A draft renders at its URL with a banner and noindex, and is listed
+   * nowhere — so the owner can read it in place before it goes live
+   * (his rule for the Michigan cluster). Publishing = moving the object
+   * from draft-articles.tsx into ARTICLES and dropping this flag.
+   */
+  draft?: boolean;
   body: React.ReactNode;
 }
 
-const h2 = "mt-8 text-lg font-bold text-slate-900";
-const p = "mt-3 text-sm leading-relaxed text-slate-600";
+export const h2 = "mt-8 text-lg font-bold text-slate-900";
+export const p = "mt-3 text-sm leading-relaxed text-slate-600";
 const li = "mt-2 text-sm leading-relaxed text-slate-600";
 
 export const ARTICLES: Article[] = [
