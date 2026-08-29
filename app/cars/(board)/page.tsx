@@ -3,8 +3,12 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   BODY_STYLES,
+  canonicalBody,
+  canonicalDrivetrain,
   canonicalFor,
+  canonicalMake,
   describeSearch,
+  DRIVETRAINS,
   searchTerm,
   type Listing,
   type ListingPhoto,
@@ -29,6 +33,7 @@ interface Params {
   make?: string;
   q?: string;
   body?: string;
+  drivetrain?: string;
   year_min?: string;
   year_max?: string;
   max_price?: string;
@@ -44,9 +49,12 @@ interface Params {
  */
 function searchTitle(p: Params): string {
   const bits: string[] = ["Used"];
-  if (p.make) bits.push(p.make);
-  if (p.body && (BODY_STYLES as readonly string[]).includes(p.body))
-    bits.push(`${p.body}s`);
+  const dt = canonicalDrivetrain(p.drivetrain);
+  if (dt) bits.push(dt);
+  const mk = canonicalMake(p.make);
+  if (mk) bits.push(mk);
+  const bd = canonicalBody(p.body);
+  if (bd) bits.push(`${bd}s`);
   if (bits.length === 1) bits.push("Cars");
   let title = bits.join(" ");
   if (p.max_payment && Number(p.max_payment) > 0)
@@ -68,13 +76,28 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const p = await searchParams;
   const title = searchTitle(p);
+  // An empty view must not be indexed: ?body=Sedan with zero sedans was
+  // a 200 with a keyword headline over nothing — the doorway shape
+  // Google's faceted-navigation guidance warns about. noindex,follow
+  // keeps the page usable and its links crawlable.
+  const supabase = await createClient();
+  const countBase = supabase
+    .from("listings")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "active");
+  // The cast to a minimal thenable keeps tsc out of the query builder's
+  // recursive generics (TS2589) — at runtime it is the same builder.
+  const { count } = await (applyView(
+    countBase as unknown as FilterableQuery,
+    parseView(p),
+  ) as unknown as PromiseLike<{ count: number | null }>);
   return {
     title: `${title} | YouBuyCars`,
     description: `${title}. Every listing reviewed before it goes live — browse prices, payment estimates and local sellers, or save the search and get emailed when new matches arrive.`,
     alternates: { canonical: canonicalFor(p) },
-    // A free-text search is the buyer's query, not a page: keep those
-    // results out of the index and point them at the filtered board.
-    ...(p.q ? { robots: { index: false, follow: true } } : {}),
+    // A free-text search is the buyer's query, not a page — and an empty
+    // view is not a page at all.
+    ...(p.q || (count ?? 0) === 0 ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
@@ -88,6 +111,65 @@ function href(params: Params, patch: Partial<Record<keyof Params, string | null>
   }
   const qs = new URLSearchParams(merged).toString();
   return qs ? `/cars?${qs}` : "/cars";
+}
+
+/**
+ * The view, parsed ONCE (23 Aug 2026 SEO plan): spelling normalised
+ * (?make=ford is Ford, ?body=suv is SUV) so the chip, the title, the
+ * canonical and the query can never disagree, and applyView() is the
+ * single place a filter becomes SQL — generateMetadata uses it for a
+ * head-count so an EMPTY view can say noindex instead of publishing a
+ * keyword headline over zero cars.
+ */
+interface BoardView {
+  filters: SearchFilters;
+  drivetrain: string | null;
+  priceCap: number;
+}
+function parseView(params: Params): BoardView {
+  const filters: SearchFilters = {
+    make: canonicalMake(params.make) || null,
+    q: searchTerm(params.q) || null,
+    body_style: canonicalBody(params.body),
+    year_min: positive(params.year_min),
+    year_max: positive(params.year_max),
+    max_price: positive(params.max_price),
+    max_payment: positive(params.max_payment),
+    max_miles: positive(params.max_miles),
+    financing: params.financing === "1",
+  };
+  const priceCap = Math.min(
+    filters.max_price ?? Infinity,
+    filters.max_payment ? maxPriceForPayment(filters.max_payment) : Infinity,
+  );
+  return { filters, drivetrain: canonicalDrivetrain(params.drivetrain), priceCap };
+}
+
+interface FilterableQuery {
+  eq(column: string, value: unknown): FilterableQuery;
+  or(filter: string): FilterableQuery;
+  gte(column: string, value: number): FilterableQuery;
+  lte(column: string, value: number): FilterableQuery;
+}
+function applyView(base: FilterableQuery, view: BoardView): FilterableQuery {
+  const { filters, drivetrain, priceCap } = view;
+  let query = base;
+  if (filters.make) query = query.eq("make", filters.make);
+  if (filters.body_style) query = query.eq("body_style", filters.body_style);
+  if (drivetrain) query = query.eq("drivetrain", drivetrain);
+  if (filters.q) {
+    // The term was sanitised by searchTerm() at parse — , ( ) " are
+    // or() operators and never reach this string.
+    query = query.or(
+      `model.ilike.%${filters.q}%,make.ilike.%${filters.q}%,trim_level.ilike.%${filters.q}%`,
+    );
+  }
+  if (filters.year_min) query = query.gte("year", filters.year_min);
+  if (filters.year_max) query = query.lte("year", filters.year_max);
+  if (priceCap !== Infinity) query = query.lte("price", priceCap);
+  if (filters.max_miles) query = query.lte("mileage", filters.max_miles);
+  if (filters.financing) query = query.eq("financing_offered", true);
+  return query;
 }
 
 function positive(v: string | undefined): number | null {
@@ -108,56 +190,15 @@ export default async function CarsPage({
   searchParams: Promise<Params>;
 }) {
   const params = await searchParams;
-  const filters: SearchFilters = {
-    make: params.make || null,
-    q: searchTerm(params.q) || null,
-    body_style:
-      params.body && (BODY_STYLES as readonly string[]).includes(params.body)
-        ? params.body
-        : null,
-    year_min: positive(params.year_min),
-    year_max: positive(params.year_max),
-    max_price: positive(params.max_price),
-    max_payment: positive(params.max_payment),
-    max_miles: positive(params.max_miles),
-    financing: params.financing === "1",
-  };
+  const view = parseView(params);
+  const { filters, drivetrain } = view;
   const supabase = await createClient();
 
-  /*
-   * The $/mo filter converts to a price cap through the SAME assumptions
-   * as the cards' est./mo — filtering by $260/mo shows exactly the cars
-   * whose cards say $260 or less. The stricter of the two caps wins.
-   */
-  const priceCap = Math.min(
-    filters.max_price ?? Infinity,
-    filters.max_payment ? maxPriceForPayment(filters.max_payment) : Infinity,
-  );
-
-  let query = supabase.from("listings").select("*").eq("status", "active");
-  if (filters.make) query = query.ilike("make", filters.make);
-  if (filters.body_style) query = query.eq("body_style", filters.body_style);
-  if (filters.q) {
-    /*
-     * The term rides inside PostgREST's or() grammar, where , ( ) and "
-     * are OPERATORS — a comma split "ford, xlt" into extra filters, a
-     * parenthesis closed the group early, and a crafted q could inject
-     * its own filter (proven live: q=zzzz,model.ilike.%Edge matched the
-     * Edge). Stripping the four reserved characters leaves every real
-     * search intact; the ilike wildcards % and _ are a buyer's to use.
-     */
-    const term = searchTerm(filters.q);
-    if (term) {
-      query = query.or(
-        `model.ilike.%${term}%,make.ilike.%${term}%,trim_level.ilike.%${term}%`,
-      );
-    }
-  }
-  if (filters.year_min) query = query.gte("year", filters.year_min);
-  if (filters.year_max) query = query.lte("year", filters.year_max);
-  if (priceCap !== Infinity) query = query.lte("price", priceCap);
-  if (filters.max_miles) query = query.lte("mileage", filters.max_miles);
-  if (filters.financing) query = query.eq("financing_offered", true);
+  const listBase = supabase.from("listings").select("*").eq("status", "active");
+  let query = applyView(
+    listBase as unknown as FilterableQuery,
+    view,
+  ) as unknown as typeof listBase;
   switch (params.sort) {
     case "price_asc":
       query = query.order("price", { ascending: true });
@@ -172,14 +213,24 @@ export default async function CarsPage({
       query = query.order("created_at", { ascending: false });
   }
 
-  const [{ data: listingData }, { data: makeData }] = await Promise.all([
+  // The whole live inventory in one thin summary: it feeds the make
+  // rail, the link pack at the foot of the board, and the counts.
+  const [{ data: listingData }, { data: summaryData }] = await Promise.all([
     query,
-    supabase.from("listings").select("make").eq("status", "active"),
+    supabase
+      .from("listings")
+      .select("make, body_style, drivetrain, price, seller_id")
+      .eq("status", "active"),
   ]);
   let listings = (listingData ?? []) as Listing[];
-  const makes = [
-    ...new Set(((makeData ?? []) as { make: string }[]).map((m) => m.make)),
-  ].sort();
+  const summary = (summaryData ?? []) as {
+    make: string;
+    body_style: string | null;
+    drivetrain: string | null;
+    price: number;
+    seller_id: string;
+  }[];
+  const makes = [...new Set(summary.map((m) => m.make))].sort();
 
   // First photo per listing, one query — and the seller line's names,
   // because a card with a dealership on it reads more trustworthy than an
@@ -193,9 +244,13 @@ export default async function CarsPage({
   // Latest price change per listing, only when it FELL — his call,
   // increases stay quiet. Filled from the batched fetch below.
   const dropByListing = new Map<string, number>();
-  if (listings.length > 0) {
+  const packSellers = new Map<
+    string,
+    { name: string | null; slug: string | null }
+  >();
+  if (summary.length > 0) {
     const ids = listings.map((l) => l.id);
-    const sellerIds = [...new Set(listings.map((l) => l.seller_id))];
+    const sellerIds = [...new Set(summary.map((m) => m.seller_id))];
     const [
       { data: photoData },
       { data: sellerData },
@@ -209,7 +264,7 @@ export default async function CarsPage({
         .order("sort_order"),
       supabase
         .from("profiles")
-        .select("id, display_name, city, financing_offered")
+        .select("id, display_name, city, financing_offered, public_slug")
         .in("id", sellerIds),
       // RLS surfaces approved reviews only — the average is honest by law.
       supabase
@@ -240,12 +295,14 @@ export default async function CarsPage({
       display_name: string | null;
       city: string | null;
       financing_offered: boolean;
+      public_slug: string | null;
     }[]) {
       sellersById.set(s.id, {
         name: s.display_name,
         city: s.city,
         financing: s.financing_offered,
       });
+      packSellers.set(s.id, { name: s.display_name, slug: s.public_slug });
     }
     const sums = new Map<string, { total: number; count: number }>();
     for (const r of (reviewData ?? []) as { seller_id: string; rating: number }[]) {
@@ -273,6 +330,7 @@ export default async function CarsPage({
   if (filters.make) chips.push({ key: "make", label: filters.make });
   if (filters.body_style)
     chips.push({ key: "body", label: `${filters.body_style}s` });
+  if (drivetrain) chips.push({ key: "drivetrain", label: drivetrain });
   if (filters.q) chips.push({ key: "q", label: `“${filters.q}”` });
   if (filters.year_min)
     chips.push({ key: "year_min", label: `${filters.year_min} or newer` });
@@ -385,6 +443,20 @@ export default async function CarsPage({
               {BODY_STYLES.map((b) => (
                 <option key={b} value={b}>
                   {b}
+                </option>
+              ))}
+            </select>
+          </details>
+
+          <details className={groupCls} open={Boolean(drivetrain)}>
+            <summary className={summaryCls}>
+              Drivetrain <span aria-hidden="true" className="text-slate-300">▾</span>
+            </summary>
+            <select name="drivetrain" aria-label="Drivetrain" defaultValue={drivetrain ?? ""} className={inputCls}>
+              <option value="">Any</option>
+              {DRIVETRAINS.map((d) => (
+                <option key={d} value={d}>
+                  {d}
                 </option>
               ))}
             </select>
@@ -582,6 +654,83 @@ export default async function CarsPage({
                   );
                 })}
               </div>
+              {summary.length > 0 && (() => {
+                const count = (fn: (m: (typeof summary)[number]) => boolean) =>
+                  summary.filter(fn).length;
+                const group = (label: string, links: { name: string; href: string; n: number }[]) =>
+                  links.length > 0 ? { label, links } : null;
+                const bands = [10000, 15000, 25000]
+                  .map((cap) => ({
+                    name: `Under ${(cap / 1000).toFixed(0)}k`,
+                    href: canonicalFor({ max_price: String(cap) }),
+                    n: count((m) => m.price <= cap),
+                  }))
+                  .filter((b) => b.n > 0);
+                const groups = [
+                  group(
+                    "By make",
+                    makes.map((mk) => ({
+                      name: mk,
+                      href: canonicalFor({ make: mk }),
+                      n: count((m) => m.make === mk),
+                    })),
+                  ),
+                  group(
+                    "By body style",
+                    BODY_STYLES.map((b) => ({
+                      name: `${b}s`,
+                      href: canonicalFor({ body: b }),
+                      n: count((m) => m.body_style === b),
+                    })).filter((l) => l.n > 0),
+                  ),
+                  group(
+                    "By drivetrain",
+                    DRIVETRAINS.map((d) => ({
+                      name: d,
+                      href: canonicalFor({ drivetrain: d }),
+                      n: count((m) => m.drivetrain === d),
+                    })).filter((l) => l.n > 0),
+                  ),
+                  group("By price", bands),
+                  group(
+                    "By seller",
+                    [...packSellers.entries()]
+                      .filter(([, v]) => v.slug && v.name)
+                      .map(([id, v]) => ({
+                        name: v.name as string,
+                        href: `/sellers/${v.slug}`,
+                        n: count((m) => m.seller_id === id),
+                      })),
+                  ),
+                ].filter((g): g is { label: string; links: { name: string; href: string; n: number }[] } => g !== null);
+                return (
+                  /* The live-inventory link pack (23 Aug 2026 SEO plan): the
+                     board's facets used to be reachable only through the GET
+                     form, which a crawler doesn't submit. Every door here has
+                     cars behind it — an empty facet is never linked. */
+                  <nav aria-label="Browse the live inventory" className="mt-10 border-t border-slate-100 pt-6">
+                    <h2 className="text-sm font-bold text-slate-900">Browse the live inventory</h2>
+                    <div className="mt-3 grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
+                      {groups.map((g) => (
+                        <div key={g.label}>
+                          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                            {g.label}
+                          </div>
+                          <ul className="mt-1.5 space-y-1">
+                            {g.links.map((l) => (
+                              <li key={l.href}>
+                                <Link href={l.href} className="text-blue-700 hover:underline">
+                                  {`${l.name} (${l.n})`}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </nav>
+                );
+              })()}
               <p className="mt-6 text-[11px] text-slate-500">
                 Monthly estimates assume $
                 {DEFAULT_ESTIMATE.down.toLocaleString("en-US")} down,{" "}

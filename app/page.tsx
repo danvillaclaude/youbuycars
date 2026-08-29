@@ -75,12 +75,18 @@ export default async function HomePage() {
       .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(6),
-    supabase.from("listings").select("make").eq("status", "active"),
+    // Also feeds the tile/chip gate: a door only renders when at least
+    // one live car is behind it (?body=Truck used to be an indexable
+    // page with a keyword headline over zero trucks).
+    supabase.from("listings").select("make, body_style, price").eq("status", "active"),
   ]);
   const latest = (latestData ?? []) as Listing[];
   const makes = [
     ...new Set(((makeData ?? []) as { make: string }[]).map((m) => m.make)),
   ].sort();
+  const inv = (makeData ?? []) as { make: string; body_style: string | null; price: number }[];
+  const hasBody = (b: string) => inv.some((m) => m.body_style === b);
+  const hasUnder = (cap: number) => inv.some((m) => m.price <= cap);
 
   const photosByListing = new Map<string, string>();
   const sellersById = new Map<
@@ -198,12 +204,12 @@ export default async function HomePage() {
           </form>
           <div className="mt-3 flex flex-wrap justify-center gap-2 text-xs">
             {[
-              { label: "Under $15k", href: "/cars?max_price=15000" },
-              { label: "Under $25k", href: "/cars?max_price=25000" },
-              { label: "SUVs", href: "/cars?body=SUV" },
-              { label: "Trucks", href: "/cars?body=Truck" },
-              { label: "Everything", href: "/cars" },
-            ].map((c) => (
+              { label: "Under $15k", href: "/cars?max_price=15000", show: hasUnder(15000) },
+              { label: "Under $25k", href: "/cars?max_price=25000", show: hasUnder(25000) },
+              { label: "SUVs", href: "/cars?body=SUV", show: hasBody("SUV") },
+              { label: "Trucks", href: "/cars?body=Truck", show: hasBody("Truck") },
+              { label: "Everything", href: "/cars", show: true },
+            ].filter((c) => c.show).map((c) => (
               <Link
                 key={c.label}
                 href={c.href}
@@ -226,11 +232,11 @@ export default async function HomePage() {
           {/* Real body-style searches now (0015) — the q= keyword hack
               is dead. */}
           {[
-            { label: "SUVs & Crossovers", href: "/cars?body=SUV", art: "M8 34c-3 0-5-2-5-5 0-2 2-4 4-5l8-2 6-9c2-3 5-4 8-4h18c3 0 6 1 8 4l7 9 11 2c3 1 5 3 5 5 0 3-2 5-5 5" },
-            { label: "Trucks", href: "/cars?body=Truck", art: "M6 34c-2 0-4-2-4-4s1-4 3-4l9-2 5-8c1-2 3-3 6-3h14v13h26c3 0 5 2 5 4s-1 4-3 4" },
-            { label: "Sedans", href: "/cars?body=Sedan", art: "M7 33c-3 0-5-2-5-4s2-4 4-4l9-3 8-8c2-2 4-3 7-3h16c3 0 5 1 7 3l8 8 10 3c2 0 4 2 4 4s-2 4-5 4" },
-            { label: "Under $15k", href: "/cars?max_price=15000", art: null },
-          ].map((t) => (
+            { label: "SUVs & Crossovers", href: "/cars?body=SUV", show: hasBody("SUV"), art: "M8 34c-3 0-5-2-5-5 0-2 2-4 4-5l8-2 6-9c2-3 5-4 8-4h18c3 0 6 1 8 4l7 9 11 2c3 1 5 3 5 5 0 3-2 5-5 5" },
+            { label: "Trucks", href: "/cars?body=Truck", show: hasBody("Truck"), art: "M6 34c-2 0-4-2-4-4s1-4 3-4l9-2 5-8c1-2 3-3 6-3h14v13h26c3 0 5 2 5 4s-1 4-3 4" },
+            { label: "Sedans", href: "/cars?body=Sedan", show: hasBody("Sedan"), art: "M7 33c-3 0-5-2-5-4s2-4 4-4l9-3 8-8c2-2 4-3 7-3h16c3 0 5 1 7 3l8 8 10 3c2 0 4 2 4 4s-2 4-5 4" },
+            { label: "Under $15k", href: "/cars?max_price=15000", show: hasUnder(15000), art: null },
+          ].filter((t) => t.show).map((t) => (
             <Link
               key={t.label}
               href={t.href}
