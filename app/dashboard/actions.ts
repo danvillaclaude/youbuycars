@@ -8,6 +8,7 @@ import {
   BODY_STYLES,
   capFor,
   CONDITIONS,
+  canonicalMake,
   MAX_PHOTOS,
   DRIVETRAINS,
   FUEL_TYPES,
@@ -18,7 +19,8 @@ import {
 
 const listingSchema = z.object({
   year: z.coerce.number().int().min(1900).max(2100),
-  make: z.string().trim().min(1).max(60),
+  // Spelled from the list (canonicalMake): "chevy" is stored as Chevrolet.
+  make: z.string().trim().min(1).max(60).transform(canonicalMake),
   model: z.string().trim().min(1).max(60),
   trim_level: z.string().trim().max(60).optional().or(z.literal("")),
   // Uppercased: a phone keyboard's lowercase VIN used to publish as typed.

@@ -4,8 +4,11 @@
  */
 import {
   BODY_STYLES,
+  canonicalBody,
   canonicalFor,
+  canonicalMake,
   capFor,
+  METRO_DETROIT_CITIES,
   CONDITIONS,
   describeSearch,
   photoUrl,
@@ -166,6 +169,18 @@ check("searchTerm of nothing is empty", searchTerm(null) === "");
   check("photoUrl fits, never crops, server-side", u.includes("resize=contain"));
   check("photoUrl without a size is the original object", photoUrl("seller/listing/a.jpg").includes("/storage/v1/object/public/"));
 }
+
+// The vocabulary (23 Aug 2026): one spelling per make, body and city.
+check("canonicalMake maps the nickname", canonicalMake("chevy") === "Chevrolet");
+check("canonicalMake fixes the case", canonicalMake("FORD") === "Ford");
+check("canonicalMake ignores hyphen/space drift", canonicalMake("mercedes benz") === "Mercedes-Benz");
+check("canonicalMake keeps an unknown make, spelled like a name", canonicalMake("koenigsegg") === "Koenigsegg");
+check("canonicalMake of nothing is empty", canonicalMake("  ") === "");
+check("canonicalBody fixes the case", canonicalBody("suv") === "SUV");
+check("canonicalBody refuses an unknown style", canonicalBody("spaceship") === null);
+check("canonicalFor spells the make and body one way", canonicalFor({ make: "ford", body: "suv" }) === "/cars?make=Ford&body=SUV");
+check("city list has no duplicates", new Set(METRO_DETROIT_CITIES).size === METRO_DETROIT_CITIES.length);
+check("city list is alphabetical", [...METRO_DETROIT_CITIES].every((c, i, a) => i === 0 || a[i - 1].localeCompare(c) < 0));
 
 // canonicalFor — one URL per board view.
 check("canonicalFor bare board is /cars", canonicalFor({}) === "/cars");

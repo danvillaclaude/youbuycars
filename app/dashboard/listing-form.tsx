@@ -15,6 +15,7 @@ import {
   type ListingPhoto,
   PHOTO_WIDTHS,
   MAX_PHOTOS,
+  MAKES,
 } from "@/lib/listings";
 import {
   createListingAction,
@@ -411,8 +412,16 @@ export function ListingForm({
           </label>
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-slate-700">Make</span>
-            <input name="make" maxLength={60} placeholder="Chevrolet"
+            {/* Free text with the list as suggestions; the server spells
+                whatever arrives via canonicalMake, so "chevy" saves as
+                Chevrolet and never becomes a second make. */}
+            <input name="make" maxLength={60} placeholder="Chevrolet" list="make-list"
               defaultValue={listing?.make ?? ""} className={inputCls("make")} />
+            <datalist id="make-list">
+              {MAKES.map((m) => (
+                <option key={m} value={m} />
+              ))}
+            </datalist>
             {fieldError("make")}
           </label>
           <label className="block">

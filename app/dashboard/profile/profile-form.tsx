@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/auth";
-import { logoUrl, PHOTO_WIDTHS } from "@/lib/listings";
+import { isMetroDetroitCity, logoUrl, METRO_DETROIT_CITIES, PHOTO_WIDTHS } from "@/lib/listings";
 import { saveProfileAction } from "./actions";
 
 export function ProfileForm({ profile }: { profile: Profile }) {
@@ -101,9 +101,17 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-700">City</span>
-        <input name="city" autoComplete="address-level2" maxLength={80} placeholder="Detroit, MI"
-          defaultValue={profile.city ?? ""}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
+        {/* From the list, not typed (23 Aug 2026 SEO plan): the one live
+            profile said "South East, Michigan", which printed into a page
+            title. One spelling per city is what makes city pages possible. */}
+        <select name="city" autoComplete="address-level2"
+          defaultValue={isMetroDetroitCity(profile.city) ? (profile.city as string) : ""}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+          <option value="">Choose your city…</option>
+          {METRO_DETROIT_CITIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
       </label>
 
       <label className="block">

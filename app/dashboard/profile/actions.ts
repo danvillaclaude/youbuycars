@@ -4,12 +4,14 @@ import { userMessage } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireApprovedSeller } from "@/lib/auth";
-import { slugify } from "@/lib/listings";
+import { METRO_DETROIT_CITIES, slugify } from "@/lib/listings";
 
 const schema = z.object({
   display_name: z.string().trim().min(1, "Buyers need a name.").max(80),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
-  city: z.string().trim().max(80).optional().or(z.literal("")),
+  // From the list, so a city is always spelled one way and never
+  // "South East, Michigan" (which printed into a page title).
+  city: z.enum(METRO_DETROIT_CITIES).optional().or(z.literal("")),
   about: z.string().trim().max(2000).optional().or(z.literal("")),
   logo_path: z.string().max(200).optional(),
   financing_offered: z.boolean().default(true),

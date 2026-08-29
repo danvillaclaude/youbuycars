@@ -60,6 +60,105 @@ export const FUEL_TYPES = [
   "Gas", "Diesel", "Hybrid", "Plug-in Hybrid", "Electric",
 ] as const;
 export const CONDITIONS = ["Excellent", "Good", "Fair"] as const;
+
+/**
+ * THE VOCABULARY, locked before dealer #2 (23 Aug 2026 SEO plan). Make
+ * was a free-text input, so "Chevy" and "Chevrolet" would have become two
+ * makes, two filters, two Brand names and two URLs the day a second
+ * dealer typed. canonicalMake() is a NORMALISER, not a gate: a make not
+ * on the list is kept, title-cased — the list only decides spelling.
+ */
+export const MAKES = [
+  "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", "Buick",
+  "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Ferrari", "Fiat", "Ford",
+  "Genesis", "GMC", "Honda", "Hummer", "Hyundai", "Infiniti", "Jaguar",
+  "Jeep", "Kia", "Lamborghini", "Land Rover", "Lexus", "Lincoln", "Lucid",
+  "Maserati", "Mazda", "McLaren", "Mercedes-Benz", "Mercury", "MINI",
+  "Mitsubishi", "Nissan", "Oldsmobile", "Plymouth", "Polestar", "Pontiac",
+  "Porsche", "Ram", "Rivian", "Rolls-Royce", "Saab", "Saturn", "Scion",
+  "Subaru", "Suzuki", "Tesla", "Toyota", "Volkswagen", "Volvo",
+] as const;
+
+const MAKE_ALIASES: Record<string, (typeof MAKES)[number]> = {
+  chevy: "Chevrolet",
+  chev: "Chevrolet",
+  vw: "Volkswagen",
+  mercedes: "Mercedes-Benz",
+  "mercedes benz": "Mercedes-Benz",
+  benz: "Mercedes-Benz",
+  merc: "Mercedes-Benz",
+  "land rover": "Land Rover",
+  landrover: "Land Rover",
+  "range rover": "Land Rover",
+  alfa: "Alfa Romeo",
+  rolls: "Rolls-Royce",
+  "rolls royce": "Rolls-Royce",
+  "mini cooper": "MINI",
+  aston: "Aston Martin",
+  "gmc truck": "GMC",
+  "ram trucks": "Ram",
+  "dodge ram": "Ram",
+};
+
+const squash = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+export function canonicalMake(input: string | null | undefined): string {
+  const raw = (input ?? "").replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+  const alias = MAKE_ALIASES[raw.toLowerCase()];
+  if (alias) return alias;
+  const hit = MAKES.find((m) => squash(m) === squash(raw));
+  if (hit) return hit;
+  // Unknown make: keep it, spelled like a name.
+  return raw
+    .split(" ")
+    .map((w) => (w.length <= 3 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1).toLowerCase()))
+    .join(" ");
+}
+
+/** "suv" → "SUV"; anything off the list is null, never a new body style. */
+export function canonicalBody(input: string | null | undefined): string | null {
+  const raw = (input ?? "").trim().toLowerCase();
+  if (!raw) return null;
+  return (BODY_STYLES as readonly string[]).find((b) => b.toLowerCase() === raw) ?? null;
+}
+
+/** "awd" → "AWD"; off the list is null. */
+export function canonicalDrivetrain(input: string | null | undefined): string | null {
+  const raw = (input ?? "").trim().toLowerCase();
+  if (!raw) return null;
+  return (DRIVETRAINS as readonly string[]).find((d) => d.toLowerCase() === raw) ?? null;
+}
+
+/**
+ * Where a seller is, chosen from a list instead of typed (the one live
+ * seller had "South East, Michigan", which printed straight into a page
+ * title). Metro Detroit's municipalities across Wayne, Oakland and
+ * Macomb, plus the edge towns dealers actually sit in. The city name is
+ * stored in profiles.city as before — slugify() derives a URL from it
+ * when city pages are built, so no column or migration was needed.
+ */
+export const METRO_DETROIT_CITIES = [
+  "Allen Park", "Ann Arbor", "Auburn Hills", "Belleville", "Berkley",
+  "Birmingham", "Bloomfield Hills", "Brighton", "Brownstown", "Canton",
+  "Chesterfield", "Clarkston", "Clawson", "Clinton Township", "Commerce Township",
+  "Dearborn", "Dearborn Heights", "Detroit", "Eastpointe", "Ecorse",
+  "Farmington", "Farmington Hills", "Ferndale", "Flat Rock", "Fraser",
+  "Garden City", "Grosse Ile", "Grosse Pointe", "Hamtramck", "Harper Woods",
+  "Harrison Township", "Hazel Park", "Highland Park", "Howell", "Inkster",
+  "Lake Orion", "Lincoln Park", "Livonia", "Macomb Township", "Madison Heights",
+  "Melvindale", "Milford", "Monroe", "Mount Clemens", "New Baltimore",
+  "Northville", "Novi", "Oak Park", "Oxford", "Plymouth", "Pontiac",
+  "Redford", "River Rouge", "Riverview", "Rochester", "Rochester Hills",
+  "Romulus", "Roseville", "Royal Oak", "Shelby Township", "Southfield",
+  "Southgate", "St. Clair Shores", "Sterling Heights", "Taylor", "Trenton",
+  "Troy", "Utica", "Warren", "Waterford", "Wayne", "West Bloomfield",
+  "Westland", "White Lake", "Wixom", "Woodhaven", "Wyandotte", "Ypsilanti",
+] as const;
+
+export function isMetroDetroitCity(name: string | null | undefined): boolean {
+  return !!name && (METRO_DETROIT_CITIES as readonly string[]).includes(name);
+}
 export const COLOR_OPTIONS = [
   "Black", "White", "Silver", "Gray", "Blue", "Red", "Burgundy", "Brown",
   "Beige", "Gold", "Green", "Orange", "Yellow", "Purple",
@@ -278,15 +377,21 @@ export function searchTerm(q: string | null | undefined): string {
  * makes a different page, so both drop. Keys are the URL's own names.
  */
 export const CANONICAL_KEYS = [
-  "make", "body", "year_min", "year_max", "max_price", "max_payment",
-  "max_miles", "financing",
+  "make", "body", "drivetrain", "year_min", "year_max", "max_price",
+  "max_payment", "max_miles", "financing",
 ] as const;
 export function canonicalFor(
   p: Partial<Record<(typeof CANONICAL_KEYS)[number], string | undefined>>,
 ): string {
   const qs = new URLSearchParams();
   for (const k of CANONICAL_KEYS) {
-    const v = p[k];
+    // Spelling is normalised here, so ?make=ford and ?make=Ford (and
+    // ?body=suv) resolve to ONE canonical page instead of three.
+    const v =
+      k === "make" ? canonicalMake(p.make)
+      : k === "body" ? canonicalBody(p.body) ?? ""
+      : k === "drivetrain" ? canonicalDrivetrain(p.drivetrain) ?? ""
+      : p[k];
     if (v) qs.set(k, v);
   }
   const s = qs.toString();
