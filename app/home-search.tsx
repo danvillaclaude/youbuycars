@@ -29,12 +29,12 @@ export function HomeSearch({
         : "text-slate-600 hover:bg-slate-100"
     }`;
   const selectCls =
-    "w-full rounded-full border-0 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700";
+    "w-full rounded-full border-0 bg-slate-50 px-3.5 py-3 text-sm font-medium text-slate-700";
 
   const note = `Estimates assume $${DEFAULT_ESTIMATE.down.toLocaleString("en-US")} down, ${DEFAULT_ESTIMATE.termMonths} months, ${DEFAULT_ESTIMATE.apr}% APR — estimates only, never an offer of credit.`;
 
   return (
-    <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-lg shadow-blue-900/5">
+    <div className="mx-auto mt-8 max-w-5xl rounded-2xl border border-slate-200 bg-white p-3 text-left shadow-lg shadow-blue-900/5">
       <div className="flex flex-wrap items-center gap-1.5">
         <button type="button" onClick={() => setTab("shop")} aria-pressed={tab === "shop"} className={tabBtn(tab === "shop")}>
           Shop cars
@@ -60,7 +60,7 @@ export function HomeSearch({
           method="get"
           role="search"
           aria-label="Search used cars"
-          className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-6"
+          className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
         >
           <select name="make" aria-label="Make" defaultValue="" className={`${selectCls} lg:col-span-1`}>
             <option value="">Any make</option>
