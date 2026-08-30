@@ -1,3 +1,7 @@
+-- APPLIED to production 30 Aug 2026 (via MCP, at the owner's "can we do
+-- this??"). Verified: tier/approved_at UPDATE and email/reviewer_phone
+-- SELECT all false for public roles; own-profile edits and public reads
+-- kept. Safe to re-run.
 -- 0018: governance columns go read-only to the public roles, and the
 -- email column actually goes dark (23 Aug 2026 overnight audit).
 --

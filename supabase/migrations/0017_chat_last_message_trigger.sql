@@ -1,3 +1,5 @@
+-- APPLIED to production 30 Aug 2026 (via MCP, at the owner's "can we do
+-- this??"). Kept for the schema's record; safe to re-run (idempotent).
 -- 0017: the inbox learns to reorder (23 Aug 2026 overnight audit).
 --
 -- chats has SELECT and INSERT policies and nothing else, so the app's
