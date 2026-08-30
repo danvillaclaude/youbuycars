@@ -8,7 +8,11 @@ export const SITE = {
   domain: "https://youbuycars.com",
   phoneDisplay: "(313) 546-8313",
   phoneE164: "+13135468313",
-  email: "isolduacar@gmail.com",
+  // hello@ is a Namecheap forwarder to the owner's Gmail (set up 30 Aug
+  // 2026). Don't swap in a raw Gmail here — this address renders on the
+  // compliance pages and in the Organization JSON-LD, where the brand's
+  // own domain is what keeps the story consistent.
+  email: "hello@youbuycars.com",
   area: "Metro Detroit, Michigan",
   /** Every server-rendered time is shown in the market's zone, not Vercel's UTC. */
   timeZone: "America/Detroit",
