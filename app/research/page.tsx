@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ARTICLES } from "./articles";
+import { fetchPublishedPosts } from "@/lib/research-posts";
+
+// Posts publish from the owner's CRM desk with no deploy; this page
+// re-reads on this cadence, so "approve" means live within minutes.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Research & Guides — Used Car Buying in Michigan | YouBuyCars",
@@ -14,7 +19,12 @@ export const metadata: Metadata = {
  * of article cards, title + dek + read time, plus doors to the tools
  * the archive keeps referring to.
  */
-export default function ResearchPage() {
+export default async function ResearchPage() {
+  const posts = await fetchPublishedPosts();
+  const entries = [
+    ...ARTICLES.map((a) => ({ slug: a.slug, title: a.title, dek: a.dek, minutes: a.minutes })),
+    ...posts.map((a) => ({ slug: a.slug, title: a.title, dek: a.dek, minutes: a.minutes })),
+  ];
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <h1 className="text-2xl font-bold">Research &amp; guides</h1>
@@ -24,7 +34,7 @@ export default function ResearchPage() {
       </p>
 
       <div className="mt-8 space-y-4">
-        {ARTICLES.map((a) => (
+        {entries.map((a) => (
           <Link
             key={a.slug}
             href={`/research/${a.slug}`}

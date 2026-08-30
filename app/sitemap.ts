@@ -42,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
-    const [{ data }, { data: sellerData }] = await Promise.all([
+    const [{ data }, { data: sellerData }, { data: postData }] = await Promise.all([
       supabase
         .from("listings")
         .select("slug, updated_at, seller_id")
@@ -51,7 +51,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .from("profiles")
         .select("id, public_slug")
         .not("public_slug", "is", null),
+      supabase
+        .from("research_posts")
+        .select("slug, published_at")
+        .eq("status", "published"),
     ]);
+    const postPages = ((postData ?? []) as { slug: string; published_at: string | null }[]).map(
+      (a) => ({
+        url: `${SITE.domain}/research/${a.slug}`,
+        ...(a.published_at ? { lastModified: new Date(a.published_at) } : {}),
+      }),
+    );
     const rows = (data ?? []) as { slug: string; updated_at: string; seller_id: string }[];
     const listingPages = rows.map((l) => ({
       url: `${SITE.domain}/cars/${l.slug}`,
@@ -72,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         };
       },
     );
-    return [...staticPages, ...listingPages, ...sellerPages];
+    return [...staticPages, ...postPages, ...listingPages, ...sellerPages];
   } catch {
     return staticPages;
   }

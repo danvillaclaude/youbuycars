@@ -2,12 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ARTICLES } from "../articles";
-import { DRAFT_ARTICLES } from "../draft-articles";
 import { Breadcrumbs } from "@/app/breadcrumbs";
+import { fetchPostBySlug } from "@/lib/research-posts";
+import { PostBody } from "../post-body";
 
-/** Live guides are listed and indexed; drafts render only at their URL. */
-function findArticle(slug: string) {
-  return ARTICLES.find((a) => a.slug === slug) ?? DRAFT_ARTICLES.find((a) => a.slug === slug);
+// DB posts publish from the owner's CRM desk with no deploy.
+export const revalidate = 300;
+
+/**
+ * A guide is either code (the original five, in articles.tsx) or a row
+ * (everything since — research_posts, approved from the CRM's Posts
+ * desk). Both wear the same template; a row still in draft renders at
+ * its URL with a banner and noindex so the owner can read it in place.
+ */
+async function findArticle(slug: string) {
+  const fromCode = ARTICLES.find((a) => a.slug === slug);
+  if (fromCode) return fromCode;
+  const post = await fetchPostBySlug(slug);
+  if (!post) return undefined;
+  return {
+    slug: post.slug,
+    title: post.title,
+    dek: post.dek,
+    minutes: post.minutes,
+    draft: post.status !== "published",
+    body: <PostBody sections={post.sections} />,
+  };
 }
 
 export function generateStaticParams() {
@@ -20,7 +40,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const article = findArticle(slug);
+  const article = await findArticle(slug);
   if (!article) return { title: "Page not found · YouBuyCars", robots: { index: false } };
   return {
     title: `${article.title} | YouBuyCars Research`,
@@ -37,7 +57,7 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const article = findArticle(slug);
+  const article = await findArticle(slug);
   if (!article) notFound();
 
   return (
