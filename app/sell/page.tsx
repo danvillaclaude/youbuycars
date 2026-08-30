@@ -3,9 +3,11 @@ import Link from "next/link";
 import { TIER_CAPS } from "@/lib/listings";
 
 export const metadata: Metadata = {
-  title: "Sell your car · YouBuyCars",
+  // Keyword titles (30 Aug 2026 SEO round): the words were already true
+  // of the page — only the title tag didn't say them.
+  title: "Sell Your Car in Metro Detroit, Michigan — Free Listing | YouBuyCars",
   description:
-    "List your vehicle on YouBuyCars for free — one active listing, reviewed before it goes live.",
+    "Sell your car in Metro Detroit: list your vehicle on YouBuyCars for free — one active listing, reviewed before it goes live, and buyers reach you by text.",
 };
 
 /**

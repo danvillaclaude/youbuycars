@@ -12,9 +12,9 @@ import {
 import { estimateMonthly } from "@/lib/payments";
 
 export const metadata: Metadata = {
-  title: "Compare cars · YouBuyCars",
+  title: "Compare Used Cars Side by Side | YouBuyCars",
   description:
-    "Put two Metro Detroit cars side by side — price, payment, miles, and the seller behind each one.",
+    "Put two Metro Detroit used cars side by side — price, monthly payment, miles, and the seller behind each one.",
 };
 
 /**

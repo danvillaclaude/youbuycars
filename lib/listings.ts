@@ -159,6 +159,24 @@ export const METRO_DETROIT_CITIES = [
 export function isMetroDetroitCity(name: string | null | undefined): boolean {
   return !!name && (METRO_DETROIT_CITIES as readonly string[]).includes(name);
 }
+
+/**
+ * City pages (30 Aug 2026, the owner's SEO round: "real city + earned
+ * pages"). The slug is derived, never stored — slugify() is total, so
+ * every list entry has exactly one URL and an unknown slug is a 404,
+ * not a page. cityFromSlug is the inverse the route uses.
+ */
+export function citySlug(city: string): string {
+  return slugify(city);
+}
+export function cityFromSlug(slug: string): string | null {
+  return (
+    (METRO_DETROIT_CITIES as readonly string[]).find(
+      (c) => slugify(c) === slug,
+    ) ?? null
+  );
+}
+
 export const COLOR_OPTIONS = [
   "Black", "White", "Silver", "Gray", "Blue", "Red", "Burgundy", "Brown",
   "Beige", "Gold", "Green", "Orange", "Yellow", "Purple",

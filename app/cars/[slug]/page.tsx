@@ -7,6 +7,7 @@ import { cache } from "react";
 import {
   formatMileage,
   formatPrice,
+  isMetroDetroitCity,
   photoUrl,
   PHOTO_WIDTHS,
   photoSrcSet,
@@ -142,15 +143,25 @@ export async function generateMetadata({
   const { slug } = await params;
   const found = await loadListing(slug);
   if (!found) return { title: "Listing · YouBuyCars" };
-  const { listing, photos } = found;
+  const { listing, photos, seller } = found;
   const name = `${listing.year} ${listing.make} ${listing.model}${listing.trim_level ? ` ${listing.trim_level}` : ""}`;
-  const description = `${name}, ${formatMileage(listing.mileage)}, ${formatPrice(listing.price)} — for sale on YouBuyCars, Metro Detroit.`;
+  /*
+   * The seller's REAL city (30 Aug 2026, the owner's SEO round): now
+   * that cities come from the 78-town dropdown rather than free text,
+   * every listing can own its town's long-tail query — "for Sale in
+   * Livonia, MI" — with Metro Detroit as the fallback for the rare
+   * pre-dropdown profile. This was planned in the old title comment;
+   * the list shipping is what made it safe.
+   */
+  const where = isMetroDetroitCity(seller?.city)
+    ? `${seller!.city}, MI`
+    : "Metro Detroit, MI";
+  const description = `${name}, ${formatMileage(listing.mileage)}, ${formatPrice(listing.price)} — for sale in ${where} on YouBuyCars.`;
   return {
-    // "2016 GMC Acadia SLT AWD for Sale in Metro Detroit, MI – $16,995":
+    // "2016 GMC Acadia SLT AWD for Sale in Livonia, MI – $16,995":
     // the long-tail query a small site can actually rank for, in the
-    // order people type it. The city will replace "Metro Detroit" once
-    // seller cities come from a list rather than free text.
-    title: `${name} for Sale in Metro Detroit, MI – ${formatPrice(listing.price)} | YouBuyCars`,
+    // order people type it.
+    title: `${name} for Sale in ${where} – ${formatPrice(listing.price)} | YouBuyCars`,
     description,
     /*
      * The share card (17 Aug 2026): a listing link texted or posted

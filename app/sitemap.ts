@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { SITE } from "@/lib/site";
+import { citySlug, isMetroDetroitCity } from "@/lib/listings";
 
 /**
  * Static pages plus every listing's permanent slug — active AND sold,
@@ -42,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     );
-    const [{ data }, { data: sellerData }, { data: postData }] = await Promise.all([
+    const [{ data }, { data: sellerData }, { data: postData }, { data: cityData }] = await Promise.all([
       supabase
         .from("listings")
         .select("slug, updated_at, seller_id")
@@ -55,6 +56,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .from("research_posts")
         .select("slug, published_at")
         .eq("status", "published"),
+      // The city doors (30 Aug 2026): announce only cities with a live
+      // car — an empty city page is noindex and doesn't belong here.
+      supabase
+        .from("listings")
+        .select("updated_at, profiles(city)")
+        .eq("status", "active"),
     ]);
     const postPages = ((postData ?? []) as { slug: string; published_at: string | null }[]).map(
       (a) => ({
@@ -82,7 +89,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         };
       },
     );
-    return [...staticPages, ...postPages, ...listingPages, ...sellerPages];
+    // One entry per city with live inventory; lastmod = its newest edit.
+    const newestByCity = new Map<string, string>();
+    // PostgREST returns the to-one embed as an object; the generated type
+    // guesses an array — normalize both shapes rather than argue with it.
+    for (const row of (cityData ?? []) as unknown as {
+      updated_at: string;
+      profiles: { city: string | null } | { city: string | null }[] | null;
+    }[]) {
+      const p = row.profiles;
+      const city = Array.isArray(p) ? (p[0]?.city ?? null) : (p?.city ?? null);
+      if (!isMetroDetroitCity(city)) continue;
+      const prev = newestByCity.get(city!);
+      if (!prev || row.updated_at > prev) newestByCity.set(city!, row.updated_at);
+    }
+    const cityPages = [...newestByCity.entries()].map(([city, newest]) => ({
+      url: `${SITE.domain}/cars/city/${citySlug(city)}`,
+      lastModified: new Date(newest),
+    }));
+
+    return [
+      ...staticPages,
+      ...cityPages,
+      ...postPages,
+      ...listingPages,
+      ...sellerPages,
+    ];
   } catch {
     return staticPages;
   }

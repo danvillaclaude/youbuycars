@@ -7,8 +7,10 @@ import {
   canonicalDrivetrain,
   canonicalFor,
   canonicalMake,
+  citySlug,
   describeSearch,
   DRIVETRAINS,
+  isMetroDetroitCity,
   searchTerm,
   type Listing,
   type ListingPhoto,
@@ -246,7 +248,7 @@ export default async function CarsPage({
   const dropByListing = new Map<string, number>();
   const packSellers = new Map<
     string,
-    { name: string | null; slug: string | null }
+    { name: string | null; slug: string | null; city: string | null }
   >();
   if (summary.length > 0) {
     const ids = listings.map((l) => l.id);
@@ -302,7 +304,11 @@ export default async function CarsPage({
         city: s.city,
         financing: s.financing_offered,
       });
-      packSellers.set(s.id, { name: s.display_name, slug: s.public_slug });
+      packSellers.set(s.id, {
+        name: s.display_name,
+        slug: s.public_slug,
+        city: s.city,
+      });
     }
     const sums = new Map<string, { total: number; count: number }>();
     for (const r of (reviewData ?? []) as { seller_id: string; rating: number }[]) {
@@ -692,6 +698,28 @@ export default async function CarsPage({
                     })).filter((l) => l.n > 0),
                   ),
                   group("By price", bands),
+                  group(
+                    /*
+                     * The city doors (30 Aug 2026 SEO round): a car sits
+                     * in a city through its SELLER, and — the earned-page
+                     * rule — only cities with live cars are ever linked.
+                     */
+                    "By city",
+                    [...new Set(
+                      [...packSellers.values()]
+                        .map((v) => v.city)
+                        .filter((c): c is string => isMetroDetroitCity(c)),
+                    )]
+                      .sort()
+                      .map((c) => ({
+                        name: `${c}, MI`,
+                        href: `/cars/city/${citySlug(c)}`,
+                        n: count(
+                          (m) => packSellers.get(m.seller_id)?.city === c,
+                        ),
+                      }))
+                      .filter((l) => l.n > 0),
+                  ),
                   group(
                     "By seller",
                     [...packSellers.entries()]

@@ -5,9 +5,9 @@ import { PromoSplit } from "@/app/promo-split";
 import { DealerInterestForm } from "./interest-form";
 
 export const metadata: Metadata = {
-  title: "For dealers · YouBuyCars",
+  title: "For Dealers — List Used Cars in Metro Detroit | YouBuyCars",
   description:
-    "Put your inventory in front of Metro Detroit buyers — a free dealer page, listings that feed your CRM, and the iSellCars.ai texting CRM with the Pro listing plan included.",
+    "Put your used-car inventory in front of Metro Detroit buyers — a free dealer page, listings that feed your CRM, and the iSellCars.ai texting CRM with the Pro listing plan included.",
 };
 
 /**

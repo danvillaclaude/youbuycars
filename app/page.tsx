@@ -38,6 +38,10 @@ import { HomeSearch } from "./home-search";
  */
 export const metadata: Metadata = {
   title: "YouBuyCars — Used Cars for Sale in Metro Detroit, Michigan",
+  // "Cash cars" rides here on purpose (30 Aug 2026 SEO round): it's how
+  // a lot of Detroit actually searches, and it's true of the inventory.
+  description:
+    "Used cars for sale in Metro Detroit, Michigan — cash cars, budget-friendly SUVs, trucks and sedans, every listing reviewed before it goes live. Browse prices and payment estimates, or sell your own car free.",
   alternates: { canonical: "/" },
 };
 

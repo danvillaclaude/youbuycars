@@ -4,9 +4,9 @@ import { SITE } from "@/lib/site";
 import { PageHeader } from "../page-header";
 
 export const metadata: Metadata = {
-  title: "About · YouBuyCars",
+  title: "About YouBuyCars — Metro Detroit's Used Car Marketplace",
   description:
-    "YouBuyCars is a personal car-finding service in Metro Detroit, run by a working automotive salesperson — tell us what you need and we text you real options.",
+    "YouBuyCars is a used-car marketplace and personal car-finding service in Metro Detroit, Michigan, run by a working automotive salesperson — tell us what you need and we text you real options.",
 };
 
 export default function AboutPage() {

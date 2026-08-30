@@ -5,9 +5,9 @@ import { PageHeader } from "../page-header";
 import { SupportForm } from "./support-form";
 
 export const metadata: Metadata = {
-  title: "Contact · YouBuyCars",
+  title: "Contact YouBuyCars — Used Cars in Metro Detroit, Michigan",
   description:
-    "Text, call or email YouBuyCars — a real person answers about your next car. Metro Detroit.",
+    "Text, call or email YouBuyCars — a real person answers about your next used car in Metro Detroit, Michigan.",
 };
 
 /**
