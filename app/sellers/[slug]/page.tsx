@@ -24,14 +24,14 @@ const loadSeller = cache(async function loadSeller(slug: string) {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, phone, about, city, logo_path, public_slug, tier, financing_offered, is_crm",
+      "id, display_name, phone, about, city, logo_path, public_slug, tier, financing_offered, is_crm, website",
     )
     .eq("public_slug", slug)
     .maybeSingle();
   return data as
     | (Pick<
         Profile,
-        "id" | "display_name" | "phone" | "about" | "city" | "logo_path" | "public_slug" | "tier" | "financing_offered"
+        "id" | "display_name" | "phone" | "about" | "city" | "logo_path" | "public_slug" | "tier" | "financing_offered" | "website"
       > & { is_crm: boolean })
     | null;
 });
@@ -145,6 +145,37 @@ export default async function SellerPage({
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
+      {/* Entity markup for DEALERS only (the kit): a private person selling
+          one car is not an AutoDealer. Deliberately NO AggregateRating —
+          with the platform's own person as the only seller, review markup
+          is Google's "self-serving" case; revisit when third-party
+          dealers with real reviews exist. */}
+      {(seller.is_crm || seller.tier !== "free") && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "AutoDealer",
+              name: seller.display_name ?? "Seller",
+              url: `${SITE.domain}/sellers/${seller.public_slug}`,
+              ...(seller.logo_path
+                ? { image: logoUrl(seller.logo_path, PHOTO_WIDTHS.logo) }
+                : {}),
+              ...(seller.city
+                ? {
+                    address: {
+                      "@type": "PostalAddress",
+                      addressLocality: seller.city,
+                      addressRegion: "MI",
+                    },
+                  }
+                : {}),
+              ...(seller.website ? { sameAs: [seller.website] } : {}),
+            }),
+          }}
+        />
+      )}
       <div className="flex flex-wrap items-center gap-5">
         {seller.logo_path ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -173,6 +204,18 @@ export default async function SellerPage({
             {listings.length} car{listings.length === 1 ? "" : "s"} for sale
             {seller.phone ? ` · ${seller.phone}` : ""}
           </p>
+          {seller.website && (
+            /* nofollow on purpose: an outbound link every seller can set
+               must not pass authority, or the field becomes a target. */
+            <a
+              href={seller.website}
+              target="_blank"
+              rel="nofollow noopener"
+              className="mt-1 inline-block text-sm font-semibold text-blue-600 hover:underline"
+            >
+              Visit website →
+            </a>
+          )}
         </div>
       </div>
 

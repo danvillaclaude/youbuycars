@@ -16,6 +16,8 @@ export interface Profile {
   /** Seller-wide financing switch (0009) — the master breaker. */
   financing_offered: boolean;
   public_slug: string | null;
+  /** The dealer's own site (0020) — shown nofollow on the dealer page. */
+  website: string | null;
 }
 
 /** The signed-in seller, or a redirect to login. */
@@ -29,7 +31,7 @@ export async function requireUser() {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, phone, is_admin, tier, approved_at, declined_at, suspended_at, about, city, logo_path, public_slug, financing_offered",
+      "id, display_name, phone, is_admin, tier, approved_at, declined_at, suspended_at, about, city, logo_path, public_slug, financing_offered, website",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -47,6 +49,7 @@ export async function requireUser() {
     logo_path: null,
     financing_offered: true,
     public_slug: null,
+    website: null,
   };
   return { supabase, user, profile };
 }

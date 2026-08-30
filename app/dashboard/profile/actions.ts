@@ -13,9 +13,29 @@ const schema = z.object({
   // "South East, Michigan" (which printed into a page title).
   city: z.enum(METRO_DETROIT_CITIES).optional().or(z.literal("")),
   about: z.string().trim().max(2000).optional().or(z.literal("")),
+  website: z.string().trim().max(200).optional().or(z.literal("")),
   logo_path: z.string().max(200).optional(),
   financing_offered: z.boolean().default(true),
 });
+
+/**
+ * The dealer's own site, held to one shape (0020's CHECK wants https://):
+ * scheme added when missing, http upgraded, junk rejected quietly to
+ * null rather than bouncing the whole profile save.
+ */
+function normalizeWebsite(raw: string | undefined): string | null {
+  const t = (raw ?? "").trim();
+  if (!t) return null;
+  const withScheme = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+  const httpsUrl = withScheme.replace(/^http:\/\//i, "https://");
+  try {
+    const u = new URL(httpsUrl);
+    if (!u.hostname.includes(".")) return null;
+    return u.toString().replace(/\/$/, "").slice(0, 200);
+  } catch {
+    return null;
+  }
+}
 
 export async function saveProfileAction(
   input: Record<string, unknown>,
@@ -45,6 +65,7 @@ export async function saveProfileAction(
       city: d.city || null,
       about: d.about || null,
       financing_offered: d.financing_offered,
+      website: normalizeWebsite(d.website),
       ...(d.logo_path ? { logo_path: d.logo_path } : {}),
       public_slug,
     })

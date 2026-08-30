@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireApprovedSeller } from "@/lib/auth";
 import { ProfileForm } from "./profile-form";
+import { BadgeKit } from "./badge-kit";
 
 export const metadata: Metadata = { title: "My dealer page · YouBuyCars", robots: { index: false } };
 
@@ -28,6 +29,9 @@ export default async function ProfilePage() {
         )}
       </p>
       <ProfileForm profile={profile} />
+      {profile.public_slug && profile.display_name && (
+        <BadgeKit slug={profile.public_slug} name={profile.display_name} />
+      )}
     </main>
   );
 }

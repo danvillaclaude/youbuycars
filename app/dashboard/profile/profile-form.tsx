@@ -40,6 +40,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         display_name: String(fd.get("display_name") ?? ""),
         phone: String(fd.get("phone") ?? ""),
         city: String(fd.get("city") ?? ""),
+        website: String(fd.get("website") ?? ""),
         about: String(fd.get("about") ?? ""),
         financing_offered: fd.get("financing_offered") != null,
         logo_path: logoPath,
@@ -112,6 +113,17 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
+      </label>
+
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium text-slate-700">
+          {"Website "}
+          <span className="font-normal text-slate-400">(optional — shown on your dealer page)</span>
+        </span>
+        <input name="website" type="url" inputMode="url" autoComplete="url" maxLength={200}
+          placeholder="https://yourdealership.com"
+          defaultValue={profile.website ?? ""}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm" />
       </label>
 
       <label className="block">
