@@ -1,23 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ARTICLES } from "../articles";
 import { Breadcrumbs } from "@/app/breadcrumbs";
 import { fetchPostBySlug } from "@/lib/research-posts";
 import { PostBody } from "../post-body";
 
-// DB posts publish from the owner's CRM desk with no deploy.
+// Posts publish from the owner's CRM desk with no deploy; pages render
+// on demand and re-read on this cadence.
 export const revalidate = 300;
 
 /**
- * A guide is either code (the original five, in articles.tsx) or a row
- * (everything since — research_posts, approved from the CRM's Posts
- * desk). Both wear the same template; a row still in draft renders at
+ * Every guide is a research_posts row (the original five moved in with
+ * migration 0022; everything since is approved from the CRM's Posts
+ * desk). One template renders them all; a row still in draft renders at
  * its URL with a banner and noindex so the owner can read it in place.
  */
 async function findArticle(slug: string) {
-  const fromCode = ARTICLES.find((a) => a.slug === slug);
-  if (fromCode) return fromCode;
   const post = await fetchPostBySlug(slug);
   if (!post) return undefined;
   return {
@@ -28,10 +26,6 @@ async function findArticle(slug: string) {
     draft: post.status !== "published",
     body: <PostBody sections={post.sections} />,
   };
-}
-
-export function generateStaticParams() {
-  return ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
 export async function generateMetadata({

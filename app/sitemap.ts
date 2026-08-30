@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { SITE } from "@/lib/site";
-import { ARTICLES } from "@/app/research/articles";
 
 /**
  * Static pages plus every listing's permanent slug — active AND sold,
@@ -27,7 +26,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/sell",
     "/dealers",
     "/research",
-    ...ARTICLES.map((a) => `/research/${a.slug}`),
+    // Guide URLs come from the research_posts query below — the code
+    // ARTICLES source is gone (migration 0022 moved the five into rows).
     "/ask",
     "/site-map",
     "/about",

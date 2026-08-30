@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ARTICLES } from "./articles";
 import { fetchPublishedPosts } from "@/lib/research-posts";
 
 // Posts publish from the owner's CRM desk with no deploy; this page
@@ -20,11 +19,10 @@ export const metadata: Metadata = {
  * the archive keeps referring to.
  */
 export default async function ResearchPage() {
-  const posts = await fetchPublishedPosts();
-  const entries = [
-    ...ARTICLES.map((a) => ({ slug: a.slug, title: a.title, dek: a.dek, minutes: a.minutes })),
-    ...posts.map((a) => ({ slug: a.slug, title: a.title, dek: a.dek, minutes: a.minutes })),
-  ];
+  // Every guide is a research_posts row since migration 0022 moved the
+  // original five out of code; newest-first, and the five carry their
+  // real Aug 2026 dates so they anchor the list in their original order.
+  const entries = await fetchPublishedPosts();
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <h1 className="text-2xl font-bold">Research &amp; guides</h1>

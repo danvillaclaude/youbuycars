@@ -5,8 +5,9 @@ import { createServerClient } from "@/lib/supabase-server";
  * "a Posts section... so I can approve posts before they go live").
  * A guide used to be JSX in articles.tsx, so publishing meant a deploy;
  * now a post is a row the owner's CRM desk flips to published, and the
- * site reads it here. The five original guides stay in code — this file
- * is for everything written since.
+ * site reads it here. Since migration 0022 the table is the ONLY
+ * source — the five original guides moved in as published rows with
+ * their real Aug 2026 dates, and articles.tsx is gone.
  *
  * Sections carry plain text with [label](href) markdown links; the
  * renderer (app/research/post-body.tsx) turns them into the same JSX

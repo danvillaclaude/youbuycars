@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice, type Listing } from "@/lib/listings";
-import { ARTICLES } from "@/app/research/articles";
+import { fetchPublishedPosts } from "@/lib/research-posts";
 
 export const metadata: Metadata = {
   title: "Site index · YouBuyCars",
@@ -22,6 +22,7 @@ export const metadata: Metadata = {
  */
 export default async function SiteIndexPage() {
   const supabase = await createClient();
+  const guides = await fetchPublishedPosts();
   const { data } = await supabase
     .from("listings")
     .select("*")
@@ -83,7 +84,7 @@ export default async function SiteIndexPage() {
 
       <h2 className={h2}>Guides</h2>
       <nav className={list}>
-        {ARTICLES.map((g) => (
+        {guides.map((g) => (
           <Link key={g.slug} href={`/research/${g.slug}`} className={link}>
             {g.title}
           </Link>

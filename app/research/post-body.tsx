@@ -1,12 +1,20 @@
 import Link from "next/link";
-import { h2, p } from "./articles";
 import type { PostSection } from "@/lib/research-posts";
 
 /**
- * Renders a database post's sections in exactly the dress the code
- * guides wear — same h2/p classes, [label](href) links become real
- * links (internal via <Link>, michigan.gov and friends via <a>).
+ * Renders a research post's sections — since migration 0022 moved the
+ * original five guides into research_posts, this is the dress EVERY
+ * guide wears, so the classes live here now (they came from
+ * articles.tsx, which is gone). [label](href) links become real links
+ * (internal via <Link>, michigan.gov and friends via <a>).
  */
+export const h2 = "mt-8 text-lg font-bold text-slate-900";
+export const p = "mt-3 text-sm leading-relaxed text-slate-600";
+// A paragraph that keeps the literal "• " prefix is a checklist row —
+// the code guides' <li> spacing, carried over so the test-drive and
+// texting checklists render exactly as they always did.
+const li = "mt-2 text-sm leading-relaxed text-slate-600";
+
 function renderParagraph(text: string, key: number) {
   const parts: React.ReactNode[] = [];
   const re = /\[([^\]]+)\]\(([^)]+)\)/g;
@@ -31,7 +39,7 @@ function renderParagraph(text: string, key: number) {
   }
   if (last < text.length) parts.push(text.slice(last));
   return (
-    <p key={key} className={p}>
+    <p key={key} className={text.startsWith("• ") ? li : p}>
       {parts}
     </p>
   );
