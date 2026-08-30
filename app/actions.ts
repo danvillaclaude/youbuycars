@@ -97,6 +97,56 @@ export async function submitInquiry(input: {
   return { ok: true };
 }
 
+const supportSchema = z.object({
+  name: z.string().trim().min(1, "Tell us your name.").max(120),
+  email: z
+    .string()
+    .trim()
+    .email("That email doesn't look right — it's where the reply goes.")
+    .max(200),
+  subject: z.string().trim().min(1, "A few words on what this is about.").max(200),
+  body: z.string().trim().min(1, "Tell us what's going on.").max(4000),
+});
+
+/**
+ * The buyer door on the support letterbox (0023) — the "Need help with
+ * the site?" form on /contact. profile_id stays null: no account is
+ * behind this door, so the email field is the only way back, which is
+ * why it's required and validated hard. The owner's CRM reads the
+ * letterbox over the service role and replies by email; nothing on this
+ * site ever reads a request back out.
+ */
+export async function submitSupportRequest(input: {
+  name: string;
+  email: string;
+  subject: string;
+  body: string;
+  website: string; // Honeypot — humans never see it, bots fill it.
+}): Promise<InquiryResult> {
+  if (input.website) return { ok: true }; // Silently drop bot spam.
+
+  const parsed = supportSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Check the form and retry.",
+    };
+  }
+
+  const supabase = createServerClient();
+  const { error } = await supabase.from("support_requests").insert({
+    profile_id: null,
+    name: parsed.data.name,
+    email: parsed.data.email,
+    subject: parsed.data.subject,
+    body: parsed.data.body,
+  });
+  if (error) {
+    return { ok: false, error: "Something went wrong — please try again." };
+  }
+  return { ok: true };
+}
+
 const dealerSchema = z.object({
   dealership: z.string().trim().min(1, "Tell us the dealership's name.").max(160),
   name: z.string().trim().min(1, "Tell us your name.").max(120),

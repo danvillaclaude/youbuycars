@@ -110,6 +110,12 @@ export default async function DashboardPage() {
             My dealer page
           </Link>
           <Link
+            href="/dashboard/support"
+            className="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Get help
+          </Link>
+          <Link
             href="/dashboard/new"
             className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
           >

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE } from "@/lib/site";
 import { PageHeader } from "../page-header";
+import { SupportForm } from "./support-form";
 
 export const metadata: Metadata = {
   title: "Contact · YouBuyCars",
@@ -134,6 +135,22 @@ export default function ContactPage() {
           </p>
         </div>
       </div>
+
+      {/* The support door (0023) — added around the registered copy,
+          never inside it. Site trouble rather than car shopping: the
+          request lands in the letterbox, the reply comes by email. */}
+      <section className="mt-5 rounded-3xl bg-slate-50 p-6 sm:p-8">
+        <h2 className="text-xl font-bold text-slate-900">
+          Need help with the site?
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          An account snag, a listing that looks wrong, something broken —
+          tell us and a real person will reply by email.
+        </p>
+        <div className="mt-5">
+          <SupportForm />
+        </div>
+      </section>
 
       <p className="mt-5 text-sm text-slate-500">
         Asking about a specific car or dealer? Every listing has Text and
