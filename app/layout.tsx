@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { preconnect } from "react-dom";
+import { PageViewTracker } from "./page-view-tracker";
 import Link from "next/link";
 import { Inter } from "next/font/google";
 import { SITE } from "@/lib/site";
@@ -57,6 +58,7 @@ export default function RootLayout({
             under the floating header, scrolling away with the page —
             now wearing the you-are-here underline (see sub-nav.tsx). */}
         <SubNav />
+        <PageViewTracker />
         <div id="content" tabIndex={-1} className="outline-none">
           {children}
         </div>

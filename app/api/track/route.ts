@@ -19,7 +19,24 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       listing_id?: string;
       kind?: string;
+      path?: string;
+      referrer_host?: string | null;
+      session_key?: string;
     };
+    // Site-wide page views (0021) ride the same letterbox.
+    if (body.kind === "page_view") {
+      const path = String(body.path ?? "");
+      const session = String(body.session_key ?? "");
+      if (path.startsWith("/") && path.length <= 200 && session.length >= 8 && session.length <= 40) {
+        const supabase = await createClient();
+        await supabase.from("page_views").insert({
+          path,
+          referrer_host: body.referrer_host ? String(body.referrer_host).slice(0, 100) : null,
+          session_key: session,
+        });
+      }
+      return new NextResponse(null, { status: 204 });
+    }
     const listingId = String(body.listing_id ?? "");
     const kind = String(body.kind ?? "");
     if (UUID.test(listingId) && KINDS.has(kind)) {
