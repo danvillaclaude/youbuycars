@@ -16,12 +16,21 @@ const OTHER_HOSTS = [
 
 const nextConfig: NextConfig = {
   async redirects() {
-    return OTHER_HOSTS.map((host) => ({
-      source: "/:path*",
-      has: [{ type: "host" as const, value: host }],
-      destination: `https://${CANONICAL_HOST}/:path*`,
-      permanent: true,
-    }));
+    return [
+      ...OTHER_HOSTS.map((host) => ({
+        source: "/:path*",
+        has: [{ type: "host" as const, value: host }],
+        destination: `https://${CANONICAL_HOST}/:path*`,
+        permanent: true,
+      })),
+      // The owner's dealer page carried its test-era slug into the wild
+      // (texted links); renamed 30 Aug 2026 while nothing was indexed.
+      {
+        source: "/sellers/test-cocy",
+        destination: "/sellers/dan-villa",
+        permanent: true,
+      },
+    ];
   },
 };
 
