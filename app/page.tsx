@@ -2,23 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
-import { formatPrice, type Listing, type ListingPhoto } from "@/lib/listings";
+import {
+  canonicalFor,
+  formatPrice,
+  photoSrcSet,
+  photoUrl,
+  PHOTO_WIDTHS,
+  type Listing,
+  type ListingPhoto,
+} from "@/lib/listings";
 import { estimateMonthly } from "@/lib/payments";
 import { ListingCard } from "@/app/listing-card";
 import { LastSearchChip } from "./last-search";
-import { PromoSplit } from "./promo-split";
+import { HomeSearch } from "./home-search";
 
 /**
- * The front door. Cut to what CarGurus' own homepage is (16 Aug 2026,
- * the owner's correction after two rounds of restyling missed the
- * point: "notice none of this is on cargurus home page"): search,
- * inventory, promos — NOTHING else. The Text-START band and its
- * registered disclosure live on /contact now; the texting explainer's
- * canonical home is /sms-consent (always was — the homepage copy
- * mirrored it); the find-a-car form belongs to dealer pages, gated to
- * paying tiers. Every registered sentence still lives at a public URL,
- * and /sms-consent — the campaign's registered proof page — is
- * untouched.
+ * The front door, rebuilt to the owner's own mockup (29 Aug 2026, "I
+ * don't like the homepage... look at the body"): a split hero with a
+ * REAL car from the board, a tabbed search panel, photo category tiles,
+ * live inventory, four feature cards, a dealer band, and a trust strip.
+ * Two rules survived the redesign intact: the hero headline and
+ * sub-line are verbatim (campaign-adjacent copy is not reworded), and
+ * every number on the page is a product fact — counts come from live
+ * inventory, the payment figure runs the live formula on a real car,
+ * and a category with nothing behind it doesn't render (the mock's
+ * "3,281 listings" placeholders became real counts, its Motorcycles
+ * tile and app-store badges didn't survive contact with reality).
  */
 /**
  * Brand-first on the home page (23 Aug 2026 SEO plan): the layout's
@@ -64,29 +73,58 @@ const ORG_JSON_LD = {
   ],
 };
 
+/** One inventory summary feeds every count and gate on the page. */
+interface InvRow {
+  id: string;
+  slug: string;
+  make: string;
+  model: string;
+  body_style: string | null;
+  price: number;
+  financing_offered: boolean;
+  created_at: string;
+}
+
 export default async function HomePage() {
-  // The shelf above the fold: newest live cars, and the makes the search
-  // select offers — same vocabulary the browse page filters on.
   const supabase = await createClient();
-  const [{ data: latestData }, { data: makeData }] = await Promise.all([
+  const [{ data: latestData }, { data: invData }] = await Promise.all([
     supabase
       .from("listings")
       .select("*")
       .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(6),
-    // Also feeds the tile/chip gate: a door only renders when at least
-    // one live car is behind it (?body=Truck used to be an indexable
-    // page with a keyword headline over zero trucks).
-    supabase.from("listings").select("make, body_style, price").eq("status", "active"),
+    supabase
+      .from("listings")
+      .select("id, slug, make, model, body_style, price, financing_offered, created_at")
+      .eq("status", "active"),
   ]);
   const latest = (latestData ?? []) as Listing[];
-  const makes = [
-    ...new Set(((makeData ?? []) as { make: string }[]).map((m) => m.make)),
-  ].sort();
-  const inv = (makeData ?? []) as { make: string; body_style: string | null; price: number }[];
-  const hasBody = (b: string) => inv.some((m) => m.body_style === b);
+  const inv = (invData ?? []) as InvRow[];
+
+  const makes = [...new Set(inv.map((m) => m.make))].sort();
+  const models = [...new Set(inv.map((m) => m.model))].sort();
   const hasUnder = (cap: number) => inv.some((m) => m.price <= cap);
+
+  // Category tiles: each body style with inventory, wearing the NEWEST
+  // car in that style as its photo and its real count.
+  const categories = new Map<string, { count: number; newest: InvRow }>();
+  for (const row of inv) {
+    if (!row.body_style) continue;
+    const cur = categories.get(row.body_style);
+    if (!cur) categories.set(row.body_style, { count: 1, newest: row });
+    else {
+      cur.count++;
+      if (row.created_at > cur.newest.created_at) cur.newest = row;
+    }
+  }
+  const categoryList = [...categories.entries()].sort((a, b) => b[1].count - a[1].count);
+
+  // The payments card runs the live formula on the cheapest financed car.
+  const cheapestFinanced = inv
+    .filter((m) => m.financing_offered)
+    .sort((a, b) => a.price - b.price)[0];
+
 
   const photosByListing = new Map<string, string>();
   const sellersById = new Map<
@@ -94,13 +132,20 @@ export default async function HomePage() {
     { name: string | null; city: string | null; financing: boolean }
   >();
   const ratingBySeller = new Map<string, { avg: number; count: number }>();
-  if (latest.length > 0) {
+  if (inv.length > 0) {
+    const photoIds = [
+      ...new Set([
+        ...latest.map((l) => l.id),
+        ...categoryList.map(([, v]) => v.newest.id),
+        ...(cheapestFinanced ? [cheapestFinanced.id] : []),
+      ]),
+    ];
     const sellerIds = [...new Set(latest.map((l) => l.seller_id))];
     const [{ data: photoData }, { data: sellerData }, { data: reviewData }] = await Promise.all([
       supabase
         .from("listing_photos")
         .select("listing_id, storage_path, sort_order")
-        .in("listing_id", latest.map((l) => l.id))
+        .in("listing_id", photoIds)
         .order("sort_order"),
       supabase
         .from("profiles")
@@ -140,281 +185,380 @@ export default async function HomePage() {
     }
   }
 
+  // The hero wears a real car: the newest live listing with a photo.
+  const heroListing = latest.find((l) => photosByListing.has(l.id));
+  const heroPhoto = heroListing ? photosByListing.get(heroListing.id) : null;
+  const heroName = heroListing
+    ? `${heroListing.year} ${heroListing.make} ${heroListing.model}`
+    : null;
+
+  // The compare card shows two real covers.
+  const compareCovers = latest
+    .filter((l) => photosByListing.has(l.id))
+    .slice(0, 2)
+    .map((l) => ({ id: l.id, path: photosByListing.get(l.id) as string }));
+
+  const chipCls =
+    "rounded-full border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-600 hover:border-blue-300 hover:text-blue-700";
+
   return (
     <main>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}
       />
-      {/* Hero — search first, the way car shoppers actually arrive.
-          Section separation below is the teardown's zebra rhythm: the
-          backgrounds alternate and NOTHING draws a border between them. */}
-      <section className="bg-gradient-to-b from-blue-50 to-white px-6 pb-14 pt-14">
-        <div className="mx-auto max-w-4xl text-center">
-          <h1 className="mx-auto max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl">
-            Find your next car without the runaround.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-slate-600">
-            Real cars from Metro Detroit sellers — or tell us what you&apos;re
-            looking for and we&apos;ll text you options. No pushy calls, no
-            sitting at a dealership all day.
-          </p>
 
-          {/* The search bar — a plain GET straight onto the browse board.
-              A clean full-width stack on phones (his report: the wrap was
-              ragged), the one-row pill bar from sm up. */}
-          <form
-            action="/cars"
-            method="get"
-            role="search"
-            aria-label="Search used cars"
-            className="mx-auto mt-8 grid max-w-2xl gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg shadow-blue-900/5 sm:flex sm:flex-wrap sm:items-stretch"
-          >
-            <select
-              name="make"
-              aria-label="Make"
-              defaultValue=""
-              className="w-full rounded-full border-0 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 sm:w-auto"
-            >
-              <option value="">All makes</option>
-              {makes.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <input
-              name="q"
-              type="search"
-              aria-label="Model or keyword"
-              placeholder="Model or keyword — Equinox, F-150…"
-              className="w-full rounded-full border-0 bg-slate-50 px-4 py-3 text-sm text-slate-700 sm:min-w-40 sm:w-auto sm:flex-1"
-            />
-            <input
-              name="max_price"
-              aria-label="Maximum price"
-              type="number"
-              min={0}
-              placeholder="Max $"
-              className="w-full rounded-full border-0 bg-slate-50 px-4 py-3 text-sm text-slate-700 sm:w-24"
-            />
-            <button className="w-full rounded-full bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-700 sm:w-auto">
-              Search
-            </button>
-          </form>
-          <div className="mt-3 flex flex-wrap justify-center gap-2 text-xs">
+      {/* Hero — his mock's split: the pitch on the left, a REAL car from
+          the board on the right (his call: a generated car on a "real
+          cars" site reads as fake). Headline and sub-line verbatim. */}
+      <section className="bg-gradient-to-b from-blue-50 to-white px-6 pb-12 pt-12">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_1fr]">
+            <div>
+              <h1 className="max-w-xl text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl">
+                Find your next car without the runaround.
+              </h1>
+              <p className="mt-4 max-w-xl text-lg text-slate-600">
+                Real cars from Metro Detroit sellers — or tell us what
+                you&apos;re looking for and we&apos;ll text you options. No
+                pushy calls, no sitting at a dealership all day.
+              </p>
+              <ul className="mt-6 space-y-2 text-sm font-medium text-slate-700">
+                <li className="flex items-center gap-2">
+                  <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">✓</span>
+                  Every listing reviewed by a real person before it goes live
+                </li>
+                <li className="flex items-center gap-2">
+                  <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">✓</span>
+                  Text or call the seller directly — no middleman
+                </li>
+                <li className="flex items-center gap-2">
+                  <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">✓</span>
+                  {"Free for buyers — no fees from us, ever"}
+                </li>
+              </ul>
+            </div>
+            {heroListing && heroPhoto && (
+              <Link
+                href={`/cars/${heroListing.slug}`}
+                className="group relative block overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photoUrl(heroPhoto, PHOTO_WIDTHS.gallery)}
+                  srcSet={photoSrcSet(heroPhoto)}
+                  sizes="(min-width: 1024px) 45vw, 100vw"
+                  alt={heroName ?? "A car on the board"}
+                  fetchPriority="high"
+                  decoding="async"
+                  className="aspect-[16/10] w-full object-cover"
+                />
+                <span className="absolute bottom-3 left-3 rounded-full bg-slate-900/80 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur group-hover:bg-slate-900">
+                  {`On the board now: ${heroName} — ${formatPrice(heroListing.price)} →`}
+                </span>
+              </Link>
+            )}
+          </div>
+
+          {/* The search panel — the mock's centerpiece, wired to the
+              board's real URLs. */}
+          <HomeSearch makes={makes} models={models} />
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs">
+            <span className="font-semibold text-slate-500">Popular:</span>
             {[
               { label: "Under $15k", href: "/cars?max_price=15000", show: hasUnder(15000) },
               { label: "Under $25k", href: "/cars?max_price=25000", show: hasUnder(25000) },
-              { label: "SUVs", href: "/cars?body=SUV", show: hasBody("SUV") },
-              { label: "Trucks", href: "/cars?body=Truck", show: hasBody("Truck") },
+              ...categoryList.slice(0, 2).map(([body]) => ({
+                label: `${body}s`,
+                href: canonicalFor({ body }),
+                show: true,
+              })),
               { label: "Everything", href: "/cars", show: true },
-            ].filter((c) => c.show).map((c) => (
-              <Link
-                key={c.label}
-                href={c.href}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-600 hover:border-blue-300 hover:text-blue-700"
-              >
-                {c.label}
-              </Link>
-            ))}
+            ]
+              .filter((c) => c.show)
+              .map((c) => (
+                <Link key={c.label} href={c.href} className={chipCls}>
+                  {c.label}
+                </Link>
+              ))}
           </div>
           {/* Returning visitors get their last search back — content
               personalizes, the layout never moves (the teardown's rule). */}
-          <LastSearchChip />
+          <div className="text-center">
+            <LastSearchChip />
+          </div>
         </div>
       </section>
 
-      {/* Shop-by-style tiles + the trust strip — the premium furniture the
-          big sites teach shoppers to expect. Tiles are just searches. */}
-      <section className="mx-auto max-w-7xl px-6 pt-10">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {/* Real body-style searches now (0015) — the q= keyword hack
-              is dead. */}
-          {[
-            { label: "SUVs & Crossovers", href: "/cars?body=SUV", show: hasBody("SUV"), art: "M8 34c-3 0-5-2-5-5 0-2 2-4 4-5l8-2 6-9c2-3 5-4 8-4h18c3 0 6 1 8 4l7 9 11 2c3 1 5 3 5 5 0 3-2 5-5 5" },
-            { label: "Trucks", href: "/cars?body=Truck", show: hasBody("Truck"), art: "M6 34c-2 0-4-2-4-4s1-4 3-4l9-2 5-8c1-2 3-3 6-3h14v13h26c3 0 5 2 5 4s-1 4-3 4" },
-            { label: "Sedans", href: "/cars?body=Sedan", show: hasBody("Sedan"), art: "M7 33c-3 0-5-2-5-4s2-4 4-4l9-3 8-8c2-2 4-3 7-3h16c3 0 5 1 7 3l8 8 10 3c2 0 4 2 4 4s-2 4-5 4" },
-            { label: "Under $15k", href: "/cars?max_price=15000", show: hasUnder(15000), art: null },
-          ].filter((t) => t.show).map((t) => (
-            <Link
-              key={t.label}
-              href={t.href}
-              className="group flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-5 text-center hover:border-blue-300"
-            >
-              {t.art ? (
-                <svg viewBox="0 0 80 44" className="h-9 w-16 text-slate-400 group-hover:text-blue-600" fill="none">
-                  <path d={t.art} stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="24" cy="34" r="6" stroke="currentColor" strokeWidth="3" />
-                  <circle cx="58" cy="34" r="6" stroke="currentColor" strokeWidth="3" />
-                </svg>
-              ) : (
-                <span className="flex h-9 items-center text-2xl font-extrabold text-slate-400 group-hover:text-blue-600">
-                  $
-                </span>
-              )}
-              <span className="text-xs font-semibold text-slate-700 group-hover:text-blue-700">
-                {t.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs font-medium text-slate-500">
-          <span>✓ Every listing reviewed before it goes live</span>
-          <span>✓ Text the seller — no phone tag, no pressure</span>
-          <span>✓ Local Metro Detroit cars and dealers</span>
-        </div>
-      </section>
+      {/* Shop by category — his mock's photo tiles, honest edition: each
+          tile wears the NEWEST real car in that style and its REAL
+          count, and a style with nothing behind it doesn't render. */}
+      {categoryList.length > 0 && (
+        <section className="mx-auto max-w-7xl px-6 pt-10">
+          <h2 className="text-xl font-bold text-slate-900">Shop by category</h2>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {categoryList.map(([body, v]) => {
+              const cover = photosByListing.get(v.newest.id);
+              return (
+                <Link
+                  key={body}
+                  href={canonicalFor({ body })}
+                  className="group overflow-hidden rounded-2xl border border-slate-200 bg-white hover:border-blue-300"
+                >
+                  {cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={photoUrl(cover, PHOTO_WIDTHS.card)}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="aspect-[16/9] w-full object-cover"
+                    />
+                  ) : (
+                    <div aria-hidden="true" className="flex aspect-[16/9] items-center justify-center bg-slate-100 text-3xl">
+                      🚗
+                    </div>
+                  )}
+                  <div className="flex items-baseline justify-between px-3.5 py-2.5">
+                    <span className="text-sm font-semibold text-slate-800 group-hover:text-blue-700">
+                      {`${body}s`}
+                    </span>
+                    <span className="text-xs text-slate-500 tabular-nums">
+                      {`${v.count} listing${v.count === 1 ? "" : "s"}`}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Real inventory above the fold — the CarGurus move. Gray stripe
           in the zebra: full-bleed background, contained content. */}
       {latest.length > 0 && (
         <section className="mt-10 bg-slate-50 px-6 py-12">
           <div className="mx-auto max-w-7xl">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-bold text-slate-900">
-              Fresh on the lot
-            </h2>
-            <Link
-              href="/cars"
-              className="text-sm font-semibold text-blue-600 hover:underline"
-            >
-              See all cars →
-            </Link>
-          </div>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {latest.map((l) => {
-              const seller = sellersById.get(l.seller_id);
-              return (
-                <ListingCard
-                  key={l.id}
-                  listing={l}
-                  photoPath={photosByListing.get(l.id) ?? null}
-                  sellerName={seller?.name}
-                  sellerCity={seller?.city}
-                  sellerFinancing={seller?.financing ?? true}
-                  sellerRating={ratingBySeller.get(l.seller_id) ?? null}
-                />
-              );
-            })}
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-xl font-bold text-slate-900">
+                Fresh on the lot
+              </h2>
+              <Link
+                href="/cars"
+                className="text-sm font-semibold text-blue-600 hover:underline"
+              >
+                See all cars →
+              </Link>
+            </div>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {latest.map((l) => {
+                const seller = sellersById.get(l.seller_id);
+                return (
+                  <ListingCard
+                    key={l.id}
+                    listing={l}
+                    photoPath={photosByListing.get(l.id) ?? null}
+                    sellerName={seller?.name}
+                    sellerCity={seller?.city}
+                    sellerFinancing={seller?.financing ?? true}
+                    sellerRating={ratingBySeller.get(l.seller_id) ?? null}
+                  />
+                );
+              })}
             </div>
           </div>
         </section>
       )}
 
-      {/* The teardown's 50/50 promo module — sell-side pitch, product
-          proof mocked in CSS. White stripe in the zebra. */}
-      <section className="px-6 py-14">
-        <PromoSplit
-          eyebrow="Sell with us"
-          headline="Your car, listed by tonight."
-          sub="Free to list your own car. A real person reviews it, it goes live to Metro Detroit buyers, and interested buyers text — your number never sits on a classifieds board."
-          ctaLabel="List your car — free"
-          ctaHref="/sell"
-        >
-          {/* Product proof: a mini listing card with the live chip. */}
-          <div className="relative w-64 rounded-xl border border-slate-200 bg-white shadow-lg shadow-blue-900/5">
-            <div className="flex aspect-[4/3] items-center justify-center rounded-t-xl bg-gradient-to-br from-slate-100 to-slate-200 text-5xl">
-              🚙
-            </div>
-            <div className="p-4">
-              <div className="flex items-baseline gap-2">
-                <span className="text-lg font-extrabold text-slate-900">{formatPrice(14500)}</span>
-                <span className="text-xs font-semibold text-green-700">{`$${estimateMonthly(14500).toLocaleString("en-US")}/mo est.`}</span>
-              </div>
-              <div className="mt-0.5 text-sm font-semibold text-slate-900">
-                2018 Chevrolet Equinox LT
-              </div>
-              <div className="mt-0.5 text-xs text-slate-500">74,200 mi</div>
-            </div>
-            <span className="absolute -right-3 -top-3 rounded-full bg-green-700 px-3 py-1 text-xs font-bold text-white shadow">
-              ✓ Live — reviewed today
-            </span>
-          </div>
-        </PromoSplit>
-      </section>
-
-      {/* The saved-search promo — gray stripe in the zebra. */}
-      <section className="bg-slate-50 px-6 py-14">
-        <PromoSplit
-          flip
-          eyebrow="Save a search"
-          headline="Let the cars come to you."
-          sub="Save any search with your email and we'll send one letter when new matching cars go live — the day they're approved. One-click unsubscribe in every letter, nothing else, ever."
-          ctaLabel="Browse & save a search"
-          ctaHref="/cars"
-        >
-          {/* Product proof: the alert letter, in miniature. */}
-          <div className="relative w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-lg shadow-blue-900/5">
-            <p className="text-xs font-semibold text-slate-500">
-              From: YouBuyCars
-            </p>
-            <p className="mt-1 text-sm font-bold text-slate-900">
-              2 new cars match your search
-            </p>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Watching: <span className="font-semibold">Chevrolet · under $15,000</span>
-            </p>
-            <div className="mt-3 space-y-2">
-              {["2018 Equinox LT — $14,500", "2016 Malibu — $11,900"].map((c) => (
-                <div
-                  key={c}
-                  className="rounded-lg bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700"
-                >
-                  {c} · <span className="text-blue-600">See this car →</span>
-                </div>
-              ))}
-            </div>
-            <span className="absolute -left-3 -top-3 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow">
-              🔔 New match
-            </span>
-          </div>
-        </PromoSplit>
-      </section>
-
-      {/* How it works — the MARKETPLACE story (16 Aug 2026, his call:
-          "considering youbuycars is a multivendor site... it should be
-          something totally different"). The old three steps told the
-          concierge tale — tell us, we find it — which reads like one
-          dealer, not a board of many sellers. The marketplace tells it
-          straight: browse, deal with the seller, drive it home. The
-          concierge survives as the door under it, on /contact. */}
-      <section className="mx-auto max-w-4xl px-6 py-16">
-        <h2 className="text-center text-2xl font-bold">How it works</h2>
-        <div className="mt-10 grid gap-8 sm:grid-cols-3">
+      {/* A better way to buy a car — the mock's value props carrying the
+          marketplace story the old How-it-works told (his 16 Aug call:
+          browse, deal directly, drive it home — plus the alert letters). */}
+      <section className="mx-auto max-w-7xl px-6 py-14">
+        <h2 className="text-center text-2xl font-bold">A better way to buy a car.</h2>
+        <div className="mt-9 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {[
             {
-              title: "Browse real local cars",
+              icon: "M11 4a7 7 0 1 0 4.4 12.4L20 21l1-1-4.6-4.6A7 7 0 0 0 11 4Z",
+              title: "Real local cars",
               body: "Every listing comes from a Metro Detroit seller or dealer, and a real person reviews each one before it goes live.",
             },
             {
+              icon: "M4 5h16v11H9l-5 4V5Z",
               title: "Deal directly with the seller",
-              body: "Text, call, or message on-site — every car connects you straight to whoever's selling it, with payment numbers you can run yourself.",
+              body: "Text, call, or message on-site — every car connects you straight to whoever's selling it.",
             },
             {
-              title: "Drive it home",
-              body: "Meet the seller, take the drive, make the deal. Sold cars stay marked, so the board never shows you a ghost.",
+              icon: "M12 3v18M7 7h7a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h8",
+              title: "Run your own numbers",
+              body: "Payment estimates on every financed car, and a calculator that works backward from the payment that fits your life.",
             },
-          ].map((step, i) => (
-            <div key={step.title} className="text-center">
-              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-base font-bold text-white">
-                {i + 1}
+            {
+              icon: "M12 4a5 5 0 0 0-5 5v4l-2 3h14l-2-3V9a5 5 0 0 0-5-5Zm-2 14a2 2 0 0 0 4 0",
+              title: "Let the cars come to you",
+              body: "Save any search with your email and get one letter when a match goes live — an unsubscribe link in every letter.",
+            },
+          ].map((prop) => (
+            <div key={prop.title} className="text-center sm:text-left">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-blue-100">
+                <svg viewBox="0 0 24 24" className="h-5 w-5 text-blue-700" fill="none" aria-hidden="true">
+                  <path d={prop.icon} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </span>
-              <h3 className="mt-3 font-semibold">{step.title}</h3>
-              <p className="mt-1 text-sm text-slate-500">{step.body}</p>
+              <h3 className="mt-3 font-semibold text-slate-900">{prop.title}</h3>
+              <p className="mt-1 text-sm text-slate-500">{prop.body}</p>
             </div>
           ))}
         </div>
-        {/* The CTA does step 1 (his call, 16 Aug 2026: "the start a
-            conversation button should be a browse cars button"). The
-            concierge door lives on /contact, reachable from the footer. */}
-        <div className="mt-9 text-center">
-          <Link
-            href="/cars"
-            className="inline-block rounded-full bg-blue-600 px-7 py-3 text-sm font-bold text-white hover:bg-blue-700"
-          >
-            Browse cars
-          </Link>
+      </section>
+
+      {/* The feature cards — his mock's four doors, each opening onto a
+          feature that actually exists. Dark cards on the gray stripe. */}
+      <section className="bg-slate-50 px-6 py-14">
+        <div className="mx-auto grid max-w-7xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex flex-col rounded-2xl bg-slate-900 p-6 text-white">
+            <h3 className="text-lg font-bold">Estimate your payments</h3>
+            {cheapestFinanced ? (
+              <p className="mt-3 text-sm leading-relaxed text-slate-300">
+                <span className="block text-3xl font-extrabold text-green-400 tabular-nums">
+                  {`$${estimateMonthly(cheapestFinanced.price).toLocaleString("en-US")}/mo est.`}
+                </span>
+                {`on the ${cheapestFinanced.make} ${cheapestFinanced.model} — real personalized numbers on every financed car.`}
+              </p>
+            ) : (
+              <p className="mt-3 text-sm leading-relaxed text-slate-300">
+                Real monthly estimates on every financed car, worked out in
+                seconds.
+              </p>
+            )}
+            <Link
+              href={cheapestFinanced ? `/cars/${cheapestFinanced.slug}#calculator` : "/cars"}
+              className="mt-auto inline-block self-start rounded-full bg-white px-5 py-2.5 text-sm font-bold text-slate-900 hover:bg-slate-200"
+            >
+              Calculate payment
+            </Link>
+          </div>
+
+          <div className="flex flex-col rounded-2xl bg-slate-900 p-6 text-white">
+            <h3 className="text-lg font-bold">Compare cars</h3>
+            {compareCovers.length === 2 && (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {compareCovers.map((c) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={c.id}
+                    src={photoUrl(c.path, PHOTO_WIDTHS.thumb)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-[4/3] w-full rounded-lg object-cover"
+                  />
+                ))}
+              </div>
+            )}
+            <p className="mt-3 text-sm leading-relaxed text-slate-300">
+              Line up two vehicles side by side and find your perfect match.
+            </p>
+            <Link
+              href="/compare"
+              className="mt-auto inline-block self-start rounded-full bg-white px-5 py-2.5 text-sm font-bold text-slate-900 hover:bg-slate-200"
+            >
+              Compare now
+            </Link>
+          </div>
+
+          <div className="flex flex-col rounded-2xl bg-slate-900 p-6 text-white">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold">Ask our AI</h3>
+              <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-slate-300">
+                Coming soon
+              </span>
+            </div>
+            <span aria-hidden="true" className="mt-3 text-4xl">✦</span>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300">
+              Instant answers about cars and pricing are on the way. Today, a
+              real person answers by text.
+            </p>
+            <Link
+              href="/ask"
+              className="mt-auto inline-block self-start rounded-full bg-white px-5 py-2.5 text-sm font-bold text-slate-900 hover:bg-slate-200"
+            >
+              Take a look
+            </Link>
+          </div>
+
+          <div className="flex flex-col rounded-2xl bg-slate-900 p-6 text-white">
+            <h3 className="text-lg font-bold">Sell your car</h3>
+            <span className="mt-3 text-3xl font-extrabold text-blue-400">Free.</span>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300">
+              Your car, listed by tonight — reviewed by a real person, live to
+              Metro Detroit buyers, and buyers text you directly.
+            </p>
+            <Link
+              href="/sell"
+              className="mt-auto inline-block self-start rounded-full bg-white px-5 py-2.5 text-sm font-bold text-slate-900 hover:bg-slate-200"
+            >
+              Get started
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* The dealer band — the mock's black stripe, selling the real
+          thing: /dealers, its walkthrough form, and the CRM behind it. */}
+      <section className="bg-slate-950 px-6 py-12 text-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Are you a dealer?</h2>
+            <p className="mt-1 max-w-xl text-sm text-slate-300">
+              Get your inventory in front of Metro Detroit shoppers on
+              YouBuyCars.
+            </p>
+            <ul className="mt-4 grid gap-x-8 gap-y-2 text-sm font-medium text-slate-200 sm:grid-cols-3">
+              <li>✓ Leads from local shoppers, straight to you</li>
+              <li>✓ Your own dealer page with reviews</li>
+              <li>✓ Tools to grow your whole desk</li>
+            </ul>
+          </div>
+          <div className="flex shrink-0 items-center gap-4">
+            <Link
+              href="/dealers"
+              className="rounded-full bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-700"
+            >
+              {"Dealers — get started"}
+            </Link>
+            <Link href="/login" className="text-sm font-semibold text-slate-300 hover:text-white">
+              Or sign in
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* The trust strip — the mock's closer, every claim true. */}
+      <section className="mx-auto max-w-7xl px-6 py-12">
+        <div className="grid gap-8 text-center sm:grid-cols-2 lg:grid-cols-4 lg:text-left">
+          {[
+            {
+              title: "Local focus",
+              body: "Metro Detroit through and through — the cars, the sellers, and the person behind the site.",
+            },
+            {
+              title: "Verified sellers",
+              body: "A real person reviews every seller and every listing before it goes live.",
+            },
+            {
+              title: "Secure & private",
+              body: "Your number stays yours — message on-site, and share it only when you choose.",
+            },
+            {
+              title: "Here to help",
+              body: "Real support from a real person, usually the same day.",
+            },
+          ].map((t) => (
+            <div key={t.title}>
+              <h3 className="text-sm font-bold text-slate-900">{t.title}</h3>
+              <p className="mt-1 text-sm text-slate-500">{t.body}</p>
+            </div>
+          ))}
         </div>
       </section>
     </main>
