@@ -136,7 +136,6 @@ export default async function HomePage() {
     const photoIds = [
       ...new Set([
         ...latest.map((l) => l.id),
-        ...categoryList.map(([, v]) => v.newest.id),
         ...(cheapestFinanced ? [cheapestFinanced.id] : []),
       ]),
     ];
@@ -290,49 +289,46 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Shop by category — his mock's photo tiles, honest edition: each
-          tile wears the NEWEST real car in that style and its REAL
-          count, and a style with nothing behind it doesn't render. */}
-      {categoryList.length > 0 && (
-        <section className="mx-auto max-w-7xl px-6 pt-10">
-          <h2 className="text-xl font-bold text-slate-900">Shop by category</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {categoryList.map(([body, v]) => {
-              const cover = photosByListing.get(v.newest.id);
-              return (
-                <Link
-                  key={body}
-                  href={canonicalFor({ body })}
-                  className="group overflow-hidden rounded-2xl border border-slate-200 bg-white hover:border-blue-300"
-                >
-                  {cover ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={photoUrl(cover, PHOTO_WIDTHS.card)}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="aspect-[16/9] w-full object-cover"
-                    />
-                  ) : (
-                    <div aria-hidden="true" className="flex aspect-[16/9] items-center justify-center bg-slate-100 text-3xl">
-                      🚗
-                    </div>
-                  )}
-                  <div className="flex items-baseline justify-between px-3.5 py-2.5">
-                    <span className="text-sm font-semibold text-slate-800 group-hover:text-blue-700">
-                      {`${body}s`}
-                    </span>
-                    <span className="text-xs text-slate-500 tabular-nums">
-                      {`${v.count} listing${v.count === 1 ? "" : "s"}`}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      {/* Shop by category — the drawn icon family, every style (his call,
+          29 Aug 2026: the photo tiles came and went in a day — "we have
+          icons it looked better... show all the categories"). Every body
+          style renders whether or not it has cars today: an empty one
+          lands on its board view, which offers the save-search and marks
+          itself noindex, so the no-empty-doors rule still holds where it
+          matters — the index — while the front door shows the whole lot. */}
+      <section className="mx-auto max-w-7xl px-6 pt-10">
+        <h2 className="text-xl font-bold text-slate-900">Shop by category</h2>
+        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-9">
+          {(
+            [
+              ["SUVs", "SUV", "M8 34c-3 0-5-2-5-5 0-2 2-4 4-5l8-2 6-9c2-3 5-4 8-4h18c3 0 6 1 8 4l7 9 11 2c3 1 5 3 5 5 0 3-2 5-5 5"],
+              ["Sedans", "Sedan", "M7 33c-3 0-5-2-5-4s2-4 4-4l9-3 8-8c2-2 4-3 7-3h16c3 0 5 1 7 3l8 8 10 3c2 0 4 2 4 4s-2 4-5 4"],
+              ["Trucks", "Truck", "M6 34c-2 0-4-2-4-4s1-4 3-4l9-2 5-8c1-2 3-3 6-3h14v13h26c3 0 5 2 5 4s-1 4-3 4"],
+              ["Coupes", "Coupe", "M7 33c-3 0-5-2-5-4s2-4 4-4l11-2 12-7c3-2 5-3 8-3h5c4 0 7 1 10 4l7 6 9 2c2 1 4 2 4 4s-2 4-5 4"],
+              ["Hatchbacks", "Hatchback", "M9 33c-3 0-5-2-5-4s2-4 4-4l8-3 6-8c2-2 4-3 7-3h15c4 0 6 2 7 5l3 10c1 3-1 5-4 5"],
+              ["Minivans", "Minivan", "M8 34c-3 0-5-2-5-5v-3c0-2 1-4 3-5l7-6c2-2 4-3 7-3h29c4 0 7 3 7 7v10c0 3-2 5-5 5"],
+              ["Vans", "Van", "M8 34c-3 0-5-2-5-5V17c0-3 2-5 5-5h42c4 0 7 2 9 5l4 6c1 2 1 3 1 5v1c0 3-2 5-5 5"],
+              ["Convertibles", "Convertible", "M7 33c-3 0-5-2-5-4s2-4 4-4l11-2 22-1 6-8 2 8 14 2c2 1 3 2 3 4s-2 4-5 4"],
+              ["Wagons", "Wagon", "M7 33c-3 0-5-2-5-4s2-4 4-4l9-3 7-8c2-2 4-3 7-3h23c3 0 5 1 6 3l3 8 6 2c2 1 3 2 3 4s-2 4-5 4"],
+            ] as const
+          ).map(([plural, body, art]) => (
+            <Link
+              key={body}
+              href={canonicalFor({ body })}
+              className="group flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-2 py-4 text-center hover:border-blue-300"
+            >
+              <svg viewBox="0 0 80 44" className="h-9 w-16 text-slate-400 group-hover:text-blue-600" fill="none" aria-hidden="true">
+                <path d={art} stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                <circle cx="24" cy="34" r="6" stroke="currentColor" strokeWidth="3" />
+                <circle cx="58" cy="34" r="6" stroke="currentColor" strokeWidth="3" />
+              </svg>
+              <span className="text-xs font-semibold text-slate-700 group-hover:text-blue-700">
+                {plural}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Real inventory above the fold — the CarGurus move. Gray stripe
           in the zebra: full-bleed background, contained content. */}
