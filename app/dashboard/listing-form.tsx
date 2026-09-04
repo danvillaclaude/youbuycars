@@ -110,8 +110,8 @@ export function ListingForm({
   /*
    * The id of a listing THIS form already created (23 Aug 2026 audit):
    * create succeeded, the photo upload threw, the seller pressed Submit
-   * again — and a second listing appeared, or a Free seller hit "limit
-   * of 1 listing" about a car they never saw. The retry now updates
+   * again — and a second listing appeared, or a Free seller hit their
+   * listing limit about a car they never saw. The retry now updates
    * the one that exists.
    */
   const [createdId, setCreatedId] = useState<string | null>(null);

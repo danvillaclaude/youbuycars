@@ -73,14 +73,14 @@ for (const status of ["pending", "active", "rejected", "sold"] as const) {
 }
 
 // The tier ladder — the DB's tier_cap() mirrors these numbers exactly.
-// Free moved 5 → 3 → 1 on 12 Aug 2026 (the owner's call; migration 0006);
-// these pins lagged at 5 and failed silently until 16 Aug. Pin the OWNER's
-// number, and change it only when he changes it.
+// Free moved 5 → 3 → 1 (12 Aug 2026) → 3 again (1 Sep 2026, migration 0024);
+// these pins once lagged at 5 and failed silently until 16 Aug. Pin the
+// OWNER's number, and change it only when he changes it.
 check("LISTING_CAP is the free cap", LISTING_CAP === TIER_CAPS.free);
-check("free cap 1 (one car is a person; two is a business)", TIER_CAPS.free === 1);
+check("free cap 3 (generous while supply is being built)", TIER_CAPS.free === 3);
 check("pro cap 25 (the $100 plan)", TIER_CAPS.pro === 25);
 check("ultimate cap 200 (the $500 plan)", TIER_CAPS.ultimate === 200);
-check("capFor defaults to free", capFor(null) === 1 && capFor("nonsense") === 1);
+check("capFor defaults to free", capFor(null) === 3 && capFor("nonsense") === 3);
 check("capFor reads tiers", capFor("pro") === 25 && capFor("ultimate") === 200);
 
 // describeSearch — the saved-search label a buyer reads in their inbox.

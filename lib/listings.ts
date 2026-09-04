@@ -208,12 +208,13 @@ export interface ListingPhoto {
 export type Tier = "free" | "pro" | "ultimate";
 
 export const TIER_CAPS: Record<Tier, number> = {
-  // 1 since 12 Aug 2026 (the owner's call, settled the same evening it
-  // briefly sat at 3; launched at 5). Free is for selling YOUR car —
-  // more than one live listing is a business, and businesses have plans.
-  // The DB's tier_cap() moved with it — migration 0006 — so the two
-  // can't disagree without a listing insert failing loudly.
-  free: 1,
+  // 3 since 1 Sep 2026 (the owner's call, migration 0024) — reversing the
+  // 12 Aug drop to 1. An early marketplace needs inventory more than a hard
+  // private-vs-business line, so free is generous while supply is built;
+  // three is enough to try it, not enough to run a business on. The DB's
+  // tier_cap() moved with it, so the two can't disagree without a listing
+  // insert failing loudly. (History: launched 5, briefly 3, settled 1, now 3.)
+  free: 3,
   pro: 25,
   ultimate: 200,
 };

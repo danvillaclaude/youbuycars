@@ -146,7 +146,7 @@ export default async function SellerPage({
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
       {/* Entity markup for DEALERS only (the kit): a private person selling
-          one car is not an AutoDealer. Deliberately NO AggregateRating —
+          their own few cars is not an AutoDealer. Deliberately NO AggregateRating —
           with the platform's own person as the only seller, review markup
           is Google's "self-serving" case; revisit when third-party
           dealers with real reviews exist. */}

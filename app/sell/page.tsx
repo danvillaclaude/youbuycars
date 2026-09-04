@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   // of the page — only the title tag didn't say them.
   title: "Sell Your Car in Metro Detroit, Michigan — Free Listing | YouBuyCars",
   description:
-    "Sell your car in Metro Detroit: list your vehicle on YouBuyCars for free — one active listing, reviewed before it goes live, and buyers reach you by text.",
+    "Sell your car in Metro Detroit: list your vehicle on YouBuyCars for free — up to three active listings, reviewed before they go live, and buyers reach you by text.",
 };
 
 /**
@@ -101,9 +101,9 @@ export default function SellPage() {
               <div className="text-sm font-semibold text-slate-500">Free</div>
               <div className="mt-1 text-2xl font-bold">$0</div>
               <p className="mt-2 text-sm text-slate-600">
-                {/* Singular on purpose — the cap is {TIER_CAPS.free}, and
-                    "up to 1 listings" would read like a bug. */}
-                One active listing. Perfect for selling your own car.
+                {/* Reads from the cap so copy and enforcement can't drift. */}
+                Up to {TIER_CAPS.free} active listings. Perfect for selling
+                your own cars.
               </p>
             </div>
             <div className="rounded-2xl border-2 border-blue-600 bg-white p-5">

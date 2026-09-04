@@ -237,7 +237,7 @@ export default function DealersPage() {
             {[
               {
                 q: "What does it cost to try?",
-                a: "Nothing. A free account lists one car, reviewed and live, with your dealer page. Upgrade only when you want more slots — and if you run iSellCars.ai, the Pro plan is included at no charge.",
+                a: "Nothing. A free account lists up to three cars, reviewed and live, with your dealer page. Upgrade only when you want more slots — and if you run iSellCars.ai, the Pro plan is included at no charge.",
               },
               {
                 q: "Where do my leads go?",
